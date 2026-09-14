@@ -21,6 +21,7 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tikz} % Per grafi, automi, architetture
+\usepackage{algorithmic}
 \usetikzlibrary{automata, positioning, arrows}
 
 % Box per Teoremi, Definizioni, Algoritmi
@@ -176,7 +177,69 @@
 \cleardoublepage
 \pagestyle{fancy}
 
-\section{Introduction to the course [14/09/2026]}
+\section{A Short History of Computability [14/09/2026]}
 
+Leibniz's (1646-1716) made an attempt to formalize human reasoning whose motto is ``Calculemus!''. The criteria are:
+\begin{description}
+    \item[\textit{Characteristica universalis}] Universal formal language
+    \item[\textit{Calculus Ratiocinator}] Logical calculation framework 
+\end{description}
+The objective is that: ``If two friends[...]''
+\begin{definition}{Proof System}{proof-system}
+    To prove a system however complex you[...]
+\end{definition}
+A proof system is composed of:
+\begin{description}
+    \item[Axioms] A list of basic facts so simple and self-evident that anyone agrees on them. 
+    \item[Theorems] A dynamic lists of known true facts
+    \item[Deduction Rules] Combine known true facts to generate more true facts to be added to the theorem list
+        \subitem Example: \textit{Modus Pones} if fact \(A\) is true and the fact \(A\Rightarrow B\) than \(B\) it's true
+\end{description}
+
+Frege's axioms are very powerful: they can generate all the mathematics and than something bad!
+This is since \textit{Bertrand Russel} proves that \textbf{contradictions} arise from the system.
+
+\begin{definition}{Unrestricted Comprehension Principle}{ucp}
+    For every well-define proprety \(P(\cdot)\), there is the set\[
+        \{x\mid P(x)\}
+    \]
+    of all and only the object having that property.
+\end{definition}
+As an examples: if \(P(x)\equiv \) x is green, then \(G=\{x\mid P(x)\}\) set that everything is green. So let's \(P(x)\equiv \) ``\(x\) is a set''. Than \(S = \{x\mid P(x)\}\) is a set of all sets, this way
+
+\begin{theorem}{Russell's Paradox}{}
+    Every set theory that contains an unrestricted comprehension principle leads to a contradiction
+\end{theorem}
+\begin{proof}
+    If \(x\) is a set, \(x\notin x\) (\(x\) dose not belong to itself) is a well-defined property. By the unrestricted comprehension principle, the set of all and only sets that do not belong to themselves exists:\[
+        R=\{x\mid x\notin x\}
+    \]
+    [...]
+\end{proof}
+Ruling out unrestricted comprehension:
+\begin{itemize}
+    \item Russell and Whiteheld, \textit{Principia Mathematica} (\textbf{PM})
+    \item Zermelo and Fraenksel set theory (\textbf{ZF})
+\end{itemize}
+A proprety \(P(x)\) can only be used to ``filter'' an already defined set, the notation:\[
+\not{}
+\] 
+is now illegal.
+\paragraph{Problem \# 2} Prove that axioms of arithmetic are consistent.
+
+Indeed, the capability of formalizing integer arithmetic (possessed by both \textbf{PM} and \textbf{ZF}) is enough to enable self-referential in a new way:
+\paragraph{Kurt Godel - \textit{Incompleteness theorems}} Reduction of logic to arithmetic: define a way to encode all of PM's logical statements as a integer nmbers and logical deduction rules as arithmetic calculations.
+    [...], Incomplete, inconsistent
+
+\begin{algorithmic}
+    \STATE \(n\leftarrow 1\) \Comment{Start from the first odd number}\\
+    \LOOP
+        \STATE \(sum \leftarrow 0\)
+        \FOR{\(i\leftarrrow \dots n-1\)}
+            \IF{\(n\equiv 0 (\mod{i})\)} \(sum\leftarrow sum + i\)\FI
+        \ENDFOR
+        \IF{\(sum =\)}
+    \ENDLOOP
+\end{algorithmic}
 
 \end{document}
