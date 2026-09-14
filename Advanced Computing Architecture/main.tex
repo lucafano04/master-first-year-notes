@@ -191,10 +191,10 @@ Dynamic power consumption is mostly due to charging and discharging of the capac
 \] 
 With:
 \begin{description}
-    \item[\(C_L\) Capacitance] Function of wire lenght, transistor size
-    \item[\(V_{DD}\) Supply Voltage] Has been dropping with succesive fab generations
-    \item[\(P_{0\rightarrow1}\) Sqitching probability] Depends on signal statistics
-    \item[\(f\) Clock Freqency] increases\dots
+    \item[\(C_L\) Capacitance] Function of wire length, transistor size
+    \item[\(V_{DD}\) Supply Voltage] Has been dropping with successive fab generations
+    \item[\(P_{0\rightarrow1}\) Switching probability] Depends on signal statistics
+    \item[\(f\) Clock Frequency] increases\dots
 \end{description}
 \begin{definition}{Short circuit current}{scc}
     Finite slope of the input signal causes a direct current path between VDD and GND for a short period of time during switching when both the nMOS and pMOS transistors are conducting.
@@ -216,7 +216,83 @@ This equation can be used to estimate the power consumption, however determining
 \begin{description}
     \item[\(f_{\text{clock}}\)] affects performance. Reducing it will lower power consuption if you do not need to do anything
     \item[\(C_{L}\)] depends on the number of gates
-    \item[\(V_{DD}\)] affects performance
+    \item[\(V_{DD}\)] affects performance. It has been reduced in history from 5V to circa 1V, but it could not be lowered anymore until we develop transistors with grater precision and lower threshold voltage.
     \item[\(P_{0\rightarrow1}\)] depends on the implementation and architecture
 \end{description}
+\subsection{Cost Estimation}
+Device cost tends to decrease over time even without improvements in the basic implementation technology (learning curve)
+
+By \textbf{increasing volumes}, cost decrease (\(\sim 10\%\) doubling production), this grants a faster learning curve, better efficiency and non-recursive engineering (NRE) and development costs \textbf{amortized over many machines}. A comodity market effect is that manifacturing costs and selling prices are close due to large competition.
+
+Experimentally, the cost of an integrated circuit is given by:
+\[
+C=\frac{C_{\text{die}}+C_{\text{testing}}+C_{\text{packaging}}}{Y}
+\]
+Where:
+\begin{description}
+    \item[\(C_{\text{die}}\)] is the cost of manifacturing a die
+    \item[\(C_{\text{testing}}\)] is the cost for testing a die after cutting the wafer of silicon into individual dies
+    \item[\(C_{\text{packaging}}\)] is the cost for packaging and then the working dies
+    \item[\(Y\)] is the yield after the final test (percent of working chips)
+\end{description}
+\(C_{\text{testing}}\) and \(C_{\text{packaging}}\) are fixed once the IC is made, they are mostly a funcrion of the complexity of the IC and \textbf{NOT of the manifacturing process}. Meanwhile \[
+C_{\text{die}}=\frac{C_{\text{wafer}}}{N_{\text{die}}\cdot Y_{\text{die}}}
+\]
+Where:
+\begin{description}
+    \item[\(C_{\text{wafer}}\)] Is the cost of making a wafer
+    \item[\(N_{\text{die}}\)] The total number of dies per wafer
+    \item[\(Y\)] Die Yield before packaging (dust or other factors during manifacturing)
+\end{description}
+Also the \(N_{\text{die}}\) can be calculated as
+\[
+N_{\text{die}}=\frac{\pi\cdot D^2/4}{A_{\text{die}}}-\frac{\pi\cdot D}{\sqrt{2\cdot A_{\text{die}}}}
+\]
+Where the first is the total number of dies on a round wafer, and the second is the number of dies close to the periphery of the wafer (incomplete). There is a \textbf{strong} dependence of \(C\) on \(A_{\text{die}}\)
+The Yield of a single die can be expressed as:
+\[
+    Y_{\text{die}}=Y_{\text{wafer}}\cdot\left(1+\frac{N_{\text{defects}}\cdot A_{\text{die}}}{\alpha}\right)^{-\alpha}
+\]
+But the \(Y_{\text{wafer}}\) is close to 100\% today, \(N_{\text{defects}}\) is the number of defects per unit area, this is \(0.4-0.8\frac{\text{ defects}}{\text{cm}^2}\), finally \(\alpha\) is an empirical value related to the complexity of the manufacturing process, today \(\sim 4.0\)
+\subsection{Performance Evaluation}
+Performance use to double every 15-18 months, according More's Law. Also the performance grows not only by reducing transistor's size but also by increasing parallelism at architectural level.
+
+\textbf{Actual trend estimation is hard} since ther's a lack of univocal testing criteria and the use of misleading performance metrics.
+\noindent Basic question: \textbf{How mutch is X faster than Y?}
+The ideal properties of a Performance Metric:
+\begin{description}
+    \item[Linearity]
+    \item[Rekayability]
+    \item[Repeatability]
+    \item[Easiness of Use]
+    \item[Consistency]
+    \item[Independence]
+\end{description}
+\subsubsection{The Clock Rate}
+The clock rate of a CPU is very missleading metric, introduces by microprocessor companies mostly for marketing reasons. Indeed this metric is not linear and reliable, but it it Repetable, Easy to Mesure, Consistent and Independent.
+
+The clock rate \textbf{dose note take the ammount of computation withim a clock cycle} into account. It also ignores the interaction of the CPU with memory and I/O systems.
+
+\subsubsection{MISP - Million of Instruction Per Second}
+Defined ad \[
+\texttt{MISP}=\frac{N}{T\cdot 10^6}
+\]
+With N the total number of istruction to be executed and T the time that have to be executed in. This metric is repetable, easy to mesure and independent, but is \textbf{NOT} linear as it ignores the amount of computation carried out by any single istruction, reliable as if the comparation could be fair between similar \texttt{ISA} and consistend ``what defines an instruction?''. The answer changes with different architectures.
+
+\subsubsection{MOPS and MFLOPS}
+Both tries to solve the problems of MISP by virtu of the better consistency of the definition of the mathematical operation \(w.r.t.\)  the more vague concept of instruction.
+[...]
+\subsubsection{Execution Time}
+[...]
+\subsection{The CPU performance equation}
+CPU Time is computed throught CPU performance equation
+\[
+\text{CPU Time} = N_{\text{CLK}}\cdot T_{\text{CLK}}=\text{CPI}\cdot\text{IC}\cdot T_{\text{CLK}}
+\]
+Where
+\begin{description}
+    \item[] 
+\end{description}
+
+\lecturestop{14/09/2026}
 \end{document}
