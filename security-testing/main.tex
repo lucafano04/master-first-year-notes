@@ -268,18 +268,18 @@ So \textbf{Security} it's a \textbf{System property, not a feture} and part of r
 \lecturestop{10/09/2026}
 
 \paragraph{Design and implementation Issues}
-There are multiple kinds of implementation issues like: \textbf{Bugs in software, environment} like in architecture, infrastructure, components, etc, \textbf{inappropriate features} in the infrestructure or resued software (like libraries), \textbf{inappropriate} use of features provvided by the infrastructure or resued software. Possible causes of those are mainly: Unclear or missing requirements, Complexity of features, Time Pressure, characteristics of a programming language, Developer/Manager error.
+There are multiple kinds of implementation issues like: \textbf{Bugs in software, environment} like in architecture, infrastructure, components, etc, \textbf{inappropriate features} in the infrastructure or re-used software (like libraries), \textbf{inappropriate} use of features provided by the infrastructure or re-used software. Possible causes of those are mainly: Unclear or missing requirements, Complexity of features, Time Pressure, characteristics of a programming language, Developer/Manager error.
 
 \begin{definition}{Bug}{bug}
     The system isn't behaving as it's designed to behave
 \end{definition}
 \begin{definition}{Vulnerability}{vulnerability}
-    A chain of \textbf{weakness} linked by casuality; it starts with a bug (\Cref{def:bug}) and ends with an error witch, if exploited, leads to a security failure (\Cref{cpt:sec_software_failure})
+    A chain of \textbf{weakness} linked by causality; it starts with a bug (\Cref{def:bug}) and ends with an error witch, if exploited, leads to a security failure (\Cref{cpt:sec_software_failure})
 \end{definition}
 Many security issues are related to vulnerabilities due to bugs, defects, or design flaws in a targeted software system.
 
-\paragraph{Common Wakness Enumeration (CWE)}
-CWE provides a publicly aviable list of the most common software (and hardware) weakness that can contribute to security vulnerabilities. Each CWE is described by several fields. Why is this done, if the needed function is in a package affected numbered by a CWE the weakness can be isolated and mitigated during the design of the application before the deploy. Also fixing a weakness before the vulnerability is introduces is a lot less pricey. 
+\paragraph{Common Weakness Enumeration (CWE)}
+CWE provides a publicly available list of the most common software (and hardware) weakness that can contribute to security vulnerabilities. Each CWE is described by several fields. Why is this done, if the needed function is in a package affected numbered by a CWE the weakness can be isolated and mitigated during the design of the application before the deploy. Also fixing a weakness before the vulnerability is introduces is a lot less pricey. 
 
 \paragraph{Common Vulnerabilities and Exposures (CVE)}
 CVE it is a publicly available list of entries that describes vulnerabilities in widely-used software components. Each CVE is described by several fields
@@ -287,4 +287,34 @@ CVE it is a publicly available list of entries that describes vulnerabilities in
 \paragraph{NVD and EUVD}
 
 \subsection{Bug exploitation}
+
+[...]
+
+\noindent [...]
+
+\noindent [...]
+\section{System Developem Life Cycle [14/09/2026]}
+Secure System developmente Life Cycle is defined similarry to the traditional SDLC, but it focuses on the development of sogtware and application in a manner that significantly: reduces security risks, eliminates security vulnerabilities and it reduces costs. sSDLC like SDLC is divided into phases. 
+
+\subsection{Planning}
+This phase is perfirmed by senior members
+
+Produces the working plan that plans the output of the deleveloping team
+
+\subsection{Defining}
+
+in terms of security:
+\begin{enumerate}
+    \item \textbf{Gap Analysis}, defining the security requirements for developers, designers, architects and QA by focusing on secure design principlesm security issues, web security and encryption. Also security assestment [...]
+    \item \textbf{Risck Assesment} see \Cref{def:risk} and \Cref{def:risk-assestment}
+    \item 
+\end{enumerate}
+
+\begin{definition}{Risk}{risk}
+    Is the potential that a given \textbf{threat will exploint vulnerabilities} of an asset or group of assets and thereby habe an inpact on the identified assets. An asset a relevant information, data or service or product.
+\end{definition}
+\begin{definition}{Risk Assesment}{risk-assestment}
+    The process of \textbf{identifing and determining risks} that affect an organizarion's operations, assets, individuals, other or[...]
+\end{definition}
+
 \end{document}
