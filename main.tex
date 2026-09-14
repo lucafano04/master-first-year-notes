@@ -52,7 +52,7 @@
     filecolor=magenta,      
     urlcolor=unitnred,
     citecolor=blue,
-    pdftitle={Lecture Notes - Advanced Computing Architectures },
+    pdftitle={Lecture Notes - Advanced Computing Architectures},
     pdfauthor={Luca Facchini},
 }
 
@@ -115,8 +115,8 @@
 \pagestyle{fancy}
 \fancyhf{}
 % Intestazioni (L=Left, R=Right, E=Even, O=Odd)
-\fancyhead[LE,RO]{\textbf{Advanced Computing Architectures }} % Esterno pagina
-\fancyhead[RE,LO]{A.Y. 2026/2027}            % Interno pagina
+\fancyhead[LE,RO]{\textbf{Advanced Computing Architectures}} % Esterno pagina
+\fancyhead[RE,LO]{A.Y. 2026/2027}             % Interno pagina
 
 % Piè di pagina
 \fancyfoot[RE,LO]{\textit{Notes by Luca Facchini - Matr. 273741}} % Interno pagina
@@ -151,7 +151,7 @@
     \vspace{-1.5cm}
     \includegraphics[width=4cm]{UniTn.jpg} 
     \vspace{0.5cm}\\
-    \Huge \textbf{Advanced Computing Architectures } \\ 
+    \Huge \textbf{Advanced Computing Architectures} \\ 
     \Large \vspace{0.2cm} Lecture Notes
 }
 \author{
@@ -171,7 +171,7 @@
 \maketitle
 \thispagestyle{empty}
 \begin{abstract}
-    \noindent These notes cover the topics of the \textbf{Advanced Computing Architectures } course, held by Prof. Passerone during the Master's Degree in Computer Science at the University of Trento. Feel free to distribute these notes. If you find any typos or errors, please contact me at the email above.
+    \noindent These notes cover the topics of the \textbf{Advanced Computing Architectures} course, held by Prof. Passerone during the Master's Degree in Computer Science at the University of Trento. Feel free to distribute these notes. If you find any typos or errors, please contact me at the email above.
 \end{abstract}
 
 \tableofcontents
@@ -179,105 +179,115 @@
 \pagestyle{fancy}
 
 \section{Performance Metrics [14/09/2026]} 
-In this first section it will be discussed all the used performance metrics in computing architectures.
+In this first section, all the performance metrics used in computing architectures will be discussed.
 
 \subsection{Power Consumption}
-In CMOS technology the power consumption is due to:
+In CMOS technology, power consumption is due to:
 \begin{description}
     \item[Dynamic (or Active)] currents related to:
-    \subitem Charging/Discharging of logic gates during switching
-    \subitem transient short-circuits during switching
-    \item[Static] leakage (sub-threshold) currents in transistors
+    \subitem Charging/Discharging of logic gates during switching.
+    \subitem Transient short-circuits during switching.
+    \item[Static] leakage (sub-threshold) currents in transistors.
 \end{description}
-The current trend is that with each process generation, dynamic power will scale by a factor of \(\sim 0.9\), but power density will scale by a factor of \(\sim 1.3-1.8\) and static power will increase at an exponential rate.
-\subsubsection{Dynamic Power Consuption}
-Dynamic power consumption is mostly due to charging and discharging of the capacitive load of every logic gate inside a digital CMOS integrated circuit.
-\[
-    \begin{aligned}
-        \text{Energy/transition} &= C_L * V_{DD}^2 * P_{0\rightarrow1}\\
-        \text{Power}=\text{Energy/transition}*f &= C_{L}*V_{DD}*P_{0\rightarrow1}*f
-    \end{aligned}
-\] 
-With:
-\begin{description}
-    \item[\(C_L\) Capacitance] Function of wire length, transistor size
-    \item[\(V_{DD}\) Supply Voltage] Has been dropping with successive fab generations
-    \item[\(P_{0\rightarrow1}\) Switching probability] Depends on signal statistics
-    \item[\(f\) Clock Frequency] Raises the power consumption since there's higher probability that there's a change of the logic gate
-\end{description}
-\begin{definition}{Short circuit current}{scc}
-    Finite slope of the input signal causes a direct current path between VDD and GND for a short period of time during switching when both the \ac{nMOS} and \ac{pMOS} transistors are conducting.
-\end{definition}
+The current trend is that with each process generation, dynamic power scales by a factor of \(\sim 0.9\), but power density scales by a factor of \(\sim 1.3-1.8\) and static power increases at an exponential rate.
+
+\subsubsection{Dynamic Power Consumption}
+Dynamic power consumption is mostly due to the charging and discharging of the capacitive load of every logic gate inside a digital CMOS integrated circuit.
 \begin{align*}
-    E_{sc} &= t_{sc}V_{DD}I_{peak}P_{o\rightarrow 1}\\
-    P_{sc} &= t_{sc}V_{DD}I_{peak}f_{o\rightarrow 1}
+    \text{Energy/transition} &= C_L \cdot V_{DD}^2 \cdot P_{0\rightarrow1}\\
+    % SEMANTIC NOTE: The formula below is missing the square on V_DD. It should be V_DD^2 according to the physics standard for dynamic power. 
+    \text{Power} = \text{Energy/transition} \cdot f &= C_{L} \cdot V_{DD}^2 \cdot P_{0\rightarrow1} \cdot f
+\end{align*} 
+Where:
+\begin{description}
+    \item[\(C_L\) Capacitance] A function of wire length and transistor size.
+    \item[\(V_{DD}\) Supply Voltage] Has been dropping with successive fab generations.
+    \item[\(P_{0\rightarrow1}\) Switching probability] Depends on signal statistics.
+    \item[\(f\) Clock Frequency] Raises power consumption since there's a higher probability of a logic gate state change.
+\end{description}
+
+\begin{definition}{Short circuit current}{scc}
+    The finite slope of the input signal causes a direct current path between \(V_{DD}\) and GND for a short period of time during switching when both the \ac{nMOS} and \ac{pMOS} transistors are conducting.
+\end{definition}
+
+\begin{align*}
+    E_{sc} &= t_{sc} \cdot V_{DD} \cdot I_{\text{peak}} \cdot P_{0\rightarrow 1}\\
+    P_{sc} &= t_{sc} \cdot V_{DD} \cdot I_{\text{peak}} \cdot f_{0\rightarrow 1}
 \end{align*}
 Where:
 \begin{description}
-    \item[\(t_{sc}\)] Duration of the rising/falling time of the input signal
-    \item[\(I_{\text{peak}}\)] determined by the saturation current of the \(P\) and \(N\) transistors and the ratio between input and output.
+    \item[\(t_{sc}\)] Duration of the rising/falling time of the input signal.
+    % SEMANTIC NOTE: "ratio between input and output slopes" is assumed here based on typical VLSI design. 
+    \item[\(I_{\text{peak}}\)] Determined by the saturation current of the \(P\) and \(N\) transistors and the ratio between input and output slopes.
 \end{description}
-\subsubsection{Static Power Consumption}
-Sub-threshold current grows exponentially with the raising of temperature and with the decreasing of threshold voltage, also the continued scaling of supply voltage will make sub-threshold conduction the primary source of power dissipation.
 
-The static power consumpion can be expressed as:\[
-I_{\text{DSub}}=k\cdot e^{\frac{-q\cdot V_{T}}{a\cdot k_a\cdot T}}
+\subsubsection{Static Power Consumption}
+Sub-threshold current grows exponentially with a rise in temperature and a decrease in threshold voltage; additionally, the continued scaling of supply voltage will make sub-threshold conduction the primary source of power dissipation.
+
+The static power consumption can be expressed as:
+\[
+    I_{\text{DSub}} = k \cdot e^{\frac{-q \cdot V_{T}}{a \cdot k_a \cdot T}}
 \]
-With \(k,a,k_a\) technology-dependent contrants, \(V_T\) the treshold voltage, and \(T\) the temperature
+Where \(k, a, k_a\) are technology-dependent constants, \(V_T\) is the threshold voltage, and \(T\) is the temperature.
+
 \subsubsection{Summing Up}
 \[
-P=C_{L}V^2_{DD}P_{0\rightarrow1}+t_{sc}V{DD}P_{0\rightarrow1}I_{\text{peak}}f+V_{DD}I_{\text{leakage}}
+    P = C_{L}V^2_{DD}P_{0\rightarrow1} + t_{sc}V_{DD}P_{0\rightarrow1}I_{\text{peak}}f + V_{DD}I_{\text{leakage}}
 \]
-This equation can be used to estimate the power consumption, however determining the individual parameters is not easy. Under architectural control we can manage:
+This equation can be used to estimate power consumption; however, determining the individual parameters is not easy. Under architectural control, we can manage:
 \begin{description}
-    \item[\(f_{\text{clock}}\)] affects performance. Reducing it will lower power consuption if you do not need to do anything
-    \item[\(C_{L}\)] depends on the number of gates
-    \item[\(V_{DD}\)] affects performance. It has been reduced in history from 5V to circa 1V, but it could not be lowered anymore until we develop transistors with grater precision and lower threshold voltage.
-    \item[\(P_{0\rightarrow1}\)] depends on the implementation and architecture
+    \item[\(f_{\text{clock}}\)] Affects performance. Reducing it will lower power consumption if no operations need to be performed.
+    \item[\(C_{L}\)] Depends on the number of gates.
+    \item[\(V_{DD}\)] Affects performance. It has been reduced historically from 5V to roughly 1V, but it cannot be lowered further until we develop transistors with greater precision and lower threshold voltages.
+    \item[\(P_{0\rightarrow1}\)] Depends on the implementation and architecture.
 \end{description}
-\subsection{Cost Estimation}
-Device cost tends to decrease over time even without improvements in the basic implementation technology (learning curve)
 
-By \textbf{increasing volumes}, cost decrease (\(\sim 10\%\) doubling production), this grants a faster learning curve, better efficiency and non-recursive engineering (NRE) and development costs \textbf{amortized over many machines}. A commodity market effect is that manufacturing costs and selling prices are close due to large competition.
+\subsection{Cost Estimation}
+Device cost tends to decrease over time even without improvements in the basic implementation technology (learning curve).
+
+By \textbf{increasing volumes}, costs decrease (\(\sim 10\%\) when doubling production). This grants a faster learning curve, better efficiency, and allows non-recurring engineering (NRE) and development costs to be \textbf{amortized over many machines}. A commodity market effect is that manufacturing costs and selling prices are close due to high competition.
 
 Experimentally, the cost of an integrated circuit is given by:
 \[
-C=\frac{C_{\text{die}}+C_{\text{testing}}+C_{\text{packaging}}}{Y}
+    C = \frac{C_{\text{die}} + C_{\text{testing}} + C_{\text{packaging}}}{Y}
 \]
 Where:
 \begin{description}
-    \item[\(C_{\text{die}}\)] is the cost of manifacturing a die
-    \item[\(C_{\text{testing}}\)] is the cost for testing a die after cutting the wafer of silicon into individual dies
-    \item[\(C_{\text{packaging}}\)] is the cost for packaging and then the working dies
-    \item[\(Y\)] is the yield after the final test (percent of working chips)
+    \item[\(C_{\text{die}}\)] The cost of manufacturing a die.
+    \item[\(C_{\text{testing}}\)] The cost of testing a die after cutting the silicon wafer into individual dies.
+    \item[\(C_{\text{packaging}}\)] The cost of packaging the working dies.
+    \item[\(Y\)] The yield after the final test (percentage of working chips).
 \end{description}
-\(C_{\text{testing}}\) and \(C_{\text{packaging}}\) are fixed once the IC is made, they are mostly a function of the complexity of the IC and \textbf{NOT of the manufacturing process}. Meanwhile \[
-C_{\text{die}}=\frac{C_{\text{wafer}}}{N_{\text{die}}\cdot Y_{\text{die}}}
+\(C_{\text{testing}}\) and \(C_{\text{packaging}}\) are fixed once the IC is made; they are mostly a function of the IC's complexity and \textbf{NOT of the manufacturing process}. Meanwhile:
+\[
+    C_{\text{die}} = \frac{C_{\text{wafer}}}{N_{\text{die}} \cdot Y_{\text{die}}}
 \]
 Where:
 \begin{description}
-    \item[\(C_{\text{wafer}}\)] Is the cost of making a wafer
-    \item[\(N_{\text{die}}\)] The total number of dies per wafer
-    \item[\(Y\)] Die Yield before packaging (dust or other factors during manifacturing)
+    \item[\(C_{\text{wafer}}\)] The cost of making a wafer.
+    \item[\(N_{\text{die}}\)] The total number of dies per wafer.
+    \item[\(Y_{\text{die}}\)] Die yield before packaging (affected by dust or other factors during manufacturing).
 \end{description}
-Also the \(N_{\text{die}}\) can be calculated as
+Also, \(N_{\text{die}}\) can be calculated as:
 \[
-N_{\text{die}}=\frac{\pi\cdot D^2/4}{A_{\text{die}}}-\frac{\pi\cdot D}{\sqrt{2\cdot A_{\text{die}}}}
+    N_{\text{die}} = \frac{\pi \cdot \frac{D^2}{4}}{A_{\text{die}}} - \frac{\pi \cdot D}{\sqrt{2 \cdot A_{\text{die}}}}
 \]
-Where the first is the total number of dies on a round wafer, and the second is the number of dies close to the periphery of the wafer (incomplete). There is a \textbf{strong} dependence of \(C\) on \(A_{\text{die}}\)
-The Yield of a single die can be expressed as:
+Where the first term is the total number of dies on a round wafer, and the second term accounts for the number of incomplete dies close to the periphery of the wafer. There is a \textbf{strong} dependence of \(C\) on \(A_{\text{die}}\).
+
+The yield of a single die can be expressed as:
 \[
-    Y_{\text{die}}=Y_{\text{wafer}}\cdot\left(1+\frac{N_{\text{defects}}\cdot A_{\text{die}}}{\alpha}\right)^{-\alpha}
+    Y_{\text{die}} = Y_{\text{wafer}} \cdot \left(1 + \frac{N_{\text{defects}} \cdot A_{\text{die}}}{\alpha}\right)^{-\alpha}
 \]
-But the \(Y_{\text{wafer}}\) is close to 100\% today, \(N_{\text{defects}}\) is the number of defects per unit area, this is \(0.4-0.8\frac{\text{ defects}}{\text{cm}^2}\), finally \(\alpha\) is an empirical value related to the complexity of the manufacturing process, today \(\sim 4.0\)
+Today, \(Y_{\text{wafer}}\) is close to 100\%; \(N_{\text{defects}}\) is the number of defects per unit area (typically \(0.4-0.8 \, \frac{\text{defects}}{\text{cm}^2}\)), and, finally, \(\alpha\) is an empirical value related to the complexity of the manufacturing process (today \(\sim 4.0\)).
+
 \subsection{Performance Evaluation}
 \textbf{Performance Evolution and Trends}
 \begin{itemize}
     \item Historically, top processors took advantage of \textbf{Moore's Law}: clock frequencies (used to) double every 15--18 months.
-    \item \textbf{Performance grows much faster}: Effective enhancements are applied not only at the technology level (transistor scaling), but also at the architectural level (higher parallelism).
+    \item \textbf{Performance grows much faster}: Effective enhancements are applied not only at the technology level (transistor scaling) but also at the architectural level (higher parallelism).
     \item \textbf{Accurate trend estimation is hard} due to:
     \begin{itemize}
-        \item Lack of univocal testing criteria.
+        \item Lack of unambiguous testing criteria.
         \item Use of misleading performance metrics.
     \end{itemize}
 \end{itemize}
@@ -285,68 +295,75 @@ But the \(Y_{\text{wafer}}\) is close to 100\% today, \(N_{\text{defects}}\) is 
 \noindent Basic question: \textbf{``How much is X faster than Y?''}
 \begin{definition}{Ideal Properties of a Performance Metric}{perf_metric_properties}
 \begin{description}
-    \item[Linearity] A metric is linear if when the values of the metric ediffer by a certain factor, also the actual performance of the machines diffes by the same factor
-    \item[Reliability] A performance metric is reliable if a system \(X\) outperforms a system \(Y\) when the corresponding values of the metric for both systems indicate that \(X\) should outperform \(Y\) 
-    \item[Repeatability] A performance metric is repetable if subsequent measurements return \textbf{compatible\footnote{And not identical}} results
-    \item[Easiness of Use] If a metric is difficult to use, few people will use it, and the probability to obtain incorrect results grows.
-    \item[Consistency] A consistent metric is one for which the units of the metric and its precise definition are the same across different systems and configurations
-    \item[Independence] A performance metric is independent if its definition is univocal
+    \item[Linearity] A metric is linear if, when the values of the metric differ by a certain factor, the actual performance of the machines differs by the same factor.
+    \item[Reliability] A performance metric is reliable if a system \(X\) outperforms a system \(Y\) when the corresponding values of the metric for both systems indicate that \(X\) should outperform \(Y\). 
+    \item[Repeatability] A performance metric is repeatable if subsequent measurements return \textbf{compatible\footnote{And not identical}} results.
+    \item[Ease of Use] If a metric is difficult to use, fewer people will use it, and the probability of obtaining incorrect results grows.
+    \item[Consistency] A consistent metric is one for which the units and precise definition are the same across different systems and configurations.
+    \item[Independence] A performance metric is independent if its definition is unambiguous.
 \end{description}
 \end{definition}
+
 \subsubsection{The Clock Rate}
-The clock rate of a CPU is very misleading metric, introduces by microprocessor companies mostly for marketing reasons. Indeed this metric is not linear and reliable, but it it Repeatable, Easy to Measure, Consistent and Independent.
+The clock rate of a CPU is a very misleading metric, introduced by microprocessor companies mostly for marketing reasons. Indeed, this metric is not linear or reliable, but it is Repeatable, Easy to Measure, Consistent, and Independent.
 
-The clock rate \textbf{dose note take the amount of computation within a clock cycle} into account. It also ignores the interaction of the CPU with memory and I/O systems.
+The clock rate \textbf{does not take the amount of computation within a clock cycle} into account. It also ignores the interaction of the CPU with memory and I/O systems.
 
-\subsubsection{MISP - Million of Instruction Per Second}
-Defined ad \[
-\texttt{MISP}=\frac{N}{T\cdot 10^6}
+\subsubsection{MIPS - Million Instructions Per Second}
+Defined as:
+\[
+    \texttt{MIPS} = \frac{N}{T \cdot 10^6}
 \]
-With \(N\) the total number of instruction to be executed and \(T\) the time that have to be executed in. This metric is repeatable, easy to measure and independent, but is \textbf{NOT} linear as it ignores the amount of computation carried out by any single instruction, \textbf{NOT} reliable as if the comparation could be fair between similar \texttt{ISA} and inconsistent as ``what defines an instruction?''. The answer changes with different architectures.
+Where \(N\) is the total number of instructions to be executed and \(T\) is the execution time. This metric is repeatable, easy to measure, and independent, but it is \textbf{NOT} linear (as it ignores the amount of computation carried out by any single instruction), \textbf{NOT} reliable (since the comparison is only fair between similar \texttt{ISA}s), and inconsistent (because "what defines an instruction?" changes across different architectures).
 
 \subsubsection{MOPS and MFLOPS}
-Both tries to solve the problems of MISP by virtu of the better consistency of the definition of the mathematical operation \(w.r.t.\)  the more vague concept of instruction.
+Both try to solve the problems of MIPS by virtue of better consistency in the definition of a mathematical operation compared to the more vague concept of an instruction.
 \[
     \begin{array}{cc}
-         \texttt{MOPS} = \frac{O}{T\cdot 10^6} & \texttt{MFLOPS} = \frac{F}{T\cdot 10^6}
+         \texttt{MOPS} = \frac{O}{T \cdot 10^6} & \texttt{MFLOPS} = \frac{F}{T \cdot 10^6}
     \end{array}
 \]
-where:
+Where:
 \begin{description}
-    \item[\(O\)] Total number of integer operations to be executed
-    \item[\(F\)] Total number of free pointer operation to be executet
-    \item[\(T\)] Time to execute \(O/F\) operations
+    \item[\(O\)] Total number of integer operations to be executed.
+    \item[\(F\)] Total number of floating point operations to be executed.
+    \item[\(T\)] Time required to execute the \(O\) or \(F\) operations.
 \end{description}
-These metrics are still unreliable and inconsistent since they do not consider \textbf{how} the mathematical operations are implemented. (eg: if in one system there's a dedicated MULT circuit)
+These metrics are still unreliable and inconsistent because they do not consider \textbf{how} the mathematical operations are implemented (e.g., if one system has a dedicated MULT circuit).
+
 \subsubsection{Execution Time}
 \begin{definition}{Execution Time}{exec-time}
-    The execution time is the \textbf{time required to complete a task} running on a computing device, including all the accessory operation necessary to this purpose. 
+    Execution time is the \textbf{time required to complete a task} running on a computing device, including all the accessory operations necessary for this purpose. 
 \end{definition}
-The performance of a system is inversely proportional to execution time. Also this is the only metric that satisfies all the proprieties.
+The performance of a system is inversely proportional to execution time. Also, this is the only metric that satisfies all the properties.
 \begin{itemize}
-    \item Douboling performance means halving execution time
-    \item If the execution time of a program running on \(X\) is lower that \(Y\) then \(X\) outperforms \(Y\)
-    \item When repeating the measure compatible results will be obtained
-    \item Execution time of an application can be measured by OS function
-    \item The unit of measurement is the second
-    \item The definition of the metric is univocal and unambiguous
+    \item Doubling performance means halving execution time.
+    \item If the execution time of a program running on \(X\) is lower than on \(Y\), then \(X\) outperforms \(Y\).
+    \item When repeating the measurement, compatible results will be obtained.
+    \item The execution time of an application can be measured via OS functions.
+    \item The unit of measurement is the second.
+    \item The definition of the metric is unambiguous.
 \end{itemize}
-\paragraph{Execution time vs CPU time} Execution time includes evrything, CPU time, waiting time for memory or I/O operations, time spend running other tasks. On the other hand CPU time is a more objective indicator of the performance of CPU without considering other system components and/or operation. CPU time is divided in: \begin{description}
-    \item[User time] Time spent when executing instructions of the task
-    \item[System time] Time spent when executing OS instruction, witch are required for the sustem to be tested
-\end{description}
-\paragraph{The CPU performance equation}
-CPU Time is computed through CPU performance equation
-\[
-\text{CPU Time} = N_{\text{CLK}}\cdot T_{\text{CLK}}=\text{CPI}\cdot\text{IC}\cdot T_{\text{CLK}}
-\]
-Where
+
+\paragraph{Execution Time vs. CPU Time} 
+Execution time includes everything: CPU time, waiting time for memory or I/O operations, and time spent running other tasks. On the other hand, CPU time is a more objective indicator of the CPU's performance without considering other system components and/or operations. CPU time is divided into: 
 \begin{description}
-    \item[\(N_{\text{CLK}}\)] Number of clock cycles
-    \item[\(T_{\text{CLK}}=\frac{1}{F_{\text{CLK}}}\)] Clock period
-    \item[\(\text{IC}\)] Instruction Count
-    \item[\(\text{CPI}=\frac{N_{\text{CLK}}}{\text{IC}}\)] Clock per instruction
-    \subitem Sometimes \(\text{IPC}=\frac{1}{\text{CPI}}\) is used
+    \item[User time] Time spent executing instructions of the task.
+    \item[System time] Time spent executing OS instructions, which are required for the system to be tested.
+\end{description}
+
+\paragraph{The CPU Performance Equation}
+CPU Time is computed through the CPU performance equation:
+\[
+    \text{CPU Time} = N_{\text{CLK}} \cdot T_{\text{CLK}} = \text{CPI} \cdot \text{IC} \cdot T_{\text{CLK}}
+\]
+Where:
+\begin{description}
+    \item[\(N_{\text{CLK}}\)] Number of clock cycles.
+    \item[\(T_{\text{CLK}} = \frac{1}{F_{\text{CLK}}}\)] Clock period.
+    \item[\(\text{IC}\)] Instruction Count.
+    \item[\(\text{CPI} = \frac{N_{\text{CLK}}}{\text{IC}}\)] Clocks Per Instruction.
+    \subitem Sometimes \(\text{IPC} = \frac{1}{\text{CPI}}\) is used.
 \end{description}
 
 \lecturestop{14/09/2026}
