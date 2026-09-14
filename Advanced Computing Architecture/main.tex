@@ -36,6 +36,8 @@
 \usepackage{hyperref}
 % Clever references
 \usepackage{cleveref}
+% Acronyms
+\usepackage[printonlyused,withpage]{acronym}
 
 % ==========================================
 % CUSTOMIZATION & BRANDING (UNITN STYLE)
@@ -176,12 +178,19 @@
 \cleardoublepage
 \pagestyle{fancy}
 
-\section{Power Consuption Analysis [14/09/2026]} 
+\section{Performance Metrics [14/09/2026]} 
+In this first section it will be discussed all the used performance metrics in computing architectures.
 
-\begin{definition}{Trend}{trend}
-    
-\end{definition}
-\subsection{Dynamic Power Consuption}
+\subsection{Power Consumption}
+In CMOS technology the power consumption is due to:
+\begin{description}
+    \item[Dynamic (or Active)] currents related to:
+    \subitem Charging/Discharging of logic gates during switching
+    \subitem transient short-circuits during switching
+    \item[Static] leakage (sub-threshold) currents in transistors
+\end{description}
+The current trend is that with each process generation, dynamic power will scale by a factor of \(\sim 0.9\), but power density will scale by a factor of \(\sim 1.3-1.8\) and static power will increase at an exponential rate.
+\subsubsection{Dynamic Power Consuption}
 Dynamic power consumption is mostly due to charging and discharging of the capacitive load of every logic gate inside a digital CMOS integrated circuit.
 \[
     \begin{aligned}
@@ -194,10 +203,10 @@ With:
     \item[\(C_L\) Capacitance] Function of wire length, transistor size
     \item[\(V_{DD}\) Supply Voltage] Has been dropping with successive fab generations
     \item[\(P_{0\rightarrow1}\) Switching probability] Depends on signal statistics
-    \item[\(f\) Clock Frequency] increases\dots
+    \item[\(f\) Clock Frequency] Raises the power consumption since there's higher probability that there's a change of the logic gate
 \end{description}
 \begin{definition}{Short circuit current}{scc}
-    Finite slope of the input signal causes a direct current path between VDD and GND for a short period of time during switching when both the nMOS and pMOS transistors are conducting.
+    Finite slope of the input signal causes a direct current path between VDD and GND for a short period of time during switching when both the \ac{nMOS} and \ac{pMOS} transistors are conducting.
 \end{definition}
 \begin{align*}
     E_{sc} &= t_{sc}V_{DD}I_{peak}P_{o\rightarrow 1}\\
@@ -205,10 +214,17 @@ With:
 \end{align*}
 Where:
 \begin{description}
-    \item[\(t_{sc}\)] Duration of the rising/falling time of the imput sifnal
-    \item[\(I_{\text{peak}}\)] determined by the saturation current of the \(P\) and \(N\) transistors and the ratio betwwn input and output.
+    \item[\(t_{sc}\)] Duration of the rising/falling time of the input signal
+    \item[\(I_{\text{peak}}\)] determined by the saturation current of the \(P\) and \(N\) transistors and the ratio between input and output.
 \end{description}
-[...]
+\subsubsection{Static Power Consumption}
+Sub-threshold current grows exponentially with the raising of temperature and with the decreasing of threshold voltage, also the continued scaling of supply voltage will make sub-threshold conduction the primary source of power dissipation.
+
+The static power consumpion can be expressed as:\[
+I_{\text{DSub}}=k\cdot e^{\frac{-q\cdot V_{T}}{a\cdot k_a\cdot T}}
+\]
+With \(k,a,k_a\) technology-dependent contrants, \(V_T\) the treshold voltage, and \(T\) the temperature
+\subsubsection{Summing Up}
 \[
 P=C_{L}V^2_{DD}P_{0\rightarrow1}+t_{sc}V{DD}P_{0\rightarrow1}I_{\text{peak}}f+V_{DD}I_{\text{leakage}}
 \]
@@ -222,7 +238,7 @@ This equation can be used to estimate the power consumption, however determining
 \subsection{Cost Estimation}
 Device cost tends to decrease over time even without improvements in the basic implementation technology (learning curve)
 
-By \textbf{increasing volumes}, cost decrease (\(\sim 10\%\) doubling production), this grants a faster learning curve, better efficiency and non-recursive engineering (NRE) and development costs \textbf{amortized over many machines}. A comodity market effect is that manifacturing costs and selling prices are close due to large competition.
+By \textbf{increasing volumes}, cost decrease (\(\sim 10\%\) doubling production), this grants a faster learning curve, better efficiency and non-recursive engineering (NRE) and development costs \textbf{amortized over many machines}. A commodity market effect is that manufacturing costs and selling prices are close due to large competition.
 
 Experimentally, the cost of an integrated circuit is given by:
 \[
@@ -235,7 +251,7 @@ Where:
     \item[\(C_{\text{packaging}}\)] is the cost for packaging and then the working dies
     \item[\(Y\)] is the yield after the final test (percent of working chips)
 \end{description}
-\(C_{\text{testing}}\) and \(C_{\text{packaging}}\) are fixed once the IC is made, they are mostly a funcrion of the complexity of the IC and \textbf{NOT of the manifacturing process}. Meanwhile \[
+\(C_{\text{testing}}\) and \(C_{\text{packaging}}\) are fixed once the IC is made, they are mostly a function of the complexity of the IC and \textbf{NOT of the manufacturing process}. Meanwhile \[
 C_{\text{die}}=\frac{C_{\text{wafer}}}{N_{\text{die}}\cdot Y_{\text{die}}}
 \]
 Where:
@@ -255,44 +271,91 @@ The Yield of a single die can be expressed as:
 \]
 But the \(Y_{\text{wafer}}\) is close to 100\% today, \(N_{\text{defects}}\) is the number of defects per unit area, this is \(0.4-0.8\frac{\text{ defects}}{\text{cm}^2}\), finally \(\alpha\) is an empirical value related to the complexity of the manufacturing process, today \(\sim 4.0\)
 \subsection{Performance Evaluation}
-Performance use to double every 15-18 months, according More's Law. Also the performance grows not only by reducing transistor's size but also by increasing parallelism at architectural level.
+\textbf{Performance Evolution and Trends}
+\begin{itemize}
+    \item Historically, top processors took advantage of \textbf{Moore's Law}: clock frequencies (used to) double every 15--18 months.
+    \item \textbf{Performance grows much faster}: Effective enhancements are applied not only at the technology level (transistor scaling), but also at the architectural level (higher parallelism).
+    \item \textbf{Accurate trend estimation is hard} due to:
+    \begin{itemize}
+        \item Lack of univocal testing criteria.
+        \item Use of misleading performance metrics.
+    \end{itemize}
+\end{itemize}
 
-\textbf{Actual trend estimation is hard} since ther's a lack of univocal testing criteria and the use of misleading performance metrics.
-\noindent Basic question: \textbf{How mutch is X faster than Y?}
-The ideal properties of a Performance Metric:
+\noindent Basic question: \textbf{``How much is X faster than Y?''}
+\begin{definition}{Ideal Properties of a Performance Metric}{perf_metric_properties}
 \begin{description}
-    \item[Linearity]
-    \item[Rekayability]
-    \item[Repeatability]
-    \item[Easiness of Use]
-    \item[Consistency]
-    \item[Independence]
+    \item[Linearity] A metric is linear if when the values of the metric ediffer by a certain factor, also the actual performance of the machines diffes by the same factor
+    \item[Reliability] A performance metric is reliable if a system \(X\) outperforms a system \(Y\) when the corresponding values of the metric for both systems indicate that \(X\) should outperform \(Y\) 
+    \item[Repeatability] A performance metric is repetable if subsequent measurements return \textbf{compatible\footnote{And not identical}} results
+    \item[Easiness of Use] If a metric is difficult to use, few people will use it, and the probability to obtain incorrect results grows.
+    \item[Consistency] A consistent metric is one for which the units of the metric and its precise definition are the same across different systems and configurations
+    \item[Independence] A performance metric is independent if its definition is univocal
 \end{description}
+\end{definition}
 \subsubsection{The Clock Rate}
-The clock rate of a CPU is very missleading metric, introduces by microprocessor companies mostly for marketing reasons. Indeed this metric is not linear and reliable, but it it Repetable, Easy to Mesure, Consistent and Independent.
+The clock rate of a CPU is very misleading metric, introduces by microprocessor companies mostly for marketing reasons. Indeed this metric is not linear and reliable, but it it Repeatable, Easy to Measure, Consistent and Independent.
 
-The clock rate \textbf{dose note take the ammount of computation withim a clock cycle} into account. It also ignores the interaction of the CPU with memory and I/O systems.
+The clock rate \textbf{dose note take the amount of computation within a clock cycle} into account. It also ignores the interaction of the CPU with memory and I/O systems.
 
 \subsubsection{MISP - Million of Instruction Per Second}
 Defined ad \[
 \texttt{MISP}=\frac{N}{T\cdot 10^6}
 \]
-With N the total number of istruction to be executed and T the time that have to be executed in. This metric is repetable, easy to mesure and independent, but is \textbf{NOT} linear as it ignores the amount of computation carried out by any single istruction, reliable as if the comparation could be fair between similar \texttt{ISA} and consistend ``what defines an instruction?''. The answer changes with different architectures.
+With \(N\) the total number of instruction to be executed and \(T\) the time that have to be executed in. This metric is repeatable, easy to measure and independent, but is \textbf{NOT} linear as it ignores the amount of computation carried out by any single instruction, \textbf{NOT} reliable as if the comparation could be fair between similar \texttt{ISA} and inconsistent as ``what defines an instruction?''. The answer changes with different architectures.
 
 \subsubsection{MOPS and MFLOPS}
 Both tries to solve the problems of MISP by virtu of the better consistency of the definition of the mathematical operation \(w.r.t.\)  the more vague concept of instruction.
-[...]
+\[
+    \begin{array}{cc}
+         \texttt{MOPS} = \frac{O}{T\cdot 10^6} & \texttt{MFLOPS} = \frac{F}{T\cdot 10^6}
+    \end{array}
+\]
+where:
+\begin{description}
+    \item[\(O\)] Total number of integer operations to be executed
+    \item[\(F\)] Total number of free pointer operation to be executet
+    \item[\(T\)] Time to execute \(O/F\) operations
+\end{description}
+These metrics are still unreliable and inconsistent since they do not consider \textbf{how} the mathematical operations are implemented. (eg: if in one system there's a dedicated MULT circuit)
 \subsubsection{Execution Time}
-[...]
-\subsection{The CPU performance equation}
-CPU Time is computed throught CPU performance equation
+\begin{definition}{Execution Time}{exec-time}
+    The execution time is the \textbf{time required to complete a task} running on a computing device, including all the accessory operation necessary to this purpose. 
+\end{definition}
+The performance of a system is inversely proportional to execution time. Also this is the only metric that satisfies all the proprieties.
+\begin{itemize}
+    \item Douboling performance means halving execution time
+    \item If the execution time of a program running on \(X\) is lower that \(Y\) then \(X\) outperforms \(Y\)
+    \item When repeating the measure compatible results will be obtained
+    \item Execution time of an application can be measured by OS function
+    \item The unit of measurement is the second
+    \item The definition of the metric is univocal and unambiguous
+\end{itemize}
+\paragraph{Execution time vs CPU time} Execution time includes evrything, CPU time, waiting time for memory or I/O operations, time spend running other tasks. On the other hand CPU time is a more objective indicator of the performance of CPU without considering other system components and/or operation. CPU time is divided in: \begin{description}
+    \item[User time] Time spent when executing instructions of the task
+    \item[System time] Time spent when executing OS instruction, witch are required for the sustem to be tested
+\end{description}
+\paragraph{The CPU performance equation}
+CPU Time is computed through CPU performance equation
 \[
 \text{CPU Time} = N_{\text{CLK}}\cdot T_{\text{CLK}}=\text{CPI}\cdot\text{IC}\cdot T_{\text{CLK}}
 \]
 Where
 \begin{description}
-    \item[] 
+    \item[\(N_{\text{CLK}}\)] Number of clock cycles
+    \item[\(T_{\text{CLK}}=\frac{1}{F_{\text{CLK}}}\)] Clock period
+    \item[\(\text{IC}\)] Instruction Count
+    \item[\(\text{CPI}=\frac{N_{\text{CLK}}}{\text{IC}}\)] Clock per instruction
+    \subitem Sometimes \(\text{IPC}=\frac{1}{\text{CPI}}\) is used
 \end{description}
 
 \lecturestop{14/09/2026}
+
+\cleardoublepage
+\appendix
+\section{List of Acronyms}
+\begin{acronym}
+ \acro{nMOS}{N-type metal-oxide-semiconductor}
+ \acro{pMOS}{p-type metal–oxide–semiconductor}
+\end{acronym}
 \end{document}
