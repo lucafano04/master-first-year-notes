@@ -8,7 +8,7 @@
 \usepackage[english]{babel}
 
 % Matematica e Informatica Teorica
-\usepackage{amsmath, amssymb, amsthm, mathtools}
+\usepackage{amsmath, amssymb, amsthm, mathtools, cancel}
 \usepackage{stmaryrd} % Simboli aggiuntivi (es. parentesi per semantica)
 
 % Layout e Geometria
@@ -38,6 +38,16 @@
 \usepackage{cleveref}
 
 % ==========================================
+% GLOSSARIES / ACRONYMS
+% ==========================================
+\usepackage[acronym,toc]{glossaries}
+\makeglossaries
+
+\newacronym{cs}{CS}{Computer Science}
+\newacronym{pm}{PM}{\textit{Principia Mathematica}}
+\newacronym{zf}{ZF}{Zermelo-Fraenkel set theory}
+
+% ==========================================
 % CUSTOMIZATION & BRANDING (UNITN STYLE)
 % ==========================================
 % Colore rosso UniTn (approssimato per uso digitale/stampa)
@@ -50,7 +60,7 @@
     filecolor=magenta,      
     urlcolor=unitnred,
     citecolor=blue,
-    pdftitle={Lecture Notes - Computability and computational complexity },
+    pdftitle={Lecture Notes - Computability and Computational Complexity},
     pdfauthor={Luca Facchini},
 }
 
@@ -107,13 +117,20 @@
   colback=green!5!white,colframe=green!60!black,fonttitle=\bfseries, breakable%
 }{cpt}
 
+\newtcbtheorem[number within=section,
+  crefname={axiom}{axioms},
+  Crefname={Axiom}{Axioms}
+]{axiom}{Axiom}{%
+  colback=purple!5,colframe=purple!80!black,fonttitle=\bfseries, breakable%
+}{ax}
+
 % ==========================================
 % HEADER & FOOTER 
 % ==========================================
 \pagestyle{fancy}
 \fancyhf{}
 % Intestazioni (L=Left, R=Right, E=Even, O=Odd)
-\fancyhead[LE,RO]{\textbf{Computability and computational complexity }} % Esterno pagina
+\fancyhead[LE,RO]{\textbf{Computability and Computational Complexity}} % Esterno pagina
 \fancyhead[RE,LO]{A.Y. 2026/2027}            % Interno pagina
 
 % Piè di pagina
@@ -149,7 +166,7 @@
     \vspace{-1.5cm}
     \includegraphics[width=4cm]{UniTn.jpg} 
     \vspace{0.5cm}\\
-    \Huge \textbf{Computability and computational complexity } \\ 
+    \Huge \textbf{Computability and Computational Complexity} \\ 
     \Large \vspace{0.2cm} Lecture Notes
 }
 \author{
@@ -169,7 +186,7 @@
 \maketitle
 \thispagestyle{empty}
 \begin{abstract}
-    \noindent These notes cover the topics of the \textbf{Computability and computational complexity } course, held by Prof. Mauro Brunato during the Master's Degree in Computer Science at the University of Trento. Feel free to distribute these notes. If you find any typos or errors, please contact me at the email above.
+    \noindent These notes cover the topics of the \textbf{Computability and Computational Complexity} course, held by Prof. Mauro Brunato during the Master's Degree in Computer Science at the University of Trento. Feel free to distribute these notes. If you find any typos or errors, please contact me at the email above.
 \end{abstract}
 
 \tableofcontents
@@ -178,73 +195,153 @@
 
 \section{A Short History of Computability [14/09/2026]}
 
-Leibniz's (1646-1716) made an attempt to formalize human reasoning whose motto is ``Calculemus!''. The criteria are:
+Leibniz (1646-1716) made an attempt to formalize human reasoning, whose motto was ``Calculemus!''. The criteria were:
 \begin{description}
-    \item[\textit{Characteristica universalis}] Universal formal language
-    \item[\textit{Calculus Ratiocinator}] Logical calculation framework 
+    \item[\textit{Characteristica universalis}] Universal formal language.
+    \item[\textit{Calculus Ratiocinator}] Logical calculation framework. 
 \end{description}
-The objective is that: ``If two friends[...]''
+The objective was that: ``If two friends should come to a disagreement, it would suffice for them to take their pencils in their hands, sit down at the abacus, and say to each other - Let us calculate!''
+
 \begin{definition}{Proof System}{proof-system}
-    To prove a system however complex you[...]
+    To prove a statement within a system, however complex, you have to:
+    \begin{enumerate}
+        \item Assert simple and obvious facts;
+        \item Break the proof into a sequence of steps, each based on previous ones (chain of reasoning);
+        \item Ensure each step is so simple and obvious that everyone would agree;
+        \item Ensure the final step asserts the proposed statement.
+    \end{enumerate}
+    By doing so, everyone is ``forced'' to accept the statement.
 \end{definition}
+
 A proof system is composed of:
 \begin{description}
     \item[Axioms] A list of basic facts so simple and self-evident that anyone agrees on them. 
-    \item[Theorems] A dynamic lists of known true facts
-    \item[Deduction Rules] Combine known true facts to generate more true facts to be added to the theorem list
-        \subitem Example: \textit{Modus Pones} if fact \(A\) is true and the fact \(A\Rightarrow B\) than \(B\) it's true
+    \item[Theorems] A dynamic list of known true facts.
+    \item[Deduction Rules] Rules that combine known true facts to generate more true facts to be added to the theorem list.
+        \subitem Example: \textit{Modus Ponens} --- if fact \(A\) is true and the fact \(A\Rightarrow B\) is true, then \(B\) is true.
 \end{description}
 
-Frege's axioms are very powerful: they can generate all the mathematics and than something bad!
-This is since \textit{Bertrand Russel} proves that \textbf{contradictions} arise from the system.
+Frege's axioms are very powerful: they can generate all of mathematics, and then something bad!
+This is because \textit{Bertrand Russell} proved that \textbf{contradictions} arise from the system.
 
 \begin{definition}{Unrestricted Comprehension Principle}{ucp}
-    For every well-define proprety \(P(\cdot)\), there is the set\[
+    For every well-defined property \(P(\cdot)\), there is the set
+    \[
         \{x\mid P(x)\}
     \]
-    of all and only the object having that property.
+    of all and only the objects having that property.
 \end{definition}
-As an examples: if \(P(x)\equiv \) x is green, then \(G=\{x\mid P(x)\}\) set that everything is green. So let's \(P(x)\equiv \) ``\(x\) is a set''. Than \(S = \{x\mid P(x)\}\) is a set of all sets, this way
 
-\begin{theorem}{Russell's Paradox}{}
-    Every set theory that contains an unrestricted comprehension principle leads to a contradiction
+As an example: if \(P(x)\equiv\) ``\(x\) is green'', then \(G=\{x\mid P(x)\}\) is the set of everything that is green. Now let \(P(x)\equiv\) ``\(x\) is a set''. Then \(S = \{x\mid P(x)\}\) is the set of all sets. Now \(G\) and \(S\) are sets and therefore elements of \(S\): \(G\in S, S\in S\). But on the other hand, neither \(G\) nor \(S\) are green, so \(G\notin G\) and \(S\notin G\).
+
+\begin{theorem}{Russell's Paradox}{russell}
+    Every set theory that contains an unrestricted comprehension principle leads to a contradiction.
 \end{theorem}
 \begin{proof}
-    If \(x\) is a set, \(x\notin x\) (\(x\) dose not belong to itself) is a well-defined property. By the unrestricted comprehension principle, the set of all and only sets that do not belong to themselves exists:\[
+    If \(x\) is a set, \(x\notin x\) (\(x\) does not belong to itself) is a well-defined property. By the unrestricted comprehension principle, the set of all sets that do not belong to themselves exists:
+    \[
         R=\{x\mid x\notin x\}
     \]
-    [...]
+    This introduces a contradiction, because \(R\in R \iff R\notin R\).
 \end{proof}
-Ruling out unrestricted comprehension:
+This paradox is also known as the ``Barber Paradox''.\newline
+
+\noindent Ruling out unrestricted comprehension:
 \begin{itemize}
-    \item Russell and Whiteheld, \textit{Principia Mathematica} (\textbf{PM})
-    \item Zermelo and Fraenksel set theory (\textbf{ZF})
+    \item Russell and Whitehead, \gls{pm}
+    \item Zermelo and Fraenkel set theory (\gls{zf})
 \end{itemize}
-A proprety \(P(x)\) can only be used to ``filter'' an already defined set, the notation:\[
-\not{}
+A property \(P(x)\) can only be used to ``filter'' an already defined set. The notation:
+\[
+    \cancel{\{x\mid P(x)\}}
 \] 
-is now illegal.
-\paragraph{Problem \# 2} Prove that axioms of arithmetic are consistent.
+is now illegal; only \(\{x\in A\mid P(x)\}\) is writable, where \(A\) \textbf{MUST} be already defined and in the domain of \(P\).
 
-Indeed, the capability of formalizing integer arithmetic (possessed by both \textbf{PM} and \textbf{ZF}) is enough to enable self-referential in a new way:
-\paragraph{Kurt Godel - \textit{Incompleteness theorems}} Reduction of logic to arithmetic: define a way to encode all of PM's logical statements as a integer nmbers and logical deduction rules as arithmetic calculations.
-    [...], Incomplete, inconsistent
+\paragraph{Problem \# 2} Prove that the axioms of arithmetic are consistent. Both \gls{pm} and \gls{zf} prevent self-referential definitions, and therefore avoid paradoxical objects such as Russell's set \(R\), but more subtle inconsistencies might lurk inside them.
 
-\begin{algorithmic}
-    \State \(n\leftarrow 1\) \Comment{Start from the first odd number}
-    \Loop
-        \State \(sum \leftarrow 0\)
-        \For{\(i\leftarrow \dots n-1\)}
-            \If{\(n\equiv 0 \pmod{i}\)} 
-                \State \(sum\leftarrow sum + i\)
+Indeed, the capability of formalizing integer arithmetic (possessed by both \gls{pm} and \gls{zf}) is enough to enable self-reference in a new way:
+
+\paragraph{Kurt Gödel - \textit{Incompleteness theorems}} Reduction of logic to arithmetic: define a way to encode all of \gls{pm}'s logical statements as integer numbers and logical deduction rules as arithmetic calculations.
+
+This showed a way to construct a number \(G\) corresponding to the statement: ``The statement represented by number \(G\) cannot be proved'':
+\begin{itemize}
+    \item If it is true, then by its own definition it has no proof, and so \gls{pm} is \textbf{incomplete} because there is at least one true statement that \gls{pm} cannot prove.
+    \item If the statement is false, then the converse is true, meaning that a \textbf{false} statement can be proven, so by deduction it is true. This means that \gls{pm} is \textbf{inconsistent}. 
+\end{itemize}
+If we have to choose, we would prefer an incomplete system over an inconsistent system.
+
+\begin{concept}{Hilbert's Entscheidungsproblem}{hilb-problem}
+    Is there an automated, unambiguous procedure to decide whether a given statement is valid using the rules of logic?
+\end{concept}
+
+The answer of Alonzo Church and Alan Turing is:
+\begin{center}
+    \textbf{Nope!}
+\end{center}
+
+The following example, unlike Gödel's example, is not pathological; it has an actual impact in \gls{cs}.
+
+\begin{algorithm}[H]
+    \caption{Will it Halt?}
+    \begin{algorithmic}
+        \State \(n\leftarrow 1\) \Comment{Start from the first odd number}
+        \Loop
+            \State \(sum \leftarrow 0\)
+            \For{\(i\leftarrow 1 \dots n-1\)} \Comment{Sum all divisors of \(n\)}
+                \If{\(n\equiv 0 \pmod{i}\)} 
+                    \State \(sum\leftarrow sum + i\)
+                \EndIf
+            \EndFor
+            \If{\(sum = n\)} \Comment{If \(n\) is perfect, Halt!}
+                \State \textbf{halt}
             \EndIf
-        \EndFor
-        \If{\(sum =\)}
-            \State \dots
-        \EndIf
-    \EndLoop
-\end{algorithmic}
+            \State \(n\leftarrow n+2\) \Comment{Else move onto the next \textit{odd} number}
+        \EndLoop
+    \end{algorithmic}
+\end{algorithm}
 
-\lecturestop{14/09/2026}
+\begin{definition}{Perfect Number}{perfect-number}
+    A natural number is \textit{perfect} if it is equal to the sum of its proper divisors.
+\end{definition}
+
+To create a program for which it is unknown whether it will halt or not, we can:
+\begin{enumerate}
+    \item Take an unproven conjecture in the form of ``All \(x\) are \(y\)''
+    \item Run a program that systematically looks for a counterexample
+    \item \dots
+    \item Profit!
+\end{enumerate}
+
+In \gls{cs} we ``turn the tables'': maybe there exists a general procedure that, given an algorithm \(A\), tells us whether \(A\) will \textbf{halt}. Just running the program will not provide an answer (if it runs forever), but there should be some static analysis technique that looks at the algorithm and tells us if it will halt or not.
+
+Suppose that there is a function \texttt{HALT(\(A\))} that takes \(A\), an algorithm, and \textbf{always} returns a correct answer:
+\begin{align}
+    \texttt{HALT}(A)=\begin{cases}
+        \text{true} & \text{if } A \text{ halts}\\
+        \text{false} & \text{if } A \text{ does not halt}
+    \end{cases}
+\end{align}
+
+The contradiction:
+\begin{algorithm}[H]
+    \caption{Halting paradox}
+    \begin{algorithmic}
+        \Procedure{$R$}{}
+        \If{\textsc{HALT}$(R)$}
+            \State \textbf{loop}
+            \Comment{If the HALT function predicts I am going to halt...}
+        \Else \Comment{\textit{... then run forever.}}
+            \State \textbf{halt}
+            \Comment{If HALT predicts that I am running forever.}
+        \EndIf \Comment{\textit{... then halt.}}
+    \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+This algorithm is self-referential and it isn't written in a well-defined programming language.
+
+\cleardoublepage
+\appendix
+\printglossary[type=\acronymtype,title=List of Acronyms]
 
 \end{document}
