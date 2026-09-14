@@ -17,9 +17,9 @@ All PDF documents are automatically compiled via GitHub Actions from their respe
 
 | Course | Subtree Directory | Status | Download PDF |
 | :--- | :--- | :---: | :---: |
-| **CCC** (Computability and computational complexity)| [`/CCC`](./CCC) | 🟢 In Progress | [📄 `Note_CCC.pdf`](https://github.com/lucafano04/master-first-year-notes/releases/download/latest/Note_CCC.pdf) |
-| **Advanced Computing Architecture** | [`/Advanced Computing Architecture`](./Advanced\ Computing\ Architecture) | 🟢 In Progress | [📄 `Note_Advanced_Computing_Architecture.pdf`](https://github.com/lucafano04/master-first-year-notes/releases/download/latest/Note_Advanced_Computing_Architecture.pdf) |
-| **Security Testing** | [`/security-testing`](./security-testing) | 🟢 In Progress | [📄 `Note_Security_Testing.pdf`](https://github.com/lucafano04/master-first-year-notes/releases/download/latest/Note_Security_Testing.pdf) |
+| **CCC** (Computability and computational complexity)| [`/CCC`](./CCC) | 🟢 In Progress | [📄 `Notes_CCC.pdf`](https://github.com/lucafano04/master-first-year-notes/releases/download/latest/Notes_CCC.pdf) |
+| **Advanced Computing Architecture** | [`/Advanced Computing Architecture`](./Advanced%20Computing%20Architecture) | 🟢 In Progress | [📄 `Notes_Advanced_Computing_Architecture.pdf`](https://github.com/lucafano04/master-first-year-notes/releases/download/latest/Notes_Advanced_Computing_Architecture.pdf) |
+| **Security Testing** | [`/security-testing`](./security-testing) | 🟢 In Progress | [📄 `Notes_Security_Testing.pdf`](https://github.com/lucafano04/master-first-year-notes/releases/download/latest/Notes_Security_Testing.pdf) |
 
 ---
 

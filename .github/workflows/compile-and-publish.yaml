@@ -26,8 +26,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          submodules: false # Se usi subtree non servono i submodule
 
       - name: Compile LaTeX Document
         uses: xu-cheng/latex-action@v3
@@ -36,30 +34,29 @@ jobs:
           working_directory: ${{ matrix.folder }}
           args: "-pdf -interaction=nonstopmode -halt-on-error"
 
-      - name: Rename PDF
+      # Rename main.pdf to the unique course PDF name before uploading
+      - name: Rename Output PDF
         run: |
-          mv "${{ matrix.folder }}/${{ matrix.tex_file }}" "${{ matrix.pdf_name }}"
-          # Nel caso la compilazione lasci il nome del file tex:
-          mv "${{ matrix.folder }}/${{ matrix.tex_file }}" "${{ matrix.pdf_name }}" || true
-          mv "${{ matrix.folder }}/${{ matrix.tex_file }}" "${{ matrix.pdf_name }}" || true
+          mv "${{ matrix.folder }}/main.pdf" "${{ matrix.pdf_name }}"
 
       - name: Upload PDF Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.pdf_name }}
-          path: ${{ matrix.folder }}/*.pdf
+          path: ${{ matrix.pdf_name }}
 
   release:
     name: Publish Latest Release
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Grants permission to create and update releases
+      contents: write
     steps:
-      - name: Download all artifacts
+      - name: Download all artifacts into single folder
         uses: actions/download-artifact@v4
         with:
           path: pdfs/
+          merge-multiple: true
 
       - name: Update 'latest' Release
         uses: softprops/action-gh-release@v2
@@ -68,7 +65,7 @@ jobs:
           name: "Latest Compiled Notes"
           body: "This release contains the latest compiled notes from the repository."
           prerelease: false
-          files: pdfs/**/*.pdf
+          files: pdfs/*.pdf
           overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
