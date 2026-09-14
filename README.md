@@ -1,6 +1,6 @@
 # 🎓 Master's Degree First Year Notes (A.Y. 2026/2027)
 
-[![LaTeX CI/CD](https://github.com/lucafano04/master-first-year-notes/actions/workflows/compile-and-publish.yml/badge.svg)](https://github.com/lucafano04/master-first-year-notes/actions/workflows/compile-and-publish.yml)
+[![LaTeX CI/CD](https://github.com/lucafano04/master-first-year-notes/actions/workflows/compile-and-publish.yaml/badge.svg)](https://github.com/lucafano04/master-first-year-notes/actions/workflows/compile-and-publish.yaml)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 [![Latest Release](https://img.shields.io/github/v/release/lucafano04/master-first-year-notes?label=PDF%20Release&color=blue)](https://github.com/lucafano04/master-first-year-notes/releases/tag/latest)
 [![Overleaf Sync](https://img.shields.io/badge/Overleaf-Subtree%20Sync-green.svg)](https://www.overleaf.com/)
