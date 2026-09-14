@@ -1,0 +1,71 @@
+name: Compile LaTeX Notes & Publish
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Consente l'esecuzione manuale
+
+jobs:
+  build:
+    name: Compile Subtrees
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - folder: 'CCC'
+            tex_file: 'main.tex'
+            pdf_name: 'Notes_CCC.pdf'
+          - folder: 'security-testing'
+            tex_file: 'main.tex'
+            pdf_name: 'Notes_Security_Testing.pdf'
+          - folder: 'Advanced Computing Architecture'
+            tex_file: 'main.tex'
+            pdf_name: 'Notes_Advanced_Computing_Architecture.pdf'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false # Se usi subtree non servono i submodule
+
+      - name: Compile LaTeX Document
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: ${{ matrix.tex_file }}
+          working_directory: ${{ matrix.folder }}
+          args: "-pdf -interaction=nonstopmode -halt-on-error"
+
+      - name: Rename PDF
+        run: |
+          mv "${{ matrix.folder }}/${{ matrix.tex_file }}" "${{ matrix.pdf_name }}"
+          # Nel caso la compilazione lasci il nome del file tex:
+          mv "${{ matrix.folder }}/${{ matrix.tex_file }}" "${{ matrix.pdf_name }}" || true
+          mv "${{ matrix.folder }}/${{ matrix.tex_file }}" "${{ matrix.pdf_name }}" || true
+
+      - name: Upload PDF Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.pdf_name }}
+          path: ${{ matrix.folder }}/*.pdf
+
+  release:
+    name: Publish Latest Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: pdfs/
+
+      - name: Update 'latest' Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Latest Compiled Notes"
+          body: "This release contains the latest compiled notes from the repository."
+          prerelease: false
+          files: pdfs/**/*.pdf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
