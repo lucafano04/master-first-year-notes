@@ -1,0 +1,270 @@
+\documentclass[11pt,a4paper, twoside]{article}
+
+% ==========================================
+% PACKAGES
+% ==========================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+
+% Matematica e Informatica Teorica
+\usepackage{amsmath, amssymb, amsthm, mathtools}
+\usepackage{stmaryrd} % Simboli aggiuntivi (es. parentesi per semantica)
+
+% Layout e Geometria
+\usepackage{geometry}
+% Usiamo inner/outer per il fronte-retro e un offset per la rilegatura
+\geometry{a4paper, inner=2.5cm, outer=2.5cm, bindingoffset=0.5cm, top=2.5cm, bottom=2.5cm}
+\usepackage{fancyhdr}
+
+% Grafica e Colori
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz} % Per grafi, automi, architetture
+\usetikzlibrary{automata, positioning, arrows}
+
+% Box per Teoremi, Definizioni, Algoritmi
+\usepackage{tcolorbox}
+\tcbuselibrary{theorems, breakable, skins}
+
+% Codice e Pseudocodice
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Link e Riferimenti
+\usepackage{hyperref}
+% Clever references
+\usepackage{cleveref}
+
+% ==========================================
+% CUSTOMIZATION & BRANDING (UNITN STYLE)
+% ==========================================
+% Colore rosso UniTn (approssimato per uso digitale/stampa)
+\definecolor{unitnred}{RGB}{178, 35, 52}
+\definecolor{codebg}{RGB}{245, 245, 245}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=unitnred,
+    filecolor=magenta,      
+    urlcolor=unitnred,
+    citecolor=blue,
+    pdftitle={Lecture Notes - Security Testing},
+    pdfauthor={Luca Facchini},
+}
+
+% Stile del Codice
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{unitnred}\bfseries,
+    commentstyle=\color{green!60!black}\itshape,
+    stringstyle=\color{blue},
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{lightgray},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    showstringspaces=false
+}
+
+% ==========================================
+% TCOLORBOX THEOREMS & DEFINITIONS
+% ==========================================
+\newtcbtheorem[number within=section,
+  crefname={definition}{definitions},
+  Crefname={Definition}{Definitions}
+]{definition}{Definition}{%
+  colback=unitnred!5,colframe=unitnred!80!black,fonttitle=\bfseries, breakable%
+}{def}
+
+\newtcbtheorem[number within=section,
+  crefname={theorem}{theorems},
+  Crefname={Theorem}{Theorems}
+]{theorem}{Theorem}{%
+  colback=blue!5,colframe=blue!80!black,fonttitle=\bfseries, breakable%
+}{thm}
+
+\newtcbtheorem[number within=section,
+  crefname={lemma}{lemmas},
+  Crefname={Lemma}{Lemmas}
+]{lemma}{Lemma}{%
+  colback=cyan!5,colframe=cyan!80!black,fonttitle=\bfseries, breakable%
+}{lem}
+
+\newtcbtheorem[number within=section,
+  crefname={observation}{observations},
+  Crefname={Observation}{Observations}
+]{observation}{Observation}{%
+  colback=orange!5,colframe=orange!80!black,fonttitle=\bfseries, breakable%
+}{obs}
+
+\newtcbtheorem[number within=section,
+  crefname={concept}{concepts},
+  Crefname={Concept}{Concepts}
+]{concept}{Concept}{%
+  colback=green!5!white,colframe=green!60!black,fonttitle=\bfseries, breakable%
+}{cpt}
+
+% ==========================================
+% HEADER & FOOTER 
+% ==========================================
+\pagestyle{fancy}
+\fancyhf{}
+% Intestazioni (L=Left, R=Right, E=Even, O=Odd)
+\fancyhead[LE,RO]{\textbf{Security Testing}} % Esterno pagina
+\fancyhead[RE,LO]{A.Y. 2026/2027}            % Interno pagina
+
+% Piè di pagina
+\fancyfoot[RE,LO]{\textit{Notes by Luca Facchini - Matr. 273741}} % Interno pagina
+\fancyfoot[LE,RO]{Page \thepage}                                  % Esterno pagina
+
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{unitnred}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\setlength{\headheight}{23.2pt}
+
+\newcommand{\lecturestop}[1]{%
+    \par\vspace{1em}
+    \begin{tcolorbox}[
+        colback=gray!10,
+        colframe=gray!60,
+        coltext=gray!60!black,
+        fontupper=\centering\bfseries\sffamily,
+        boxrule=0.5pt,
+        arc=2mm,
+        left=4mm, right=4mm, top=2mm, bottom=2mm
+    ]
+        Lecture stopped here on #1 — Remaining slides to be covered in the next session.
+    \end{tcolorbox}
+    \par\vspace{1em}
+}
+
+% ==========================================
+% TITLE PAGE INFO
+% ==========================================
+\title{
+    \vspace{-1.5cm}
+    \includegraphics[width=4cm]{UniTn.jpg} 
+    \vspace{0.5cm}\\
+    \Huge \textbf{Security Testing} \\ 
+    \Large \vspace{0.2cm} Lecture Notes
+}
+\author{
+    \textbf{Luca Facchini} \\
+    \textit{Master's Degree in Computer Science} \\
+    University of Trento \\
+    \href{mailto:luca.facchini-1@studenti.unitn.it}{luca.facchini-1@studenti.unitn.it}\\
+    \href{mailto:luca@fc-software.it}{luca@fc-software.it}
+}
+\date{Last updated: \today}
+
+% ==========================================
+% DOCUMENT BEGINS
+% ==========================================
+\begin{document}
+\pagestyle{empty}
+\maketitle
+\thispagestyle{empty}
+\begin{abstract}
+    \noindent These notes cover the topics of the \textbf{Security Testing} course, held by Prof. Alessandro Marchetto and TA Dott. Michele Bof during the Master's Degree in Computer Science at the University of Trento. Feel free to distribute these notes. If you find any typos or errors, please contact me at the email above.
+\end{abstract}
+
+\tableofcontents
+\cleardoublepage
+\pagestyle{fancy}
+
+\section{Introduction to the course [10/09/2026]}
+The objective of the course is to provide principles, techniques, and tools of Security Testing.
+
+The project as part of the exam is written in Java, but the course also explores other programming languages like C/C++, Python, PHP, and SQL. This is because different programming languages have different vulnerabilities.
+\subsection{Contents of the course}
+Here are described the main topics of the course
+\paragraph{Introduction to Security Testing} An overview of the security testing life-cycle, vulnerabilities, bugs and secure coding
+\paragraph{Context} Than a context about Vulnerability analysis, rate and repositories will be given.
+\paragraph{Vulnerabilities} A in detail presentation of SQL Ingection, XSS, String format and more 
+\paragraph{Vulnerability detection} Both Static and Dynamic analysis will be discussed, and an overview of AI-based vulnerability detection will be overseen.
+\paragraph{Tools} For those analysis tolls needs to be provvided, they will be analized and discussed.
+\paragraph{[OPTIONAL] Advanced Topics} 
+
+\subsection{Exam}
+The exam is composed of two parts:
+\begin{itemize}
+    \item A written test with questions and exercises with both open and closed form questions (maximum two (2) hours) - About 60\% of the grade
+    \item A written project report \textbf{to be submitted before the written exam} - About 40\% of the grade
+\end{itemize}
+Is permitted to attend both in one session or distinct sessions with no expiration date, both parts need to be at least 18/30, grades are expressed out of 30.
+
+A simulation of the written part will be performed. Some laboratories will be devoted to work on the exam project.
+\subsubsection{Project rules}
+\begin{itemize}
+    \item The groups can be composed by one or two students
+    \item The project can be submitted maximum two non consecutive times
+    \item It the project is graded by a fail two times than a different test have to be arranged
+    \item A passing project can be used for a maximum of two written tests
+    \item In case of passing final grade the project can not be resubmitted
+    \item In case resubmission, a clear difference/delta between the first and the second submission must exists; otherwise the final score will be reduced of 1.
+\end{itemize}
+\textbf{TOTAL OR PARTIAL PLAGIARISM IS FORBIDDEN}
+
+\noindent This is valid in both the project and the test.
+
+\section{Concepts, Notions, and Context [10/09/2026]}
+We will start by giving the definition of Software and Security
+\begin{definition}{Software}{software}
+    A Software is composed by a set of Programs and Data witch provides functionalities. Often, it could be part of a cyber-physical system.
+\end{definition}
+\begin{definition}{Security}{security}
+    Understanding and identifying software-induces security risks and how to manage them.
+\end{definition}
+With these definition we can conclude that the software plays a crucial role in providing security but it's one of the relevant \textbf{source of security issues} and problems. Meanwhile the relevance of security has been increasing but still not enaught. Indeed programming courses do not pay mutch attention to it and many developers have a lomited training in software security or no training at all, this is enhanced by the fact that the goal is still developing the software.
+\paragraph{Why is software a source of security?}
+Most developer produce \textbf{insecure code}. Some relevant factors are:
+\begin{itemize}
+    \item Limited Training
+    \item Textbooks do not focus on security
+    \item Limited security audits
+    \item Dev. focus on feature implementation and not security
+    \item Security is complex and expensive, requires time and resources
+    \item Legacy software is often unsafe
+\end{itemize}
+Security is always considered a \textbf{secondary factor}, often is a \textbf{trade-off (or a conflict)} among: \textbf{Security}, \textbf{Functionality} and Convenience/Opportunities.
+\begin{definition}{Secure Software}{secure_software}
+    A software system is \textbf{secure if it satisfies specified security objection}.
+
+    E.G., \textbf{Confidentiality}, \textbf{Integrity} and \textbf{Availability} requirements for the system's data and functionality.
+\end{definition}
+In general the \textbf{CIA} triad is not enough, there are other proprieties like: Authentication, Authorization, Privacy, Anonymity, Non-repudiation, Reliability, Audit, etc\dots\\
+Security is about \textbf{preventing and imposing countermeasures to reduce risks} to relevant assets to acceptable levels.
+\begin{concept}{Security Policy}{security_policy}
+    A security policy specifies what security requirements and goals the countermeasures are intended to achieve.
+\end{concept}
+\begin{concept}{Security Mechanisms}{security_mechanisms}
+    Security mechanisms and controls are applied to enforce the security policy as defined in \cref{cpt:security_policy}
+\end{concept}
+\begin{concept}{Security by Design}{sec_by_design}
+    Security by Design referees when security is taken care of design the design, implementation, and testing phase (i.e. each phase) of software development
+\end{concept}
+A system is as secure as its weakest element, a system is composed by actors
+\begin{description}
+    \item[System] Provides data and services
+    \item[Honest user] Uses the system as intended
+    \item[Dishonest attacker] Attempts to find issues using unusual interaction and features to produce harmful effects. Like disrupting honest user's use (IA), learns information intended for honest user only (C) or intercepts communications (C).
+    \item[Defender] Protects against possible attacks (known and un-known)
+\end{description}
+It's important to distinguish between safety and security
+\begin{concept}{Safety vs Security}{safety_security}
+    Safety is about protecting from accidental risks, security is about mitigating \textbf{risks of dangers caused be intentional, malicious actions}
+\end{concept}
+\begin{concept}{Security Software Failure}{sec_software_failure}
+    A Security software failure is a scenario in witch the software dose not achive the security objectives/requirements. Software issues that can cause such failure exists.
+\end{concept}
+Most software has no clear and specific objectives, these are not absolute but often specific and case-dependent. Usually these are traded off against non-functional requirements. For this reason software design and implementation issues (e.g. bugs) can lead to a \textbf{substantial disruption of the software} and its behavior.
+
+So \textbf{Security} it's a \textbf{System property, not a feture} and part of reliability.
+
+\lecturestop{10/09/2026}
+
+\end{document}
