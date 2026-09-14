@@ -21,7 +21,6 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tikz} % Per grafi, automi, architetture
-\usepackage{algorithmic}
 \usetikzlibrary{automata, positioning, arrows}
 
 % Box per Teoremi, Definizioni, Algoritmi
@@ -232,14 +231,20 @@ Indeed, the capability of formalizing integer arithmetic (possessed by both \tex
     [...], Incomplete, inconsistent
 
 \begin{algorithmic}
-    \STATE \(n\leftarrow 1\) \Comment{Start from the first odd number}\\
-    \LOOP
-        \STATE \(sum \leftarrow 0\)
-        \FOR{\(i\leftarrrow \dots n-1\)}
-            \IF{\(n\equiv 0 (\mod{i})\)} \(sum\leftarrow sum + i\)\FI
-        \ENDFOR
-        \IF{\(sum =\)}
-    \ENDLOOP
+    \State \(n\leftarrow 1\) \Comment{Start from the first odd number}
+    \Loop
+        \State \(sum \leftarrow 0\)
+        \For{\(i\leftarrow \dots n-1\)}
+            \If{\(n\equiv 0 \pmod{i}\)} 
+                \State \(sum\leftarrow sum + i\)
+            \EndIf
+        \EndFor
+        \If{\(sum =\)}
+            \State \dots
+        \EndIf
+    \EndLoop
 \end{algorithmic}
+
+\lecturestop{14/09/2026}
 
 \end{document}
