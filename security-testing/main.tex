@@ -6,6 +6,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
+\usepackage{multicol}
 
 % Matematica e Informatica Teorica
 \usepackage{amsmath, amssymb, amsthm, mathtools}
@@ -16,12 +17,13 @@
 % Usiamo inner/outer per il fronte-retro e un offset per la rilegatura
 \geometry{a4paper, inner=2.5cm, outer=2.5cm, bindingoffset=0.5cm, top=2.5cm, bottom=2.5cm}
 \usepackage{fancyhdr}
+\usepackage{float} % Aggiunto per supportare [H] nelle figure
 
 % Grafica e Colori
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tikz} % Per grafi, automi, architetture
-\usetikzlibrary{automata, positioning, arrows}
+\usetikzlibrary{automata, positioning, arrows, arrows.meta}
 
 % Box per Teoremi, Definizioni, Algoritmi
 \usepackage{tcolorbox}
@@ -36,6 +38,28 @@
 \usepackage{hyperref}
 % Clever references
 \usepackage{cleveref}
+
+% ==========================================
+% GLOSSARIES / ACRONYMS
+% ==========================================
+\usepackage[acronym,toc]{glossaries}
+\makeglossaries
+
+\newacronym{cia}{CIA}{Confidentiality, Integrity, and Availability}
+\newacronym{cwe}{CWE}{Common Weakness Enumeration}
+\newacronym{cve}{CVE}{Common Vulnerabilities and Exposures}
+\newacronym{cvss}{CVSS}{Common Vulnerability Scoring System}
+\newacronym{nvd}{NVD}{National Vulnerability Database}
+\newacronym{euvd}{EUVD}{European Union Vulnerability Database}
+\newacronym{enisa}{ENISA}{European Union Agency for Cybersecurity}
+\newacronym{os}{OS}{Operating System}
+\newacronym{fs}{FS}{File System}
+\newacronym{sto}{STO}{Security Through Obscurity}
+\newacronym{cert}{CERT}{Computer Emergency Response Team}
+\newacronym{sdlc}{SDLC}{System Development Life Cycle}
+\newacronym{ssdlc}{sSDLC}{Secure System Development Life Cycle}
+\newacronym{qa}{QA}{Quality Assurance}
+\newacronym{srs}{SRS}{Software Requirements Specification}
 
 % ==========================================
 % CUSTOMIZATION & BRANDING (UNITN STYLE)
@@ -176,145 +200,343 @@
 \cleardoublepage
 \pagestyle{fancy}
 
-\section{Introduction to the course [10/09/2026]}
-The objective of the course is to provide principles, techniques, and tools of Security Testing.
+\section{Introduction to the Course [10/09/2026]}
+The objective of the course is to provide principles, techniques, and tools for Security Testing.
 
-The project as part of the exam is written in Java, but the course also explores other programming languages like C/C++, Python, PHP, and SQL. This is because different programming languages have different vulnerabilities.
-\subsection{Contents of the course}
-Here are described the main topics of the course
-\paragraph{Introduction to Security Testing} An overview of the security testing life-cycle, vulnerabilities, bugs and secure coding
-\paragraph{Context} Than a context about Vulnerability analysis, rate and repositories will be given.
-\paragraph{Vulnerabilities} A in detail presentation of SQL Ingection, XSS, String format and more 
-\paragraph{Vulnerability detection} Both Static and Dynamic analysis will be discussed, and an overview of AI-based vulnerability detection will be overseen.
-\paragraph{Tools} For those analysis tolls needs to be provvided, they will be analized and discussed.
+The project, as part of the exam, is written in Java, but the course also explores other programming languages like C/C++, Python, PHP, and SQL. This is because different programming languages suffer from different vulnerabilities.
+
+\subsection{Contents of the Course}
+The main topics of the course are described below:
+
+\paragraph{Introduction to Security Testing} An overview of the security testing life-cycle, vulnerabilities, bugs, and secure coding.
+\paragraph{Context} A context regarding vulnerability analysis, rates, and repositories will be provided.
+\paragraph{Vulnerabilities} A detailed presentation of SQL Injection, XSS, String formatting issues, and more. 
+\paragraph{Vulnerability Detection} Both static and dynamic analysis will be discussed, and an overview of AI-based vulnerability detection will be provided.
+\paragraph{Tools} For these analyses, tools need to be provided; they will be analyzed and discussed.
 \paragraph{[OPTIONAL] Advanced Topics} 
 
 \subsection{Exam}
 The exam is composed of two parts:
 \begin{itemize}
-    \item A written test with questions and exercises with both open and closed form questions (maximum two (2) hours) - About 60\% of the grade
-    \item A written project report \textbf{to be submitted before the written exam} - About 40\% of the grade
+    \item A written test with exercises as well as open and closed-form questions (maximum two (2) hours) - About 60\% of the grade.
+    \item A written project report \textbf{to be submitted before the written exam} - About 40\% of the grade.
 \end{itemize}
-Is permitted to attend both in one session or distinct sessions with no expiration date, both parts need to be at least 18/30, grades are expressed out of 30.
+It is permitted to attend both in one session or in distinct sessions with no expiration date. Both parts need to be at least 18/30; grades are expressed out of 30.
 
-A simulation of the written part will be performed. Some laboratories will be devoted to work on the exam project.
-\subsubsection{Project rules}
+A simulation of the written part will be performed. Some laboratories will be devoted to working on the exam project.
+
+\subsubsection{Project Rules}
 \begin{itemize}
-    \item The groups can be composed by one or two students
-    \item The project can be submitted maximum two non consecutive times
-    \item It the project is graded by a fail two times than a different test have to be arranged
-    \item A passing project can be used for a maximum of two written tests
-    \item In case of passing final grade the project can not be resubmitted
-    \item In case resubmission, a clear difference/delta between the first and the second submission must exists; otherwise the final score will be reduced of 1.
+    \item Groups can be composed of one or two students.
+    \item The project can be submitted a maximum of two non-consecutive times.
+    \item If the project is graded as a fail two times, a different test has to be arranged.
+    \item A passing project can be used for a maximum of two written tests.
+    \item In case of a passing final grade, the project cannot be resubmitted.
+    \item In case of resubmission, a clear difference/delta between the first and the second submission must exist; otherwise, the final score will be reduced by 1.
 \end{itemize}
+
 \textbf{TOTAL OR PARTIAL PLAGIARISM IS FORBIDDEN}
 
-\noindent This is valid in both the project and the test.
+\noindent This applies to both the project and the written test.
 
 \section{Concepts, Notions, and Context [10-14/09/2026]}
-We will start by giving the definition of Software and Security
-\begin{definition}{Software}{software}
-    A Software is composed by a set of Programs and Data witch provides functionalities. Often, it could be part of a cyber-physical system.
-\end{definition}
-\begin{definition}{Security}{security}
-    Understanding and identifying software-induces security risks and how to manage them.
-\end{definition}
-With these definition we can conclude that the software plays a crucial role in providing security but it's one of the relevant \textbf{source of security issues} and problems. Meanwhile the relevance of security has been increasing but still not enaught. Indeed programming courses do not pay mutch attention to it and many developers have a lomited training in software security or no training at all, this is enhanced by the fact that the goal is still developing the software.
-\paragraph{Why is software a source of security?}
-Most developer produce \textbf{insecure code}. Some relevant factors are:
-\begin{itemize}
-    \item Limited Training
-    \item Textbooks do not focus on security
-    \item Limited security audits
-    \item Dev. focus on feature implementation and not security
-    \item Security is complex and expensive, requires time and resources
-    \item Legacy software is often unsafe
-\end{itemize}
-Security is always considered a \textbf{secondary factor}, often is a \textbf{trade-off (or a conflict)} among: \textbf{Security}, \textbf{Functionality} and Convenience/Opportunities.
-\begin{definition}{Secure Software}{secure_software}
-    A software system is \textbf{secure if it satisfies specified security objection}.
+We will start by defining Software and Security.
 
-    E.G., \textbf{Confidentiality}, \textbf{Integrity} and \textbf{Availability} requirements for the system's data and functionality.
+\begin{definition}{Software}{software}
+    Software is composed of a set of programs and data which provide functionality. Often, it can be part of a cyber-physical system.
 \end{definition}
-In general the \textbf{CIA} triad is not enough, there are other proprieties like: Authentication, Authorization, Privacy, Anonymity, Non-repudiation, Reliability, Audit, etc\dots\\
-Security is about \textbf{preventing and imposing countermeasures to reduce risks} to relevant assets to acceptable levels.
-\begin{concept}{Security Policy}{security_policy}
+
+\begin{definition}{Security}{security}
+    Understanding and identifying software-induced security risks and determining how to manage them.
+\end{definition}
+
+With these definitions, we can conclude that software plays a crucial role in providing security, but it is also a significant \textbf{source of security issues} and problems. Meanwhile, the relevance of security has been increasing but still not enough. Indeed, programming courses do not pay much attention to it, and many developers have limited training in software security or no training at all. This is exacerbated by the fact that the primary goal is usually just to develop the software.
+
+\paragraph{Why is software a source of security vulnerabilities/issues?}
+Most developers produce \textbf{insecure code}. Some relevant factors are:
+\begin{itemize}
+    \item Limited training.
+    \item Textbooks do not focus on security.
+    \item Limited security audits.
+    \item Developers focus on feature implementation and not security.
+    \item Security is complex and expensive, requiring time and resources.
+    \item Legacy software is often unsafe.
+\end{itemize}
+
+Security is frequently considered a \textbf{secondary factor}; often it is a \textbf{trade-off (or conflict)} between: \textbf{Security}, \textbf{Functionality}, and Convenience/Opportunities.
+
+\begin{definition}{Secure Software}{secure_software}
+    A software system is \textbf{secure if it satisfies specified security objectives}.
+
+    E.g., \gls{cia} requirements for the system's data and functionality.
+\end{definition}
+
+In general, the \gls{cia} triad is not enough; there are other properties like Authentication, Authorization, Privacy, Anonymity, Non-repudiation, Reliability, Audit, etc. \\
+Security is about \textbf{preventing risks and imposing countermeasures to reduce threats} to relevant assets to acceptable levels.
+
+\begin{concept}{Security Policy}{security-policy}
     A security policy specifies what security requirements and goals the countermeasures are intended to achieve.
 \end{concept}
-\begin{concept}{Security Mechanisms}{security_mechanisms}
-    Security mechanisms and controls are applied to enforce the security policy as defined in \cref{cpt:security_policy}
-\end{concept}
-\begin{concept}{Security by Design}{sec_by_design}
-    Security by Design referees when security is taken care of design the design, implementation, and testing phase (i.e. each phase) of software development
-\end{concept}
-A system is as secure as its weakest element, a system is composed by actors
-\begin{description}
-    \item[System] Provides data and services
-    \item[Honest user] Uses the system as intended
-    \item[Dishonest attacker] Attempts to find issues using unusual interaction and features to produce harmful effects. Like disrupting honest user's use (IA), learns information intended for honest user only (C) or intercepts communications (C).
-    \item[Defender] Protects against possible attacks (known and un-known)
-\end{description}
-It's important to distinguish between safety and security
-\begin{concept}{Safety vs Security}{safety_security}
-    Safety is about protecting from accidental risks, security is about mitigating \textbf{risks of dangers caused be intentional, malicious actions}
-\end{concept}
-\begin{concept}{Security Software Failure}{sec_software_failure}
-    A Security software failure is a scenario in witch the software dose not achive the security objectives/requirements. Software issues that can cause such failure exists.
-\end{concept}
-Most software has no clear and specific objectives, these are not absolute but often specific and case-dependent. Usually these are traded off against non-functional requirements. For this reason software design and implementation issues (e.g. bugs) can lead to a \textbf{substantial disruption of the software} and its behavior.
 
-So \textbf{Security} it's a \textbf{System property, not a feture} and part of reliability.
+\begin{concept}{Security Mechanisms}{security_mechanisms}
+    Security mechanisms and controls are applied to enforce the security policy as defined in \cref{cpt:security-policy}.
+\end{concept}
+
+\begin{concept}{Security by Design}{sec_by_design}
+    Security by Design refers to when security is addressed during the design, implementation, and testing phases (i.e., each phase) of software development.
+\end{concept}
+
+A system is only as secure as its weakest element. A typical system is composed of several actors:
+\begin{description}
+    \item[System] Provides data and services.
+    \item[Honest user] Uses the system as intended.
+    \item[Dishonest attacker] Attempts to find issues using unusual interactions and features to produce harmful effects. Such as disrupting an honest user's access (Integrity and Availability), learning information intended for honest users only (Confidentiality), or intercepting communications (Confidentiality).
+    \item[Defender] Protects against possible attacks (known and unknown).
+\end{description}
+
+It is important to distinguish between safety and security:
+\begin{concept}{Safety vs Security}{safety_security}
+    Safety is about protecting from accidental risks, while security is about mitigating \textbf{risks of dangers caused by intentional, malicious actions}.
+\end{concept}
+
+\begin{concept}{Security Software Failure}{sec_software_failure}
+    A Security software failure is a scenario in which the software does not achieve its security objectives/requirements. Software issues that can cause such failures exist.
+\end{concept}
+
+Most software has no clear and specific absolute objectives; rather, these objectives are often specific and case-dependent. Usually, they are traded off against non-functional requirements. For this reason, software design and implementation issues (e.g., bugs) can lead to a \textbf{substantial disruption of the software} and its behavior.
+
+Therefore, \textbf{Security} is a \textbf{system property, not a feature}, and it is a core part of reliability.
 
 \lecturestop{10/09/2026}
 
-\paragraph{Design and implementation Issues}
-There are multiple kinds of implementation issues like: \textbf{Bugs in software, environment} like in architecture, infrastructure, components, etc, \textbf{inappropriate features} in the infrastructure or re-used software (like libraries), \textbf{inappropriate} use of features provided by the infrastructure or re-used software. Possible causes of those are mainly: Unclear or missing requirements, Complexity of features, Time Pressure, characteristics of a programming language, Developer/Manager error.
+\paragraph{Design and Implementation Issues}
+There are multiple kinds of implementation issues, such as: \textbf{Bugs in software and environments} (like in architecture, infrastructure, components, etc.), \textbf{inappropriate features} in the infrastructure or reused software (like libraries), and \textbf{inappropriate use} of features provided by the infrastructure or reused software. Possible causes of these are mainly: Unclear or missing requirements, complexity of features, time pressure, characteristics of the programming language, and developer/manager errors.
 
 \begin{definition}{Bug}{bug}
-    The system isn't behaving as it's designed to behave
+    The system isn't behaving as it's designed to behave.
 \end{definition}
+
 \begin{definition}{Vulnerability}{vulnerability}
-    A chain of \textbf{weakness} linked by causality; it starts with a bug (\Cref{def:bug}) and ends with an error witch, if exploited, leads to a security failure (\Cref{cpt:sec_software_failure})
+    A chain of \textbf{weaknesses} linked by causality; it starts with a bug (\cref{def:bug}) and ends with an error which, if exploited, leads to a security failure (\cref{cpt:sec_software_failure}).
 \end{definition}
+
 Many security issues are related to vulnerabilities due to bugs, defects, or design flaws in a targeted software system.
 
-\paragraph{Common Weakness Enumeration (CWE)}
-CWE provides a publicly available list of the most common software (and hardware) weakness that can contribute to security vulnerabilities. Each CWE is described by several fields. Why is this done, if the needed function is in a package affected numbered by a CWE the weakness can be isolated and mitigated during the design of the application before the deploy. Also fixing a weakness before the vulnerability is introduces is a lot less pricey. 
+\paragraph{Common Weakness Enumeration (\gls{cwe})}
+\gls{cwe} provides a publicly available list of the most common software (and hardware) weaknesses that can contribute to security vulnerabilities. Each \gls{cwe} is described by several fields. Why is this done? If the needed function is in a package affected by a known \gls{cwe}, the weakness can be isolated and mitigated during the design of the application before deployment. Also, fixing a weakness before a vulnerability is introduced is much more cost-effective. 
 
-\paragraph{Common Vulnerabilities and Exposures (CVE)}
-CVE it is a publicly available list of entries that describes vulnerabilities in widely-used software components. Each CVE is described by several fields
+\paragraph{Common Vulnerabilities and Exposures (\gls{cve})}
+\gls{cve} is a publicly available list of entries that describes vulnerabilities in widely-used software components. Each \gls{cve} is described by several fields.
 
-\paragraph{NVD and EUVD}
+\paragraph{\gls{nvd} and \gls{euvd}} 
+The \gls{nvd} is a publicly available database with \gls{cve} entries. This database contains a large number of vulnerabilities and provides methods to search and explore the stored \glspl{cve}. The equivalent in Europe is the \gls{euvd}; this is part of the NIS2 directive. The EU mandated \gls{enisa} to develop and maintain the \textbf{EU}ropean \textbf{V}ulnerability \textbf{D}atabase. \gls{enisa} cooperates with MITRE and other non-EU operators working with the \gls{cve} system, putting together various sources to enrich it.
 
-\subsection{Bug exploitation}
+\subsection{Bug Exploitation}
+While a typical bug might just lead to a software crash, an attacker (who is \textbf{not} a normal user) will actively attempt to find bugs/defects through unusual/unexpected interactions and features. They will work to exploit them to do much worse.
 
-[...]
+\begin{definition}{Exploitation}{exploitation}
+    An activity in which an attacker uses a bug/defect (vulnerability, see \cref{def:vulnerability}) to achieve their goals.
+\end{definition}
 
-\noindent [...]
+\begin{definition}{Exploit}{exploit}
+    A cleverly crafted input, or a series of (unusually unintuitive) interactions with the system, that triggers a bug or a flaw to benefit the attacker.
+\end{definition}
 
-\noindent [...]
-\section{System Developem Life Cycle [14/09/2026]}
-Secure System developmente Life Cycle is defined similarry to the traditional SDLC, but it focuses on the development of sogtware and application in a manner that significantly: reduces security risks, eliminates security vulnerabilities and it reduces costs. sSDLC like SDLC is divided into phases. 
+As per the previous definitions, an attacker might need several steps to achieve their attack goals; these steps are called an attack path.
 
-\subsection{Planning}
-This phase is perfirmed by senior members
+\begin{definition}{Attack Path}{attack-path}
+    An attack path is a series of exploits (\cref{def:exploit}) or atomic attacks.
+\end{definition}
 
-Produces the working plan that plans the output of the deleveloping team
+Usually, an exploit can be very complex, but some patterns can be identified. CAPEC is trying to enumerate and classify the most common attacks. 
+Also, exploit databases exist that collect \gls{cvss}-compliant exploits and vulnerable software (e.g., ATT\&CK).
+
+\subsection{Achieving Security}
+Security in computer software systems is hard and complicated due to great complexity and dependency on the \gls{os}, \gls{fs}, Network, and physical access. Also, system/software security is \textbf{difficult to measure}; there are no perfect metrics and not enough powerful security testing tools and procedures. From a business perspective, there are deadlines to meet, clients do not demand security (it's often not considered a \textbf{user requirement}), and finally, few to no developers have a culture and knowledge regarding security.
+
+\paragraph{Software Size} 
+From a technical POV, the use of software is growing, and along with it, its complexity and size. Also, the reuse and maintenance of pieces of code are growing. Both lead to more bugs and flaws since complex software is difficult to debug and audit for bugs. While it's more probable to find a vulnerability, it is also more difficult and time-consuming for an attacker to find a way in.
+
+\paragraph{Roles and Responsibilities} 
+Who is responsible for software security? In our view, Developers and Pen-testers.
+
+\paragraph{How much security?} 
+Since absolute security is \textbf{unachievable}, a \textbf{trade-off} must be made:
+\begin{center}
+    More Security \(\Rightarrow\) More Cost \(\Rightarrow\) Less convenience 
+\end{center}
+Indeed, security measures (see \cref{cpt:security-policy}) should be as invisible as possible to the end-user, and an appropriate level relevant to the need should be chosen.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        scale=0.8,
+        >=Stealth,
+        box/.style={
+            rounded corners=5pt,
+            minimum width=3cm,
+            minimum height=0.8cm,
+            align=center,
+            font=\sffamily\bfseries,
+            text=white
+        },
+        green/.style={box, fill=green!60!black},
+        red/.style={box, fill=red},
+        arrow/.style={->, thick, draw=blue!60},
+        label/.style={font=\sffamily\scriptsize, fill=white, inner sep=2pt}
+    ]
+    
+    % --- Node Placement on a Grid ---
+    \node[green] (owners)          at (0, 0)      {Owners};
+    \node[green] (availability)    at (5, 0)      {Availability\\usefulness / \ldots};
+    \node[green] (countermeasures) at (0, -2.5)   {Countermeasures};
+    \node[red]   (vulnerabilities) at (0, -5)     {Vulnerabilities};
+    \node[red]   (threats)         at (-4.5, -5)  {Threats};
+    \node[red]   (attackers)       at (-9, -5)    {Attackers};
+    \node[red]   (risks)           at (4.5, -5)   {Risks};
+    \node[green] (assets)          at (4.5, -8)   {Assets};
+    
+    % --- Edges and Labels ---
+    % Owners
+    \draw[arrow] (owners) -- node[label, above] {want to maximize} (availability);
+    \draw[arrow] (owners) -- node[label, left] {impose} (countermeasures);
+    \draw[arrow] (owners.west) to[bend right=45] node[label, left] {want to minimize} (vulnerabilities.west);
+    
+    % Countermeasures & Vulnerabilities
+    \draw[arrow] (countermeasures.250) -- node[label, left] {reduce} (vulnerabilities.110);
+    \draw[arrow] (vulnerabilities.70) -- node[label, right] {require} (countermeasures.290);
+    
+    % Vulnerabilities & Risks
+    \draw[arrow] (vulnerabilities.20) to[bend left=15] node[label, above] {lead to} (risks.160);
+    \draw[arrow] (vulnerabilities.340) to[bend right=15] node[label, below] {may have} (risks.200);
+    
+    % Attackers, Threats, Vulnerabilities
+    \draw[arrow] (attackers) -- node[label, above] {give rise to} (threats);
+    \draw[arrow] (threats) -- node[label, above] {exploit} (vulnerabilities);
+    
+    % Threats to Risks (Sweeps elegantly under vulnerabilities)
+    \draw[arrow] (threats.south) to[bend right=25] node[label, below] {increase} (risks.south);
+    
+    % Attackers to Assets (L-shape routing under the entire graph)
+    \draw[arrow] (attackers.south) |- node[label, near start, right] {want to abuse} (assets.west);
+    
+    % Risks to Assets
+    \draw[arrow] (risks) -- node[label, right] {to} (assets);
+    
+    % Availability to Assets & Risks
+    \draw[arrow] (availability.south) to[bend left=15] node[label, right] {increase} (assets.east);
+    \draw[arrow] (availability.250) to[bend right=15] node[label, right] {of} (risks.45);
+    
+    \end{tikzpicture}
+    \caption{Security meta-model definition}
+    \label{fig:sec-meta-model}
+\end{figure}
+
+\paragraph{How to realize security objectives?}
+To minimize risks, there are 3 pillars:
+\begin{description}
+    \item[Methods] Proactive, Detective, Reactive.
+    \subitem[Proactive] Prevent possible issues and flaws at the very beginning.
+    \subitem[Detective] Predict/catch issues.
+    \subitem[Reactive] Recover assets, repair damage, prosecute offenders.
+    \item[Know The Attacker] Types/typical attacks and commonly exploited security issues.
+    \item[Existing issues] The attacker does not create security issues and vulnerabilities; they exploit existing ones. 
+\end{description}
+
+\paragraph{Security through obscurity} 
+\gls{sto} means hiding design and implementation details to gain security. This \textbf{DOES NOT WORK} because it is difficult to keep secrets in coding; if the entire security mechanism relies on a single secret, the whole system is compromised once it is revealed. Also, secret algorithms and unreviewed code mean flaws will not be spotted nor fixed. Security \textbf{and} obscurity can work together, but not ONLY obscurity.
+
+\paragraph{Cryptography} 
+Usually, an association between security and cryptography is made; however, many security problems cannot be solved by cryptography. Cryptography and its use have intrinsic limitations. Furthermore, 85\% of \gls{cert} security advisories could not have been solved or prevented with cryptography alone.
+
+\paragraph{When to Start}
+\begin{center}
+    IMMEDIATELY
+\end{center}
+Not on the next version.
+
+\section{System Development Life Cycle [14/09/2026]}
+The \gls{ssdlc} is defined similarly to the traditional \gls{sdlc}, but it focuses on the development of software and applications in a manner that significantly reduces security risks, eliminates security vulnerabilities, and reduces costs. The \gls{ssdlc}, like the \gls{sdlc}, is divided into phases. 
 
 \subsection{Defining}
+In this phase, the product's requirements must be defined and documented, then approved by the customer (or via market analysis) to form a \gls{srs}. 
 
-in terms of security:
-\begin{enumerate}
-    \item \textbf{Gap Analysis}, defining the security requirements for developers, designers, architects and QA by focusing on secure design principlesm security issues, web security and encryption. Also security assestment [...]
-    \item \textbf{Risck Assesment} see \Cref{def:risk} and \Cref{def:risk-assestment}
-    \item 
-\end{enumerate}
+It produces the working plan that outlines the expected output of the developing team with security milestones, certifications, risk assessments, key security resources, and required third-party resources.
+
+Before outlining the security deliverables of this phase, we must formally define risk and its assessment:
 
 \begin{definition}{Risk}{risk}
-    Is the potential that a given \textbf{threat will exploint vulnerabilities} of an asset or group of assets and thereby habe an inpact on the identified assets. An asset a relevant information, data or service or product.
+    The potential that a given \textbf{threat will exploit vulnerabilities} of an asset or group of assets, thereby having a negative impact on those identified assets. An asset is relevant information, data, a service, or a product.
 \end{definition}
-\begin{definition}{Risk Assesment}{risk-assestment}
-    The process of \textbf{identifing and determining risks} that affect an organizarion's operations, assets, individuals, other or[...]
+
+\begin{definition}{Risk Assessment}{risk-assessment}
+    The process of \textbf{identifying and determining risks} that affect an organization's operations, assets, individuals, other organizations, and the nation.
 \end{definition}
+
+\noindent In terms of security, the Defining phase includes:
+\begin{enumerate}
+    \item \textbf{Gap Analysis}: Defining the security requirements for developers, designers, architects, and \gls{qa} by focusing on secure design principles, security issues, web security, and encryption. This also includes organizing security awareness sessions—both technical-specific training for developers and general sessions for the broader team.
+    \item \textbf{Risk Assessment}: The practical execution of the processes defined in \cref{def:risk} and \cref{def:risk-assessment}.
+    \item \textbf{Third-Party Software Tracking}: (This will be discussed in later chapters).
+\end{enumerate}
+
+\subsubsection{Threat Modeling}
+
+\begin{definition}{Asset}{asset}
+    An asset is relevant data, a service, or a component that is the objective of protection.
+\end{definition}
+
+\begin{definition}{Threat}{threat}
+    A potential cause of an unwanted incident, which may result in harm to a system or organization (e.g., malicious actors, malware, or natural disasters).
+\end{definition}
+
+\begin{definition}{Impact}{impact}
+    The magnitude of harm or loss that can be expected if a specific vulnerability is successfully exploited by a threat.
+\end{definition}
+
+\begin{definition}{Probability (Likelihood)}{probability}
+    The chance or frequency with which a specific threat is expected to successfully exploit a vulnerability.
+\end{definition}
+
+\begin{definition}{Quantitative Risk}{quantitative-risk}
+    Risk can be calculated as the product of the impact (\cref{def:impact}) resulting from a successful attack on a certain asset (\cref{def:asset}) and the probability (\cref{def:probability}) of that attack occurring.
+    \[
+        \text{Risk} = \text{Impact} \cdot \text{Probability}
+    \]
+    The output is a numerical value that is typically mapped to a qualitative severity level (e.g., High, Medium, Low).
+\end{definition}
+
+\noindent The threat modeling process is composed of the following steps:
+\begin{enumerate}
+    \item Identify and characterize the system.
+    \item Identify assets (\cref{def:asset}).
+    \item Identify threats (\cref{def:threat}).
+    \item Identify vulnerabilities (\cref{def:vulnerability}).
+    \item Estimate the impact on assets (\cref{def:impact}).
+    \item Estimate the probability of exploitation (\cref{def:probability}).
+    \item Rank the threats by their calculated risk (\cref{def:quantitative-risk}).
+    \item Decide which threats to respond to, using established risk thresholds.
+    \item Decide on mitigation and control actions for the selected threats. 
+\end{enumerate}
+
+\subsubsection{Third-Party Software Tracking}
+
+\lecturestop{14/09/2026}
+
+\cleardoublepage
+\appendix
+
+% Force all acronyms to print, regardless of whether they were cited
+\glsaddall
+
+% Set a nice gap between the two columns
+\setlength{\columnsep}{1cm}
+
+% Span the section title across both columns
+\begin{multicols}{2}[\section{List of Acronyms}]
+    % Disable the default glossary title so it doesn't print twice
+    \renewcommand{\glossarysection}[2][]{}
+    \printglossary[type=\acronymtype]
+\end{multicols}
 
 \end{document}
