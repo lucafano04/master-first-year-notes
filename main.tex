@@ -16,6 +16,7 @@
 % Usiamo inner/outer per il fronte-retro e un offset per la rilegatura
 \geometry{a4paper, inner=2.5cm, outer=2.5cm, bindingoffset=0.5cm, top=2.5cm, bottom=2.5cm}
 \usepackage{fancyhdr}
+\usepackage{multicol} % For 2-column acronyms
 
 % Grafica e Colori
 \usepackage{graphicx}
@@ -36,8 +37,24 @@
 \usepackage{hyperref}
 % Clever references
 \usepackage{cleveref}
-% Acronyms
-\usepackage[printonlyused,withpage]{acronym}
+
+% ==========================================
+% GLOSSARIES / ACRONYMS
+% ==========================================
+\usepackage[acronym,toc]{glossaries}
+\makeglossaries
+
+\newacronym{cmos}{CMOS}{Complementary Metal-Oxide-Semiconductor}
+\newacronym{cpu}{CPU}{Central Processing Unit}
+\newacronym{ic}{IC}{Integrated Circuit}
+\newacronym{isa}{ISA}{Instruction Set Architecture}
+\newacronym{mflops}{MFLOPS}{Million Floating-Point Operations Per Second}
+\newacronym{mips}{MIPS}{Million Instructions Per Second}
+\newacronym{mops}{MOPS}{Million Operations Per Second}
+\newacronym{nmos}{nMOS}{N-type Metal-Oxide-Semiconductor}
+\newacronym{nre}{NRE}{Non-Recurring Engineering}
+\newacronym{pmos}{pMOS}{P-type Metal-Oxide-Semiconductor}
+\newacronym{os}{OS}{Operating System}
 
 % ==========================================
 % CUSTOMIZATION & BRANDING (UNITN STYLE)
@@ -182,7 +199,7 @@
 In this first section, all the performance metrics used in computing architectures will be discussed.
 
 \subsection{Power Consumption}
-In CMOS technology, power consumption is due to:
+In \gls{cmos} technology, power consumption is due to:
 \begin{description}
     \item[Dynamic (or Active)] currents related to:
     \subitem Charging/Discharging of logic gates during switching.
@@ -192,11 +209,11 @@ In CMOS technology, power consumption is due to:
 The current trend is that with each process generation, dynamic power scales by a factor of \(\sim 0.9\), but power density scales by a factor of \(\sim 1.3-1.8\) and static power increases at an exponential rate.
 
 \subsubsection{Dynamic Power Consumption}
-Dynamic power consumption is mostly due to the charging and discharging of the capacitive load of every logic gate inside a digital CMOS integrated circuit.
+Dynamic power consumption is mostly due to the charging and discharging of the capacitive load of every logic gate inside a digital \gls{cmos} integrated circuit.
 \begin{align*}
-    \text{Energy/transition} &= C_L \cdot V_{DD}^2 \cdot P_{0\rightarrow1}\\
-    % SEMANTIC NOTE: The formula below is missing the square on V_DD. It should be V_DD^2 according to the physics standard for dynamic power. 
-    \text{Power} = \text{Energy/transition} \cdot f &= C_{L} \cdot V_{DD}^2 \cdot P_{0\rightarrow1} \cdot f
+    \text{Energy/transition} &= C_L \cdot V_{DD}^2 \cdot P_{0\rightarrow1} \\
+    \text{Power} &= \text{Energy/transition} \cdot f \\
+                 &= C_{L} \cdot V_{DD}^2 \cdot P_{0\rightarrow1} \cdot f
 \end{align*} 
 Where:
 \begin{description}
@@ -207,7 +224,7 @@ Where:
 \end{description}
 
 \begin{definition}{Short circuit current}{scc}
-    The finite slope of the input signal causes a direct current path between \(V_{DD}\) and GND for a short period of time during switching when both the \ac{nMOS} and \ac{pMOS} transistors are conducting.
+    The finite slope of the input signal causes a direct current path between \(V_{DD}\) and GND for a short period of time during switching when both the \gls{nmos} and \gls{pmos} transistors are conducting.
 \end{definition}
 
 \begin{align*}
@@ -230,11 +247,12 @@ The static power consumption can be expressed as:
 \]
 Where \(k, a, k_a\) are technology-dependent constants, \(V_T\) is the threshold voltage, and \(T\) is the temperature.
 
-\subsubsection{Summing Up}
+\subsubsection{Total Power Consumption}
+Combining the aforementioned elements, the total power consumption is:
 \[
-    P = C_{L}V^2_{DD}P_{0\rightarrow1} + t_{sc}V_{DD}P_{0\rightarrow1}I_{\text{peak}}f + V_{DD}I_{\text{leakage}}
+    P_{\text{total}} = \left(C_{L} \cdot V^2_{DD} \cdot P_{0\rightarrow1} \cdot f\right) + \left(t_{sc} \cdot V_{DD} \cdot P_{0\rightarrow1} \cdot I_{\text{peak}} \cdot f\right) + \left(V_{DD} \cdot I_{\text{leakage}}\right)
 \]
-This equation can be used to estimate power consumption; however, determining the individual parameters is not easy. Under architectural control, we can manage:
+This equation can be used to estimate power consumption; however, determining the individual parameters is challenging. At the architectural level, we can manage:
 \begin{description}
     \item[\(f_{\text{clock}}\)] Affects performance. Reducing it will lower power consumption if no operations need to be performed.
     \item[\(C_{L}\)] Depends on the number of gates.
@@ -245,9 +263,9 @@ This equation can be used to estimate power consumption; however, determining th
 \subsection{Cost Estimation}
 Device cost tends to decrease over time even without improvements in the basic implementation technology (learning curve).
 
-By \textbf{increasing volumes}, costs decrease (\(\sim 10\%\) when doubling production). This grants a faster learning curve, better efficiency, and allows non-recurring engineering (NRE) and development costs to be \textbf{amortized over many machines}. A commodity market effect is that manufacturing costs and selling prices are close due to high competition.
+By \textbf{increasing volumes}, costs decrease (\(\sim 10\%\) when doubling production). This grants a faster learning curve, better efficiency, and allows \gls{nre} and development costs to be \textbf{amortized over many machines}. A commodity market effect is that manufacturing costs and selling prices are close due to high competition.
 
-Experimentally, the cost of an integrated circuit is given by:
+Experimentally, the cost of an \gls{ic} is given by:
 \[
     C = \frac{C_{\text{die}} + C_{\text{testing}} + C_{\text{packaging}}}{Y}
 \]
@@ -258,7 +276,7 @@ Where:
     \item[\(C_{\text{packaging}}\)] The cost of packaging the working dies.
     \item[\(Y\)] The yield after the final test (percentage of working chips).
 \end{description}
-\(C_{\text{testing}}\) and \(C_{\text{packaging}}\) are fixed once the IC is made; they are mostly a function of the IC's complexity and \textbf{NOT of the manufacturing process}. Meanwhile:
+\(C_{\text{testing}}\) and \(C_{\text{packaging}}\) are fixed once the \gls{ic} is made; they are mostly a function of the \gls{ic}'s complexity and \textbf{NOT of the manufacturing process}. Meanwhile:
 \[
     C_{\text{die}} = \frac{C_{\text{wafer}}}{N_{\text{die}} \cdot Y_{\text{die}}}
 \]
@@ -283,21 +301,21 @@ Today, \(Y_{\text{wafer}}\) is close to 100\%; \(N_{\text{defects}}\) is the num
 \subsection{Performance Evaluation}
 \textbf{Performance Evolution and Trends}
 \begin{itemize}
-    \item Historically, top processors took advantage of \textbf{Moore's Law}: clock frequencies (used to) double every 15--18 months.
+    \item Historically, top processors took advantage of \textbf{Moore's Law} (\cref{cpt:moores-law}).
     \item \textbf{Performance grows much faster}: Effective enhancements are applied not only at the technology level (transistor scaling) but also at the architectural level (higher parallelism).
-    \item \textbf{Accurate trend estimation is hard} due to:
-    \begin{itemize}
-        \item Lack of unambiguous testing criteria.
-        \item Use of misleading performance metrics.
-    \end{itemize}
+    \item \textbf{Accurate trend estimation is hard} due to a lack of unambiguous testing criteria and the use of misleading performance metrics.
 \end{itemize}
+
+\begin{concept}{Moore's Law}{moores-law}
+    An empirical observation stating that the number of transistors in a dense \gls{ic}, and consequently the clock frequencies, traditionally double every 15--18 months.
+\end{concept}
 
 \noindent Basic question: \textbf{``How much is X faster than Y?''}
 \begin{definition}{Ideal Properties of a Performance Metric}{perf_metric_properties}
 \begin{description}
     \item[Linearity] A metric is linear if, when the values of the metric differ by a certain factor, the actual performance of the machines differs by the same factor.
     \item[Reliability] A performance metric is reliable if a system \(X\) outperforms a system \(Y\) when the corresponding values of the metric for both systems indicate that \(X\) should outperform \(Y\). 
-    \item[Repeatability] A performance metric is repeatable if subsequent measurements return \textbf{compatible\footnote{And not identical}} results.
+    \item[Repeatability] A performance metric is repeatable if subsequent measurements return \textbf{compatible\footnote{Compatible results mean they fall within an acceptable statistical variance, not necessarily identical.}} results.
     \item[Ease of Use] If a metric is difficult to use, fewer people will use it, and the probability of obtaining incorrect results grows.
     \item[Consistency] A consistent metric is one for which the units and precise definition are the same across different systems and configurations.
     \item[Independence] A performance metric is independent if its definition is unambiguous.
@@ -305,31 +323,29 @@ Today, \(Y_{\text{wafer}}\) is close to 100\%; \(N_{\text{defects}}\) is the num
 \end{definition}
 
 \subsubsection{The Clock Rate}
-The clock rate of a CPU is a very misleading metric, introduced by microprocessor companies mostly for marketing reasons. Indeed, this metric is not linear or reliable, but it is Repeatable, Easy to Measure, Consistent, and Independent.
+The clock rate of a \gls{cpu} is a very misleading metric, introduced by microprocessor companies mostly for marketing reasons. Indeed, this metric is neither linear nor reliable, but it is Repeatable, Easy to Measure, Consistent, and Independent.
 
-The clock rate \textbf{does not take the amount of computation within a clock cycle} into account. It also ignores the interaction of the CPU with memory and I/O systems.
+The clock rate \textbf{does not take the amount of computation within a clock cycle into account}. It also ignores the interaction of the \gls{cpu} with memory and I/O systems.
 
-\subsubsection{MIPS - Million Instructions Per Second}
-Defined as:
-\[
-    \texttt{MIPS} = \frac{N}{T \cdot 10^6}
-\]
-Where \(N\) is the total number of instructions to be executed and \(T\) is the execution time. This metric is repeatable, easy to measure, and independent, but it is \textbf{NOT} linear (as it ignores the amount of computation carried out by any single instruction), \textbf{NOT} reliable (since the comparison is only fair between similar \texttt{ISA}s), and inconsistent (because "what defines an instruction?" changes across different architectures).
+\subsubsection{Instruction and Operation Metrics}
 
-\subsubsection{MOPS and MFLOPS}
-Both try to solve the problems of MIPS by virtue of better consistency in the definition of a mathematical operation compared to the more vague concept of an instruction.
-\[
-    \begin{array}{cc}
-         \texttt{MOPS} = \frac{O}{T \cdot 10^6} & \texttt{MFLOPS} = \frac{F}{T \cdot 10^6}
-    \end{array}
-\]
-Where:
-\begin{description}
-    \item[\(O\)] Total number of integer operations to be executed.
-    \item[\(F\)] Total number of floating point operations to be executed.
-    \item[\(T\)] Time required to execute the \(O\) or \(F\) operations.
-\end{description}
-These metrics are still unreliable and inconsistent because they do not consider \textbf{how} the mathematical operations are implemented (e.g., if one system has a dedicated MULT circuit).
+\begin{definition}{MIPS (Million Instructions Per Second)}{mips-def}
+    \gls{mips} is defined as the execution rate of a system based on instruction count:
+    \[
+        \text{\gls{mips}} = \frac{N}{T \cdot 10^6}
+    \]
+    Where \(N\) is the total number of instructions to be executed and \(T\) is the execution time in seconds.
+\end{definition}
+\noindent This metric is repeatable, easy to measure, and independent, but it is \textbf{NOT} linear (as it ignores the amount of computation carried out by any single instruction), \textbf{NOT} reliable (since the comparison is only fair between similar \glspl{isa}), and inconsistent (because the definition of an ``instruction'' changes across different architectures).
+
+\begin{definition}{MOPS and MFLOPS}{mops-mflops-def}
+    To solve the consistency problems of \gls{mips}, performance can be measured using strictly defined mathematical operations:
+    \begin{align*}
+         \text{\gls{mops}} &= \frac{O}{T \cdot 10^6} & \text{\gls{mflops}} &= \frac{F}{T \cdot 10^6}
+    \end{align*}
+    Where \(O\) is the total number of integer operations, \(F\) is the total number of floating-point operations, and \(T\) is the execution time.
+\end{definition}
+\noindent These metrics are still unreliable and inconsistent because they do not consider \textbf{how} the mathematical operations are implemented at the hardware level (e.g., whether a system has a dedicated multiplication circuit).
 
 \subsubsection{Execution Time}
 \begin{definition}{Execution Time}{exec-time}
@@ -340,22 +356,22 @@ The performance of a system is inversely proportional to execution time. Also, t
     \item Doubling performance means halving execution time.
     \item If the execution time of a program running on \(X\) is lower than on \(Y\), then \(X\) outperforms \(Y\).
     \item When repeating the measurement, compatible results will be obtained.
-    \item The execution time of an application can be measured via OS functions.
+    \item The execution time of an application can be measured via \gls{os} functions.
     \item The unit of measurement is the second.
     \item The definition of the metric is unambiguous.
 \end{itemize}
 
-\paragraph{Execution Time vs. CPU Time} 
-Execution time includes everything: CPU time, waiting time for memory or I/O operations, and time spent running other tasks. On the other hand, CPU time is a more objective indicator of the CPU's performance without considering other system components and/or operations. CPU time is divided into: 
+\paragraph{Execution Time vs. \gls{cpu} Time} 
+Execution time includes everything: \gls{cpu} time, waiting time for memory or I/O operations, and time spent running other tasks. On the other hand, \gls{cpu} time is a more objective indicator of the \gls{cpu}'s performance without considering other system components and/or operations. \gls{cpu} time is divided into: 
 \begin{description}
     \item[User time] Time spent executing instructions of the task.
-    \item[System time] Time spent executing OS instructions, which are required for the system to be tested.
+    \item[System time] Time spent executing \gls{os} instructions, which are required for the system to be tested.
 \end{description}
 
-\paragraph{The CPU Performance Equation}
-CPU Time is computed through the CPU performance equation:
+\paragraph{The \gls{cpu} Performance Equation}
+\gls{cpu} Time is computed through the \gls{cpu} performance equation:
 \[
-    \text{CPU Time} = N_{\text{CLK}} \cdot T_{\text{CLK}} = \text{CPI} \cdot \text{IC} \cdot T_{\text{CLK}}
+    \text{\gls{cpu} Time} = N_{\text{CLK}} \cdot T_{\text{CLK}} = \text{CPI} \cdot \text{IC} \cdot T_{\text{CLK}}
 \]
 Where:
 \begin{description}
@@ -368,11 +384,48 @@ Where:
 
 \lecturestop{14/09/2026}
 
+\noindent The CPI can be furthermore calculated, also before the implementation of the actual infrastructure with this formula:
+\[
+    \text{CPI} = \frac{\sum_{i=1}^n\text{IC}_i\cdot\text{CPI}_i}{\text{IC}}
+\]
+Where:
+\begin{description}
+    \item[\(\text{IC}\)] Is the instruction complexity, with \(i\) referring to the single instruction
+\end{description}
+\paragraph{The choiche of the Task}
+An important choice that we have to make to use execution time as a metrics is the task to execute, or better known as witch benchmark shall we execute to test the architecture. We distinguish different types of beanchmarks:
+
+\begin{itemize}
+    \item Real Application
+    \item Modified (scripted) Application
+    \item Kernels
+    \item Synthetic benchmarks (e.g., Dhrystone, Whetstone)
+    \item Toy benchmarks
+\end{itemize}
+The selection of the benchmark suffers from a problem. Companies producing architectures trends to optimize the benchmark to highlight better performance of their product. To adress (but not solve) this problem some action are taken:
+\begin{itemize}
+    \item Suites of multiple application are used;
+    \item Benchmark source code modification, generally, are not allowed;
+    \item System configuration and compilers option \textbf{must} be reported ammong the mesured data;
+\end{itemize}
+Also different class of use for an architecture requires a different type of beanchmark, we recognise Desktop Computing defined by SPEC, Servers defined by TPC and Embedded Computing defined by EEMBC. The suites defined by these corporation changes in the yerars to reflect current technologies and prevent excessive sensitivity to optimizations by the producers. 
+
+
+
 \cleardoublepage
 \appendix
-\section{List of Acronyms}
-\begin{acronym}
- \acro{nMOS}{N-type metal-oxide-semiconductor}
- \acro{pMOS}{p-type metal–oxide–semiconductor}
-\end{acronym}
+
+% Force all acronyms to print, regardless of whether they were cited
+\glsaddall
+
+% Set a nice gap between the two columns
+\setlength{\columnsep}{1cm}
+
+% Span the section title across both columns
+\begin{multicols}{2}[\section{List of Acronyms}]
+    % Disable the default glossary title so it doesn't print twice
+    \renewcommand{\glossarysection}[2][]{}
+    \printglossary[type=\acronymtype]
+\end{multicols}
+
 \end{document}
