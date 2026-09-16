@@ -1,0 +1,122 @@
+\section{Computability}
+\subsection{Basic Definitions}
+
+\begin{definition}{Alphabet}{alphabet}
+    An alphabet is a set with a finite number of symbols.
+\end{definition}
+
+\noindent Usually, an alphabet (\cref{def:alphabet}) is denoted by \(\Sigma\). Now, let us compose words. To do so, we shall use the Cartesian product. As an example, the set of pairs of symbols will be \(\Sigma\times\Sigma=\Sigma^2\). The cardinality of this set is given by the product of the cardinalities of the composing sets: \(|\Sigma\times\Sigma|=|\Sigma|\cdot|\Sigma|\). To represent words with \(n\) symbols, we define the general set of length \(n\) by induction:
+\[
+    \Sigma^n=\begin{cases}
+        \{\varepsilon\} & n=0\\
+        \Sigma^{n-1}\times \Sigma & n>0
+    \end{cases}
+\]
+This represents ``The set of all strings on \(\Sigma\) of length \(n\)''.
+
+\noindent To define the set of all words, independent of their length, we take the union of all \(\Sigma^n\) sets:
+\[
+    \Sigma^0 \cup\Sigma^1 \cup\Sigma^2 \cup\ldots=\bigcup_{n\in\mathbb{N}}\Sigma^n=\Sigma^*
+\]
+
+\begin{definition}{Strings on an Alphabet}{strings}
+    The strings on an alphabet \(\Sigma\) (\cref{def:alphabet}) are all the strings in its Kleene closure, which is the set:
+    \[\Sigma^*=\bigcup_{n\in\mathbb{N}}\Sigma^n\]
+\end{definition}
+
+\begin{definition}{Enumeration}{enumeration}
+    An enumeration of the strings (\cref{def:strings}) on an alphabet (\cref{def:alphabet}) is a 1:1 and onto function (bijection) that maps the set of natural numbers \(\mathbb{N}\) to the set \(\Sigma^*\).
+    \[
+        f:\mathbb{N}\rightarrow \Sigma^*
+    \]
+\end{definition}
+
+\noindent By defining such a bijection between integers and strings, we establish that the set \(\mathbb{N}\) and the set \(\Sigma^*\) have the same cardinality (i.e., they are countably infinite).
+
+\begin{definition}{Decision Function}{decision-function}
+    A decision function is a function that takes a string (\cref{def:strings}) in the alphabet \(\Sigma^*\) and maps it to the set \(\{0,1\}\), representing TRUE and FALSE.
+    \[
+        f:\Sigma^*\rightarrow\{0,1\}
+    \]
+\end{definition}
+
+\begin{definition}{Partial and Total Functions}{part-total-func}
+    A \textbf{total function} maps every element of the domain to exactly one element of the codomain. A \textbf{partial function} is a function that is not total (i.e., it is undefined for at least one element in the domain).
+\end{definition}
+
+\begin{definition}{Equal and Distinct Functions}{equal-func}
+    Two functions \(f\) and \(g\) are evaluated as equal or distinct based on the following criteria:
+    \begin{align}
+        f &= g \iff \forall s \in \Sigma^*, \; f(s) = g(s) \\
+        f &\neq g \iff \exists s \in \Sigma^*, \; f(s) \neq g(s)
+    \end{align}
+\end{definition}
+
+\begin{theorem}{Uncountability of Decision Functions}{uncount-dec}
+    There is no enumeration (\cref{def:enumeration}) of decision functions (\cref{def:decision-function}).
+    \begin{proof}
+        Suppose, for the sake of contradiction, that there is a bijection mapping \(\mathbb{N}\) to the set of all decision functions (\cref{def:decision-function}):
+        \[
+            \mathbb{N}\rightarrow\{f:\Sigma^*\rightarrow \{0,1\}\}
+        \]
+        Because \(\Sigma^*\) is isomorphic to \(\mathbb{N}\) (as established by \cref{def:enumeration}), this implies a surjective mapping exists directly from any string \(s \in \Sigma^*\) to a decision function \(f_s\):
+        \[
+            s \mapsto f_s
+        \]
+        Since this mapping is assumed to be surjective, every possible decision function \(g\) must be accounted for in this enumeration:
+        \[
+            \forall g \in \{f:\Sigma^*\rightarrow\{0,1\}\}, \quad \exists s \in \Sigma^* \text{ such that } f_s = g
+        \]
+        Now, let us define a new decision function \(h\) (using Cantor's diagonal argument):
+        \[
+            h(s) = 1 - f_s(s) \quad \forall s \in \Sigma^*
+        \]
+        By this definition, it is mathematically true that for every string \(s\):
+        \[
+            h(s) \neq f_s(s) \implies h \neq f_s
+        \]
+        Thus, \(h\) is distinct from every \(f_s\) in our enumeration, meaning the function \(h\) is unmapped. This contradicts the assumption that our mapping is surjective. Therefore, a 1:1 mapping (enumeration) of decision functions cannot exist.
+     \end{proof}
+\end{theorem}
+\noindent Thus, there is a fundamental difference in cardinality between the set of strings \(\Sigma^*\) (\cref{def:strings}) and the set of all decision functions \(\{f:\Sigma^*\rightarrow \{0,1\}\}\) (\cref{def:decision-function}). This distinction perfectly illustrates the boundary between \textbf{countable} and \textbf{uncountable} infinite sets.
+
+\begin{definition}{Countable Set}{countable}
+    A set \(S\) is \textbf{countable} (or countably infinite) if and only if there exists a bijection (a 1:1 and onto total function) from the set itself to the set of natural numbers \(\mathbb{N}\). Formally, there exists:
+    \[
+        \exists f: S \rightarrow \mathbb{N} \quad \text{such that } f \text{ is bijective (meaning } f^{-1}: \mathbb{N} \rightarrow S \text{ exists)}.
+    \]
+\end{definition}
+
+\noindent Based on \cref{def:enumeration} and \cref{def:countable}, we can formally state that the set of strings \(\Sigma^*\) is countable, whereas the set of all decision functions is uncountable.
+
+\noindent Furthermore, there is a 1:1 correspondence (bijection) between the set of all decision functions and the power set (the set of all subsets) of \(\Sigma^*\), denoted as \(\mathcal{P}(\Sigma^*)\). 
+
+For any subset \(S \subseteq \Sigma^*\) (where \(S \in \mathcal{P}(\Sigma^*)\)), we can define its characteristic (or indicator) function \(\chi_S\):
+\[
+\begin{aligned}
+    \chi_{S}: \Sigma^* &\rightarrow \{0,1\}\\
+    w &\mapsto \begin{cases}
+        1 & \text{if } w \in S\\
+        0 & \text{if } w \notin S
+    \end{cases}
+\end{aligned}
+\]
+
+\noindent Conversely, every decision function \(f\) defines a unique subset of \(\Sigma^*\). We can define a mapping \(C\) from the set of decision functions to the power set \(\mathcal{P}(\Sigma^*)\):
+\[
+\begin{aligned}
+    C: \{f : \Sigma^* \rightarrow \{0,1\}\} &\rightarrow \mathcal{P}(\Sigma^*)\\
+    f &\mapsto \underbrace{\{s \in \Sigma^* \mid f(s) = 1\}}_{f^{-1}(\{1\})}
+\end{aligned}
+\]
+and its inverse mapping \(\chi\) (using the characteristic function) from the power set back to the set of decision functions:
+\[
+\begin{aligned}
+    \chi: \mathcal{P}(\Sigma^*) &\rightarrow \{f : \Sigma^* \rightarrow \{0,1\}\}\\
+    S &\mapsto \chi_S
+\end{aligned}
+\]
+
+\noindent Because \(C\) and \(\chi\) are inverses of each other (\(C(\chi_S) = S\) and \(\chi_{C(f)} = f\)), they form a bijection. This proves that the set of all decision functions has the exact same cardinality as the power set \(\mathcal{P}(\Sigma^*)\). By Cantor's theorem, the power set of a countable infinite set (like \(\Sigma^*,\text{\cref{def:strings}}\)) is strictly larger and uncountable, which reinforces our previous result (\cref{thm:uncount-dec}).
+
+\lecturestop{15/09/2026}
