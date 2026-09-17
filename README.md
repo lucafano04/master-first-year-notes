@@ -18,7 +18,7 @@ All PDF documents are automatically compiled via GitHub Actions from their respe
 | Course | Subtree Directory | Status | Download PDF |
 | :--- | :--- | :---: | :---: |
 | **Computability and Computational Complexity** (Prof. M. Brunato) | [`/CCC`](./CCC) | 🟢 In Progress | [📄 `Notes.pdf`](https://github.com/lucafano04/master-first-year-notes/releases/download/latest/Notes_CCC.pdf) |
-| **Advanced Computing Architectures** (Prof. D. Passerone) | [`/Advanced Computing Architectures`](./Advanced%20Computing%20Architectures) | 🟢 In Progress | [📄 `Notes.pdf`](https://github.com/lucafano04/master-first-year-notes/releases/download/latest/Notes_Advanced_Computing_Architectures.pdf) |
+| **Advanced Computing Architectures** (Prof. D. Passerone) | [`/Advanced Computing Architectures`](./Advanced%20Computing%20Architecture) | 🟢 In Progress | [📄 `Notes.pdf`](https://github.com/lucafano04/master-first-year-notes/releases/download/latest/Notes_Advanced_Computing_Architectures.pdf) |
 | **Security Testing** (Prof. A. Marchetto / Dott. M. Bof) | [`/security-testing`](./security-testing) | 🟢 In Progress | [📄 `Notes.pdf`](https://github.com/lucafano04/master-first-year-notes/releases/download/latest/Notes_Security_Testing.pdf) |
 
 ---

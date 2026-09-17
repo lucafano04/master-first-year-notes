@@ -19,7 +19,7 @@ jobs:
           - folder: 'security-testing'
             tex_file: 'main.tex'
             pdf_name: 'Notes_Security_Testing.pdf'
-          - folder: 'Advanced Computing Architectures'
+          - folder: 'Advanced Computing Architecture'
             tex_file: 'main.tex'
             pdf_name: 'Notes_Advanced_Computing_Architectures.pdf'
 
