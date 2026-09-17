@@ -19,9 +19,9 @@ jobs:
           - folder: 'security-testing'
             tex_file: 'main.tex'
             pdf_name: 'Notes_Security_Testing.pdf'
-          - folder: 'Advanced Computing Architecture'
+          - folder: 'Advanced Computing Architectures'
             tex_file: 'main.tex'
-            pdf_name: 'Notes_Advanced_Computing_Architecture.pdf'
+            pdf_name: 'Notes_Advanced_Computing_Architectures.pdf'
 
     steps:
       - name: Checkout Repository
@@ -52,11 +52,28 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Download all artifacts into single folder
         uses: actions/download-artifact@v4
         with:
           path: pdfs/
           merge-multiple: true
+
+      - name: Move 'latest' Tag to Current Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Delete the remote 'latest' tag if it exists
+          git push origin --delete latest || true
+          
+          # Create/force tag 'latest' locally at the current HEAD
+          git tag -f latest
+          
+          # Push the updated 'latest' tag to remote
+          git push origin latest --force
 
       - name: Update 'latest' Release
         uses: softprops/action-gh-release@v2
