@@ -1,0 +1,331 @@
+\section{Performance Metrics [14-16/09/2026]} 
+In this first section, all the performance metrics used in computing architectures will be discussed.
+
+\subsection{Power Consumption}
+In \gls{cmos} technology, power consumption is due to:
+\begin{description}
+    \item[Dynamic (or Active)] currents related to:
+    \subitem Charging/Discharging of logic gates during switching.
+    \subitem Transient short-circuits during switching.
+    \item[Static] leakage (sub-threshold) currents in transistors.
+\end{description}
+The current trend is that with each process generation, dynamic power scales by a factor of \(\sim 0.9\), but power density scales by a factor of \(\sim 1.3-1.8\) and static power increases at an exponential rate.
+
+\subsubsection{Dynamic Power Consumption}
+\begin{definition}{Dynamic Power Consumption}{dyn-power}
+    Dynamic power consumption is mostly due to the charging and discharging of the capacitive load of every logic gate inside a digital \gls{cmos} integrated circuit.
+    \begin{align*}
+        \text{Energy/transition} &= C_L \cdot V_{DD}^2 \cdot P_{0\rightarrow1} \\
+        \text{Power} &= \text{Energy/transition} \cdot f \\
+                     &= C_{L} \cdot V_{DD}^2 \cdot P_{0\rightarrow1} \cdot f
+    \end{align*} 
+    Where:
+    \begin{description}
+        \item[\(C_L\) Capacitance] A function of wire length and transistor size.
+        \item[\(V_{DD}\) Supply Voltage] Has been dropping with successive fab generations.
+        \item[\(P_{0\rightarrow1}\) Switching probability] Depends on signal statistics.
+        \item[\(f\) Clock Frequency] Raises power consumption since there's a higher probability of a logic gate state change.
+    \end{description}
+\end{definition}
+
+\begin{definition}{Short Circuit Current}{scc}
+    The finite slope of the input signal causes a direct current path between \(V_{DD}\) and \gls{gnd} for a short period of time during switching when both the \gls{nmos} and \gls{pmos} transistors are conducting.
+    \begin{align*}
+        E_{sc} &= t_{sc} \cdot V_{DD} \cdot I_{\text{peak}} \cdot P_{0\rightarrow 1}\\
+        P_{sc} &= t_{sc} \cdot V_{DD} \cdot I_{\text{peak}} \cdot f_{0\rightarrow 1}
+    \end{align*}
+    Where:
+    \begin{description}
+        \item[\(t_{sc}\)] Duration of the rising/falling time of the input signal.
+        \item[\(I_{\text{peak}}\)] Determined by the saturation current of the \(P\) and \(N\) transistors and the ratio between input and output slopes.
+    \end{description}
+\end{definition}
+
+\subsubsection{Static Power Consumption}
+\begin{definition}{Static Power Consumption}{stat-power}
+    Sub-threshold current grows exponentially with a rise in temperature and a decrease in threshold voltage; additionally, the continued scaling of supply voltage will make sub-threshold conduction the primary source of power dissipation.
+    
+    The static power consumption can be expressed as:
+    \[
+        I_{\text{DSub}} = k \cdot e^{\frac{-q \cdot V_{T}}{a \cdot k_a \cdot T}}
+    \]
+    Where \(k, a, k_a\) are technology-dependent constants, \(V_T\) is the threshold voltage, and \(T\) is the temperature.
+\end{definition}
+
+\subsubsection{Total Power Consumption}
+\begin{definition}{Total Power Consumption}{tot-power}
+    Combining the aforementioned elements, the total power consumption is:
+    \[
+        P_{\text{total}} = \left(C_{L} \cdot V^2_{DD} \cdot P_{0\rightarrow1} \cdot f\right) + \left(t_{sc} \cdot V_{DD} \cdot P_{0\rightarrow1} \cdot I_{\text{peak}} \cdot f\right) + \left(V_{DD} \cdot I_{\text{leakage}}\right)
+    \]
+    This equation can be used to estimate power consumption; however, determining the individual parameters is challenging. At the architectural level, we can manage:
+    \begin{description}
+        \item[\(f_{\text{clock}}\)] Affects performance. Reducing it will lower power consumption if no operations need to be performed.
+        \item[\(C_{L}\)] Depends on the number of gates.
+        \item[\(V_{DD}\)] Affects performance. It has been reduced historically from 5V to roughly 1V, but it cannot be lowered further until we develop transistors with greater precision and lower threshold voltages.
+        \item[\(P_{0\rightarrow1}\)] Depends on the implementation and architecture.
+    \end{description}
+\end{definition}
+
+\subsection{Cost Estimation}
+Device cost tends to decrease over time even without improvements in the basic implementation technology (learning curve).
+
+By \textbf{increasing volumes}, costs decrease (\(\sim 10\%\) when doubling production). This grants a faster learning curve, better efficiency, and allows \gls{nre} and development costs to be \textbf{amortized over many machines}. A commodity market effect is that manufacturing costs and selling prices are close due to high competition.
+
+\begin{definition}{Integrated Circuit Cost}{ic-cost}
+    Experimentally, the cost of an \gls{ic} is given by:
+    \[
+        C = \frac{C_{\text{die}} + C_{\text{testing}} + C_{\text{packaging}}}{Y}
+    \]
+    Where:
+    \begin{description}
+        \item[\(C_{\text{die}}\)] The cost of manufacturing a die.
+        \item[\(C_{\text{testing}}\)] The cost of testing a die after cutting the silicon wafer into individual dies.
+        \item[\(C_{\text{packaging}}\)] The cost of packaging the working dies.
+        \item[\(Y\)] The yield after the final test (percentage of working chips).
+    \end{description}
+    \(C_{\text{testing}}\) and \(C_{\text{packaging}}\) are fixed once the \gls{ic} is made; they are mostly a function of the \gls{ic}'s complexity and \textbf{NOT of the manufacturing process}.
+\end{definition}
+
+\begin{definition}{Die Cost and Wafer Capacity}{die-cost}
+    The cost of a single die depends on the yield of the wafer:
+    \[
+        C_{\text{die}} = \frac{C_{\text{wafer}}}{N_{\text{die}} \cdot Y_{\text{die}}}
+    \]
+    Where:
+    \begin{description}
+        \item[\(C_{\text{wafer}}\)] The cost of making a wafer.
+        \item[\(N_{\text{die}}\)] The total number of dies per wafer.
+        \item[\(Y_{\text{die}}\)] Die yield before packaging (affected by dust or other factors during manufacturing).
+    \end{description}
+    Also, \(N_{\text{die}}\) can be calculated based on the area:
+    \[
+        N_{\text{die}} = \frac{\pi \cdot \frac{D^2}{4}}{A_{\text{die}}} - \frac{\pi \cdot D}{\sqrt{2 \cdot A_{\text{die}}}}
+    \]
+    Where the first term is the total number of dies on a round wafer, and the second term accounts for the number of incomplete dies close to the periphery of the wafer. There is a \textbf{strong} dependence of \(C\) on \(A_{\text{die}}\).
+\end{definition}
+
+\begin{definition}{Die Yield}{die-yield}
+    The yield of a single die can be expressed as:
+    \[
+        Y_{\text{die}} = Y_{\text{wafer}} \cdot \left(1 + \frac{N_{\text{defects}} \cdot A_{\text{die}}}{\alpha}\right)^{-\alpha}
+    \]
+    Today, \(Y_{\text{wafer}}\) is close to 100\%; \(N_{\text{defects}}\) is the number of defects per unit area (typically \(0.4-0.8 \, \frac{\text{defects}}{\text{cm}^2}\)), and, finally, \(\alpha\) is an empirical value related to the complexity of the manufacturing process (today \(\sim 4.0\)).
+\end{definition}
+
+\subsection{Performance Evaluation}
+\textbf{Performance Evolution and Trends}
+\begin{itemize}
+    \item Historically, top processors took advantage of \textbf{Moore's Law} (\cref{cpt:moores-law}).
+    \item \textbf{Performance grows much faster}: Effective enhancements are applied not only at the technology level (transistor scaling) but also at the architectural level (higher parallelism).
+    \item \textbf{Accurate trend estimation is hard} due to a lack of unambiguous testing criteria and the use of misleading performance metrics.
+\end{itemize}
+
+\begin{concept}{Moore's Law}{moores-law}
+    An empirical observation stating that the number of transistors in a dense \gls{ic}, and consequently the clock frequencies, traditionally double every 15--18 months.
+\end{concept}
+
+\noindent Basic question: \textbf{``How much is X faster than Y?''}
+\begin{definition}{Ideal Properties of a Performance Metric}{perf_metric_properties}
+\begin{description}
+    \item[Linearity] A metric is linear if, when the values of the metric differ by a certain factor, the actual performance of the machines differs by the same factor.
+    \item[Reliability] A performance metric is reliable if a system \(X\) outperforms a system \(Y\) when the corresponding values of the metric for both systems indicate that \(X\) should outperform \(Y\). 
+    \item[Repeatability] A performance metric is repeatable if subsequent measurements return \textbf{compatible\footnote{Compatible results mean they fall within an acceptable statistical variance, not necessarily identical.}} results.
+    \item[Ease of Use] If a metric is difficult to use, fewer people will use it, and the probability of obtaining incorrect results grows.
+    \item[Consistency] A consistent metric is one for which the units and precise definition are the same across different systems and configurations.
+    \item[Independence] A performance metric is independent if its definition is unambiguous.
+\end{description}
+\end{definition}
+
+\subsubsection{The Clock Rate}
+The clock rate of a \gls{cpu} is a very misleading metric, introduced by microprocessor companies mostly for marketing reasons. Indeed, this metric is neither linear nor reliable, but it is Repeatable, Easy to Measure, Consistent, and Independent.
+
+The clock rate \textbf{does not take the amount of computation within a clock cycle into account}. It also ignores the interaction of the \gls{cpu} with memory and I/O systems.
+
+\subsubsection{Instruction and Operation Metrics}
+
+\begin{definition}{MIPS (Million Instructions Per Second)}{mips-def}
+    \gls{mips} is defined as the execution rate of a system based on instruction count:
+    \[
+        \text{\gls{mips}} = \frac{N}{T \cdot 10^6}
+    \]
+    Where \(N\) is the total number of instructions to be executed and \(T\) is the execution time in seconds.
+\end{definition}
+\noindent This metric is repeatable, easy to measure, and independent, but it is \textbf{NOT} linear (as it ignores the amount of computation carried out by any single instruction), \textbf{NOT} reliable (since the comparison is only fair between similar \glspl{isa}), and inconsistent (because the definition of an ``instruction'' changes across different architectures).
+
+\begin{definition}{MOPS and MFLOPS}{mops-mflops-def}
+    To solve the consistency problems of \gls{mips}, performance can be measured using strictly defined mathematical operations (\gls{mops} and \gls{mflops}):
+    \begin{align*}
+         \text{\gls{mops}} &= \frac{O}{T \cdot 10^6} & \text{\gls{mflops}} &= \frac{F}{T \cdot 10^6}
+    \end{align*}
+    Where \(O\) is the total number of integer operations, \(F\) is the total number of floating-point operations, and \(T\) is the execution time.
+\end{definition}
+\noindent These metrics are still unreliable and inconsistent because they do not consider \textbf{how} the mathematical operations are implemented at the hardware level (e.g., whether a system has a dedicated multiplication circuit).
+
+\subsubsection{Execution Time}
+\begin{definition}{Execution Time}{exec-time}
+    Execution time is the \textbf{time required to complete a task} running on a computing device, including all the accessory operations necessary for this purpose. 
+\end{definition}
+The performance of a system is inversely proportional to execution time. Also, this is the only metric that satisfies all the properties.
+\begin{itemize}
+    \item Doubling performance means halving execution time.
+    \item If the execution time of a program running on \(X\) is lower than on \(Y\), then \(X\) outperforms \(Y\).
+    \item When repeating the measurement, compatible results will be obtained.
+    \item The execution time of an application can be measured via \gls{os} functions.
+    \item The unit of measurement is the second.
+    \item The definition of the metric is unambiguous.
+\end{itemize}
+
+\paragraph{Execution Time vs. \gls{cpu} Time} 
+Execution time includes everything: \gls{cpu} time, waiting time for memory or I/O operations, and time spent running other tasks. On the other hand, \gls{cpu} time is a more objective indicator of the \gls{cpu}'s performance without considering other system components and/or operations. \gls{cpu} time is divided into: 
+\begin{description}
+    \item[User time] Time spent executing instructions of the task.
+    \item[System time] Time spent executing \gls{os} instructions, which are required for the system to be tested.
+\end{description}
+
+\begin{definition}{CPU Performance Equation}{cpu-perf-eq}
+    \gls{cpu} Time is computed through the \gls{cpu} performance equation:
+    \[
+        \text{\gls{cpu} Time} = N_{\text{CLK}} \cdot T_{\text{CLK}} = \text{CPI} \cdot \text{IC} \cdot T_{\text{CLK}}
+    \]
+    Where:
+    \begin{description}
+        \item[\(N_{\text{CLK}}\)] Number of clock cycles.
+        \item[\(T_{\text{CLK}} = \frac{1}{F_{\text{CLK}}}\)] Clock period.
+        \item[\(\text{IC}\)] Instruction Count.
+        \item[\(\text{CPI} = \frac{N_{\text{CLK}}}{\text{IC}}\)] \gls{cpi}.
+        \subitem Sometimes \(\text{IPC} = \frac{1}{\text{CPI}}\) (\gls{ipc}) is used.
+    \end{description}
+\end{definition}
+
+\lecturestop{14/09/2026}
+
+\begin{definition}{Average CPI}{avg-cpi}
+    The \gls{cpu} \gls{cpi} can be further computed prior to the implementation of the actual infrastructure using the following formula:
+    \[
+        \text{CPI} = \frac{\sum_{i=1}^n \text{IC}_i \cdot \text{CPI}_i}{\text{IC}}
+    \]
+    Where:
+    \begin{description}
+        \item[\(n\)] is the total number of distinct instruction classes.
+        \item[\(\text{IC}_i\)] is the instruction count for instructions of class \(i\).
+        \item[\(\text{CPI}_i\)] is the average cycles per instruction for class \(i\).
+        \item[\(\text{IC}\)] is the total instruction count (\(\sum \text{IC}_i\)).
+    \end{description}
+\end{definition}
+
+\paragraph{The Choice of the Task}
+An important choice when using execution time as a metric is the task to execute, or more specifically, which benchmark to run to test the architecture. We distinguish several types of benchmarks:
+\begin{itemize}
+    \item Real applications
+    \item Modified (scripted) applications
+    \item Kernels
+    \item Synthetic benchmarks (e.g., Dhrystone, Whetstone)
+    \item Toy benchmarks
+\end{itemize}
+The selection of a benchmark suffers from a known issue: companies producing architectures tend to optimize for the benchmark to highlight better performance of their product. To address (but not solve) this problem, several actions are taken:
+\begin{itemize}
+    \item Suites of multiple applications are used.
+    \item Modifications to the benchmark source code are generally not allowed.
+    \item System configurations and compiler options \textbf{must} be reported alongside the measured data.
+\end{itemize}
+Different classes of use for an architecture require different types of benchmarks. We recognize Desktop Computing (defined by \gls{spec}), Servers (defined by \gls{tpc}), and Embedded Computing (defined by \gls{eembc}). The suites defined by these consortiums change over the years to reflect current technologies and prevent excessive sensitivity to producer optimizations. 
+
+\paragraph{\gls{spec}base vs. \gls{spec}peak} 
+The \gls{spec} consortium allows reporting two kinds of data metrics:
+\begin{description}
+    \item[\gls{spec}base] A baseline performance indicator. Only four compiler flags are allowed, maintaining the same settings and compiler for all programs. Program-specific information/optimizations are prohibited.
+    \item[\gls{spec}peak] A ``guaranteed never to exceed'' performance indicator. Allows disabling network and display, single-user mode, and different compile flags/compilers for each program. Altering the \gls{os} kernel is permitted.
+\end{description}
+The former establishes a realistic day-to-day performance metric, while the latter provides the maximum performance reachable under optimal conditions.
+
+\begin{definition}{Geometric Mean of Normalized Execution Times}{geom-mean}
+    \gls{spec} 2000 suggests two indexes: CINT2000 for integer benchmarks, and CFP2000 for floating-point benchmarks. Both are obtained as the \textbf{geometric mean} of the \textbf{normalized execution times} of the programs in the suite. The normalization is provided against a reference machine:
+    \[
+        G = \sqrt[N]{\prod_{j=1}^N \frac{T_{e_j}}{T_{R_j}}}
+    \]
+    where:
+    \begin{description}
+        \item[\(N\)] is the total number of programs in the benchmark suite.
+        \item[\(T_{e_j}\)] is the execution time of the \(j\)-th program on the tested architecture.
+        \item[\({T_{R_j}}\)] is the reference execution time of the \(j\)-th program.
+    \end{description}
+    The geometric mean is used because it maintains consistent relationships when comparing normalized values, regardless of the reference machine. Otherwise, long and short tasks would skew the weights, encouraging producers to optimize the easiest sections to test rather than the slowest. 
+\end{definition}
+
+\begin{definition}{Alternative Execution Time Metrics}{alt-metrics}
+    Other aggregate metrics used include:
+    \begin{itemize}
+        \item Total execution time: \(T = \sum_{j=1}^N T_{e_j}\)
+        \item Average execution time: \(\bar{T}_e = \frac{1}{N} \sum_{j=1}^N T_{e_j}\)
+        \item Weighted execution time: \(T_{e_w} = \sum_{j=1}^N w_j T_{e_j}\)
+        \item Equal time weighting: \(w_j = \frac{1}{T_{R_j} \cdot \sum_{k=1}^N \frac{1}{T_{R_k}}}\)
+    \end{itemize}
+\end{definition}
+
+\paragraph{Embedded Benchmarks} 
+Usually, \gls{eembc} suites consist of kernels rather than full applications. Additionally, in \gls{eembc}, hand-coding is often allowed.
+
+\subsection{Quantitative Principles for the Design of Computer Systems}
+\begin{concept}{Architecture Optimization Goals}{arch-opt}
+    The design of a new processing system is a multi-variable, multi-objective optimization problem. It typically yields different solutions depending on \textbf{execution time} (\(T\)), \textbf{cost} (\(C\)), and \textbf{power consumption} (\(P\)). The optimal solution depends on the trade-off among different requirements. For example, for desktop architectures, given a specific design configuration \(X_i\), the goal is often:
+    \[
+        \text{Minimize } Y_1(X_i) = T(X_i) \cdot C(X_i) \quad \text{subject to } P(X_i) \leq P_{\text{max}}
+    \]
+    However, for embedded architectures, the goal shifts:
+    \[
+        \text{Minimize } Y_2(X_i) = C(X_i) \cdot P(X_i) \quad \text{subject to } T(X_i) \leq T_{\text{max}}
+    \]
+    This reflects the fact that desktop computers have abundant power access but need to minimize cost and time, whereas embedded systems must strictly minimize power and cost while meeting a maximum time deadline.
+\end{concept}
+
+\begin{concept}{Design Space}{design-space}
+    The design space is an \(n\)-dimensional space consisting of all possible tuples of design parameters.
+\end{concept}
+The total number of possible system configurations (\(N_c\)) is large. For each \(i\)-th configuration, a triple \((T_i, C_i, P_i)\) exists, identifying a point \(J_i\) in the 3D space \((T, C, P)\).
+
+\begin{definition}{Dominated Point}{dominated-point}
+    A design point \(J_k\) is \textbf{dominated by} \(J_i\) if \(J_i\) is:
+    \begin{itemize}
+        \item Better than or equal to \(J_k\) in all criteria;
+        \item Strictly better in at least one criterion.
+    \end{itemize}
+\end{definition}
+
+\begin{definition}{Pareto Point}{pareto-points}
+    A point is Pareto-optimal, or a Pareto point, if it is not dominated by any other point in the design space.
+\end{definition}
+The task of searching for Pareto points within the design space is called \textbf{design space exploration}. This can be exhaustive (evaluating all configurations) or based on optimization algorithms.
+
+\subsection{Improving an Existing System}
+
+Assuming we add an enhancement \(E\) to a given system or architecture, we need to quantify the performance improvement yielded by \(E\).
+\begin{definition}{Speedup}{speedup}
+    The speedup of a system for a given enhancement \(E\) is the ratio of execution times:
+    \[
+        \text{Speedup}(E) = \frac{\text{Execution Time without } E}{\text{Execution Time with } E}
+    \]
+\end{definition}
+This definition applies if the entire system benefits from the enhancement \(E\). If only a fraction \(F \leq 1\) of a system benefits from \(E\) (by a speedup factor of \(S\)), then the overall speedup is calculated as follows:
+
+\begin{definition}{Overall Speedup}{overall-speedup}
+    Let \(T_{e_{\text{old}}}\) be the original execution time, and \(T_{e_{\text{new}}}\) be the new execution time. The overall speedup for a system with an enhancement \(E\) that applies to only a fraction \(F\) (yielding a local speedup factor of \(S\)) is derived as:
+    \begin{align*}
+        T_{e_{\text{new}}} &= T_{e_{\text{old}}} \cdot (1 - F) + \frac{T_{e_{\text{old}}} \cdot F}{S} \\
+        T_{e_{\text{new}}} &= T_{e_{\text{old}}} \left[ (1 - F) + \frac{F}{S} \right] \\
+        S_{\text{overall}} &= \frac{T_{e_{\text{old}}}}{T_{e_{\text{new}}}} = \frac{1}{(1 - F) + \frac{F}{S}}
+    \end{align*}
+    By calculating the limit as the local speedup approaches infinity (\(S \to \infty\)), we find the theoretical maximum overall speedup:
+    \[
+        \lim_{S \to \infty} S_{\text{overall}} = \frac{1}{1-F}
+    \]
+\end{definition}
+From this equation, it is clear that the overall speedup is strictly bounded by the fraction of the system that actually uses the improvement.
+
+\begin{theorem}{Amdahl's Law}{amdahl-law}
+    The performance improvement to be gained from using a faster mode of execution is limited by the fraction of time the faster mode can be used.
+    \begin{description}
+        \item[Corollary 1] Make the common case (the largest \(F\)) as fast as possible.
+        \item[Corollary 2 (Law of Diminishing Returns)] The speedup gained from additional enhancements affecting the same fraction of computation \(F\) tends to decrease as the number of enhancements grows.
+    \end{description}
+\end{theorem}

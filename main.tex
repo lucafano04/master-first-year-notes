@@ -1,4 +1,5 @@
-\documentclass[11pt,a4paper, twoside]{article}
+\documentclass[11pt,a4paper, twoside, titlepage]{article}
+\usepackage{ccicons}
 
 % ==========================================
 % PACKAGES
@@ -46,7 +47,11 @@
 
 \newacronym{cmos}{CMOS}{Complementary Metal-Oxide-Semiconductor}
 \newacronym{cpu}{CPU}{Central Processing Unit}
+\newacronym{cpi}{CPI}{Clocks Per Instruction}
+\newacronym{eembc}{EEMBC}{Embedded Microprocessor Benchmark Consortium}
+\newacronym{gnd}{GND}{Ground}
 \newacronym{ic}{IC}{Integrated Circuit}
+\newacronym{ipc}{IPC}{Instructions Per Clock}
 \newacronym{isa}{ISA}{Instruction Set Architecture}
 \newacronym{mflops}{MFLOPS}{Million Floating-Point Operations Per Second}
 \newacronym{mips}{MIPS}{Million Instructions Per Second}
@@ -55,6 +60,8 @@
 \newacronym{nre}{NRE}{Non-Recurring Engineering}
 \newacronym{pmos}{pMOS}{P-type Metal-Oxide-Semiconductor}
 \newacronym{os}{OS}{Operating System}
+\newacronym{spec}{SPEC}{Standard Performance Evaluation Corporation}
+\newacronym{tpc}{TPC}{Transaction Processing Performance Council}
 
 % ==========================================
 % CUSTOMIZATION & BRANDING (UNITN STYLE)
@@ -93,35 +100,40 @@
 % ==========================================
 \newtcbtheorem[number within=section,
   crefname={definition}{definitions},
-  Crefname={Definition}{Definitions}
+  Crefname={Definition}{Definitions},
+  list inside=deflist
 ]{definition}{Definition}{%
   colback=unitnred!5,colframe=unitnred!80!black,fonttitle=\bfseries, breakable%
 }{def}
 
 \newtcbtheorem[number within=section,
   crefname={theorem}{theorems},
-  Crefname={Theorem}{Theorems}
+  Crefname={Theorem}{Theorems},
+  list inside=thmlist
 ]{theorem}{Theorem}{%
   colback=blue!5,colframe=blue!80!black,fonttitle=\bfseries, breakable%
 }{thm}
 
 \newtcbtheorem[number within=section,
   crefname={lemma}{lemmas},
-  Crefname={Lemma}{Lemmas}
+  Crefname={Lemma}{Lemmas},
+  list inside=lemlist
 ]{lemma}{Lemma}{%
   colback=cyan!5,colframe=cyan!80!black,fonttitle=\bfseries, breakable%
 }{lem}
 
 \newtcbtheorem[number within=section,
   crefname={observation}{observations},
-  Crefname={Observation}{Observations}
+  Crefname={Observation}{Observations},
+  list inside=obslist
 ]{observation}{Observation}{%
   colback=orange!5,colframe=orange!80!black,fonttitle=\bfseries, breakable%
 }{obs}
 
 \newtcbtheorem[number within=section,
   crefname={concept}{concepts},
-  Crefname={Concept}{Concepts}
+  Crefname={Concept}{Concepts},
+  list inside=cptlist
 ]{concept}{Concept}{%
   colback=green!5!white,colframe=green!60!black,fonttitle=\bfseries, breakable%
 }{cpt}
@@ -184,240 +196,74 @@
 % DOCUMENT BEGINS
 % ==========================================
 \begin{document}
+% --- TITLE PAGE ---
 \pagestyle{empty}
 \maketitle
-\thispagestyle{empty}
-\begin{abstract}
-    \noindent These notes cover the topics of the \textbf{Advanced Computing Architectures} course, held by Prof. Passerone during the Master's Degree in Computer Science at the University of Trento. Feel free to distribute these notes. If you find any typos or errors, please contact me at the email above.
-\end{abstract}
 
+% --- COPYRIGHT / LEGAL PAGE (Back of Title Page) ---
+\newpage
+\thispagestyle{empty}
+\vspace*{\fill} % Pushes the text to the bottom of the page
+
+\noindent \textbf{About this Document}\\
+These notes cover the topics of the \textbf{Advanced Computing Architectures} course, held by Prof. Passerone during the Master's Degree in Computer Science at the University of Trento. The content herein is derived from class lectures, course recordings, and the professor's official slides and notes.
+
+\vspace{1em}
+\noindent \textbf{License \& Copyright}\\
+\textcopyright\ 2026 Luca Facchini. My personal contributions, transcriptions, and formatting within this document are distributed under the Creative Commons Attribution-NonCommercial 4.0 International license (\textbf{CC BY-NC 4.0} \ccbynceu). The full text of the license is available in the \texttt{LICENSE} file at the root of this project. Please note that any original intellectual property, figures, or direct excerpts sourced from the professor remain strictly under their respective original copyrights and licenses.
+
+\vspace{1em}
+\noindent \textbf{Disclaimer}\\
+This material is provided ``AS IS'', without warranty of any kind, express or implied, including but not limited to the warranties of accuracy, completeness, or fitness for a particular purpose. These are independently produced student notes and do not constitute an official university publication. 
+
+\vspace{1em}
+\noindent \textit{If you find any typos or errors, please contact me at the email on the title page.}
+\vspace{2cm}
+
+\cleardoublepage
+
+% --- TABLE OF CONTENTS ---
+\pagestyle{fancy} % Turn headers back on for the TOC and beyond
 \tableofcontents
 \cleardoublepage
-\pagestyle{fancy}
 
-\section{Performance Metrics [14/09/2026]} 
-In this first section, all the performance metrics used in computing architectures will be discussed.
+% --- PREFACE / SCOPE ---
+\section*{Preface: Scope and Purpose}
+\addcontentsline{toc}{section}{Preface: Scope and Purpose} % Adds this unnumbered section to the TOC
 
-\subsection{Power Consumption}
-In \gls{cmos} technology, power consumption is due to:
-\begin{description}
-    \item[Dynamic (or Active)] currents related to:
-    \subitem Charging/Discharging of logic gates during switching.
-    \subitem Transient short-circuits during switching.
-    \item[Static] leakage (sub-threshold) currents in transistors.
-\end{description}
-The current trend is that with each process generation, dynamic power scales by a factor of \(\sim 0.9\), but power density scales by a factor of \(\sim 1.3-1.8\) and static power increases at an exponential rate.
+\noindent \textbf{The Motivation}\\
+These notes were initially born out of a personal need: the desire to organize, synthesize, and rigorously typeset the vast amount of information presented during the lectures. Writing and structuring this material in \LaTeX\ served as my primary method of active recall and study. However, recognizing how challenging it can be to study from scattered slides, recordings, and fragmented notes, I decided to open-source this project. The goal is to provide current and future students of the Master's Degree in Computer Science with a unified, structured, and accessible study companion.
 
-\subsubsection{Dynamic Power Consumption}
-Dynamic power consumption is mostly due to the charging and discharging of the capacitive load of every logic gate inside a digital \gls{cmos} integrated circuit.
-\begin{align*}
-    \text{Energy/transition} &= C_L \cdot V_{DD}^2 \cdot P_{0\rightarrow1} \\
-    \text{Power} &= \text{Energy/transition} \cdot f \\
-                 &= C_{L} \cdot V_{DD}^2 \cdot P_{0\rightarrow1} \cdot f
-\end{align*} 
-Where:
-\begin{description}
-    \item[\(C_L\) Capacitance] A function of wire length and transistor size.
-    \item[\(V_{DD}\) Supply Voltage] Has been dropping with successive fab generations.
-    \item[\(P_{0\rightarrow1}\) Switching probability] Depends on signal statistics.
-    \item[\(f\) Clock Frequency] Raises power consumption since there's a higher probability of a logic gate state change.
-\end{description}
+\vspace{1em}
+\noindent \textbf{The Scope}\\
+The scope of this document is to cover the core theoretical concepts, definitions, mathematical proofs, and practical architectures discussed throughout the course. It is designed to act as a comprehensive bridge between the professor's official slides and the verbal explanations provided during class. 
 
-\begin{definition}{Short circuit current}{scc}
-    The finite slope of the input signal causes a direct current path between \(V_{DD}\) and GND for a short period of time during switching when both the \gls{nmos} and \gls{pmos} transistors are conducting.
-\end{definition}
+\vspace{1em}
+\noindent \textbf{How to Use This Material}\\
+While I have made every effort to ensure the mathematical and technical rigor of this document, it is important to state what these notes are \textit{not}. They are \textbf{not a replacement} for the official recommended textbooks, nor are they a substitute for attending lectures and engaging with the professor. They are a student-made study guide. You should use them to clarify complex topics, review for exams, and quickly reference formal definitions.
 
-\begin{align*}
-    E_{sc} &= t_{sc} \cdot V_{DD} \cdot I_{\text{peak}} \cdot P_{0\rightarrow 1}\\
-    P_{sc} &= t_{sc} \cdot V_{DD} \cdot I_{\text{peak}} \cdot f_{0\rightarrow 1}
-\end{align*}
-Where:
-\begin{description}
-    \item[\(t_{sc}\)] Duration of the rising/falling time of the input signal.
-    % SEMANTIC NOTE: "ratio between input and output slopes" is assumed here based on typical VLSI design. 
-    \item[\(I_{\text{peak}}\)] Determined by the saturation current of the \(P\) and \(N\) transistors and the ratio between input and output slopes.
-\end{description}
+\vspace{1em}
+\noindent \textbf{Collaborative Spirit}\\
+Because this is an actively maintained, open-source project, it is subject to continuous improvement. If you are studying from this document and spot a typographical error, a mathematical inaccuracy, or a missing concept, please do not hesitate to reach out via the contact information on the title page. Collaborative corrections are highly encouraged and deeply appreciated.
 
-\subsubsection{Static Power Consumption}
-Sub-threshold current grows exponentially with a rise in temperature and a decrease in threshold voltage; additionally, the continued scaling of supply voltage will make sub-threshold conduction the primary source of power dissipation.
+\vspace{2em}
+\noindent \textit{Happy studying,}\\
+\textbf{Luca Facchini}\\
+BSc Graduate in Computer Science
 
-The static power consumption can be expressed as:
-\[
-    I_{\text{DSub}} = k \cdot e^{\frac{-q \cdot V_{T}}{a \cdot k_a \cdot T}}
-\]
-Where \(k, a, k_a\) are technology-dependent constants, \(V_T\) is the threshold voltage, and \(T\) is the temperature.
+\cleardoublepage
 
-\subsubsection{Total Power Consumption}
-Combining the aforementioned elements, the total power consumption is:
-\[
-    P_{\text{total}} = \left(C_{L} \cdot V^2_{DD} \cdot P_{0\rightarrow1} \cdot f\right) + \left(t_{sc} \cdot V_{DD} \cdot P_{0\rightarrow1} \cdot I_{\text{peak}} \cdot f\right) + \left(V_{DD} \cdot I_{\text{leakage}}\right)
-\]
-This equation can be used to estimate power consumption; however, determining the individual parameters is challenging. At the architectural level, we can manage:
-\begin{description}
-    \item[\(f_{\text{clock}}\)] Affects performance. Reducing it will lower power consumption if no operations need to be performed.
-    \item[\(C_{L}\)] Depends on the number of gates.
-    \item[\(V_{DD}\)] Affects performance. It has been reduced historically from 5V to roughly 1V, but it cannot be lowered further until we develop transistors with greater precision and lower threshold voltages.
-    \item[\(P_{0\rightarrow1}\)] Depends on the implementation and architecture.
-\end{description}
-
-\subsection{Cost Estimation}
-Device cost tends to decrease over time even without improvements in the basic implementation technology (learning curve).
-
-By \textbf{increasing volumes}, costs decrease (\(\sim 10\%\) when doubling production). This grants a faster learning curve, better efficiency, and allows \gls{nre} and development costs to be \textbf{amortized over many machines}. A commodity market effect is that manufacturing costs and selling prices are close due to high competition.
-
-Experimentally, the cost of an \gls{ic} is given by:
-\[
-    C = \frac{C_{\text{die}} + C_{\text{testing}} + C_{\text{packaging}}}{Y}
-\]
-Where:
-\begin{description}
-    \item[\(C_{\text{die}}\)] The cost of manufacturing a die.
-    \item[\(C_{\text{testing}}\)] The cost of testing a die after cutting the silicon wafer into individual dies.
-    \item[\(C_{\text{packaging}}\)] The cost of packaging the working dies.
-    \item[\(Y\)] The yield after the final test (percentage of working chips).
-\end{description}
-\(C_{\text{testing}}\) and \(C_{\text{packaging}}\) are fixed once the \gls{ic} is made; they are mostly a function of the \gls{ic}'s complexity and \textbf{NOT of the manufacturing process}. Meanwhile:
-\[
-    C_{\text{die}} = \frac{C_{\text{wafer}}}{N_{\text{die}} \cdot Y_{\text{die}}}
-\]
-Where:
-\begin{description}
-    \item[\(C_{\text{wafer}}\)] The cost of making a wafer.
-    \item[\(N_{\text{die}}\)] The total number of dies per wafer.
-    \item[\(Y_{\text{die}}\)] Die yield before packaging (affected by dust or other factors during manufacturing).
-\end{description}
-Also, \(N_{\text{die}}\) can be calculated as:
-\[
-    N_{\text{die}} = \frac{\pi \cdot \frac{D^2}{4}}{A_{\text{die}}} - \frac{\pi \cdot D}{\sqrt{2 \cdot A_{\text{die}}}}
-\]
-Where the first term is the total number of dies on a round wafer, and the second term accounts for the number of incomplete dies close to the periphery of the wafer. There is a \textbf{strong} dependence of \(C\) on \(A_{\text{die}}\).
-
-The yield of a single die can be expressed as:
-\[
-    Y_{\text{die}} = Y_{\text{wafer}} \cdot \left(1 + \frac{N_{\text{defects}} \cdot A_{\text{die}}}{\alpha}\right)^{-\alpha}
-\]
-Today, \(Y_{\text{wafer}}\) is close to 100\%; \(N_{\text{defects}}\) is the number of defects per unit area (typically \(0.4-0.8 \, \frac{\text{defects}}{\text{cm}^2}\)), and, finally, \(\alpha\) is an empirical value related to the complexity of the manufacturing process (today \(\sim 4.0\)).
-
-\subsection{Performance Evaluation}
-\textbf{Performance Evolution and Trends}
-\begin{itemize}
-    \item Historically, top processors took advantage of \textbf{Moore's Law} (\cref{cpt:moores-law}).
-    \item \textbf{Performance grows much faster}: Effective enhancements are applied not only at the technology level (transistor scaling) but also at the architectural level (higher parallelism).
-    \item \textbf{Accurate trend estimation is hard} due to a lack of unambiguous testing criteria and the use of misleading performance metrics.
-\end{itemize}
-
-\begin{concept}{Moore's Law}{moores-law}
-    An empirical observation stating that the number of transistors in a dense \gls{ic}, and consequently the clock frequencies, traditionally double every 15--18 months.
-\end{concept}
-
-\noindent Basic question: \textbf{``How much is X faster than Y?''}
-\begin{definition}{Ideal Properties of a Performance Metric}{perf_metric_properties}
-\begin{description}
-    \item[Linearity] A metric is linear if, when the values of the metric differ by a certain factor, the actual performance of the machines differs by the same factor.
-    \item[Reliability] A performance metric is reliable if a system \(X\) outperforms a system \(Y\) when the corresponding values of the metric for both systems indicate that \(X\) should outperform \(Y\). 
-    \item[Repeatability] A performance metric is repeatable if subsequent measurements return \textbf{compatible\footnote{Compatible results mean they fall within an acceptable statistical variance, not necessarily identical.}} results.
-    \item[Ease of Use] If a metric is difficult to use, fewer people will use it, and the probability of obtaining incorrect results grows.
-    \item[Consistency] A consistent metric is one for which the units and precise definition are the same across different systems and configurations.
-    \item[Independence] A performance metric is independent if its definition is unambiguous.
-\end{description}
-\end{definition}
-
-\subsubsection{The Clock Rate}
-The clock rate of a \gls{cpu} is a very misleading metric, introduced by microprocessor companies mostly for marketing reasons. Indeed, this metric is neither linear nor reliable, but it is Repeatable, Easy to Measure, Consistent, and Independent.
-
-The clock rate \textbf{does not take the amount of computation within a clock cycle into account}. It also ignores the interaction of the \gls{cpu} with memory and I/O systems.
-
-\subsubsection{Instruction and Operation Metrics}
-
-\begin{definition}{MIPS (Million Instructions Per Second)}{mips-def}
-    \gls{mips} is defined as the execution rate of a system based on instruction count:
-    \[
-        \text{\gls{mips}} = \frac{N}{T \cdot 10^6}
-    \]
-    Where \(N\) is the total number of instructions to be executed and \(T\) is the execution time in seconds.
-\end{definition}
-\noindent This metric is repeatable, easy to measure, and independent, but it is \textbf{NOT} linear (as it ignores the amount of computation carried out by any single instruction), \textbf{NOT} reliable (since the comparison is only fair between similar \glspl{isa}), and inconsistent (because the definition of an ``instruction'' changes across different architectures).
-
-\begin{definition}{MOPS and MFLOPS}{mops-mflops-def}
-    To solve the consistency problems of \gls{mips}, performance can be measured using strictly defined mathematical operations:
-    \begin{align*}
-         \text{\gls{mops}} &= \frac{O}{T \cdot 10^6} & \text{\gls{mflops}} &= \frac{F}{T \cdot 10^6}
-    \end{align*}
-    Where \(O\) is the total number of integer operations, \(F\) is the total number of floating-point operations, and \(T\) is the execution time.
-\end{definition}
-\noindent These metrics are still unreliable and inconsistent because they do not consider \textbf{how} the mathematical operations are implemented at the hardware level (e.g., whether a system has a dedicated multiplication circuit).
-
-\subsubsection{Execution Time}
-\begin{definition}{Execution Time}{exec-time}
-    Execution time is the \textbf{time required to complete a task} running on a computing device, including all the accessory operations necessary for this purpose. 
-\end{definition}
-The performance of a system is inversely proportional to execution time. Also, this is the only metric that satisfies all the properties.
-\begin{itemize}
-    \item Doubling performance means halving execution time.
-    \item If the execution time of a program running on \(X\) is lower than on \(Y\), then \(X\) outperforms \(Y\).
-    \item When repeating the measurement, compatible results will be obtained.
-    \item The execution time of an application can be measured via \gls{os} functions.
-    \item The unit of measurement is the second.
-    \item The definition of the metric is unambiguous.
-\end{itemize}
-
-\paragraph{Execution Time vs. \gls{cpu} Time} 
-Execution time includes everything: \gls{cpu} time, waiting time for memory or I/O operations, and time spent running other tasks. On the other hand, \gls{cpu} time is a more objective indicator of the \gls{cpu}'s performance without considering other system components and/or operations. \gls{cpu} time is divided into: 
-\begin{description}
-    \item[User time] Time spent executing instructions of the task.
-    \item[System time] Time spent executing \gls{os} instructions, which are required for the system to be tested.
-\end{description}
-
-\paragraph{The \gls{cpu} Performance Equation}
-\gls{cpu} Time is computed through the \gls{cpu} performance equation:
-\[
-    \text{\gls{cpu} Time} = N_{\text{CLK}} \cdot T_{\text{CLK}} = \text{CPI} \cdot \text{IC} \cdot T_{\text{CLK}}
-\]
-Where:
-\begin{description}
-    \item[\(N_{\text{CLK}}\)] Number of clock cycles.
-    \item[\(T_{\text{CLK}} = \frac{1}{F_{\text{CLK}}}\)] Clock period.
-    \item[\(\text{IC}\)] Instruction Count.
-    \item[\(\text{CPI} = \frac{N_{\text{CLK}}}{\text{IC}}\)] Clocks Per Instruction.
-    \subitem Sometimes \(\text{IPC} = \frac{1}{\text{CPI}}\) is used.
-\end{description}
-
-\lecturestop{14/09/2026}
-
-\noindent The CPI can be furthermore calculated, also before the implementation of the actual infrastructure with this formula:
-\[
-    \text{CPI} = \frac{\sum_{i=1}^n\text{IC}_i\cdot\text{CPI}_i}{\text{IC}}
-\]
-Where:
-\begin{description}
-    \item[\(\text{IC}\)] Is the instruction complexity, with \(i\) referring to the single instruction
-\end{description}
-\paragraph{The choiche of the Task}
-An important choice that we have to make to use execution time as a metrics is the task to execute, or better known as witch benchmark shall we execute to test the architecture. We distinguish different types of beanchmarks:
-
-\begin{itemize}
-    \item Real Application
-    \item Modified (scripted) Application
-    \item Kernels
-    \item Synthetic benchmarks (e.g., Dhrystone, Whetstone)
-    \item Toy benchmarks
-\end{itemize}
-The selection of the benchmark suffers from a problem. Companies producing architectures trends to optimize the benchmark to highlight better performance of their product. To adress (but not solve) this problem some action are taken:
-\begin{itemize}
-    \item Suites of multiple application are used;
-    \item Benchmark source code modification, generally, are not allowed;
-    \item System configuration and compilers option \textbf{must} be reported ammong the mesured data;
-\end{itemize}
-Also different class of use for an architecture requires a different type of beanchmark, we recognise Desktop Computing defined by SPEC, Servers defined by TPC and Embedded Computing defined by EEMBC. The suites defined by these corporation changes in the yerars to reflect current technologies and prevent excessive sensitivity to optimizations by the producers. 
-
-
+\include{01-performanceMetrics}
 
 \cleardoublepage
 \appendix
 
-% Force all acronyms to print, regardless of whether they were cited
-\glsaddall
+% Generate automated lists of definitions, concepts, and theorems
+\tcblistof[\section]{deflist}{List of Definitions}
+\tcblistof[\section]{cptlist}{List of Concepts}
+\tcblistof[\section]{thmlist}{List of Theorems}
 
+\clearpage
 % Set a nice gap between the two columns
 \setlength{\columnsep}{1cm}
 
