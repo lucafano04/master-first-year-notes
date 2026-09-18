@@ -32,6 +32,7 @@ jobs:
         with:
           root_file: ${{ matrix.tex_file }}
           working_directory: ${{ matrix.folder }}
+          pre_compile: "pdflatex -interaction=nonstopmode ${{ matrix.tex_file }} && makeglossaries $(basename ${{ matrix.tex_file }} .tex)"
           args: "-pdf -interaction=nonstopmode -halt-on-error"
 
       # Rename main.pdf to the unique course PDF name before uploading
