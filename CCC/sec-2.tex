@@ -91,32 +91,40 @@ This represents ``The set of all strings on \(\Sigma\) of length \(n\)''.
 
 \noindent Furthermore, there is a 1:1 correspondence (bijection) between the set of all decision functions and the power set (the set of all subsets) of \(\Sigma^*\), denoted as \(\mathcal{P}(\Sigma^*)\). 
 
-For any subset \(S \subseteq \Sigma^*\) (where \(S \in \mathcal{P}(\Sigma^*)\)), we can define its characteristic (or indicator) function \(\chi_S\):
-\[
-\begin{aligned}
-    \chi_{S}: \Sigma^* &\rightarrow \{0,1\}\\
-    w &\mapsto \begin{cases}
-        1 & \text{if } w \in S\\
-        0 & \text{if } w \notin S
-    \end{cases}
-\end{aligned}
-\]
+\begin{definition}{Characteristic Function}{char-func}
+    For any subset \(S \subseteq \Sigma^*\) (where \(S \in \mathcal{P}(\Sigma^*)\)), its \textbf{characteristic} (or indicator) \textbf{function} \(\chi_S\) is defined as:
+    \[
+    \begin{aligned}
+        \chi_{S}: \Sigma^* &\rightarrow \{0,1\}\\
+        w &\mapsto \begin{cases}
+            1 & \text{if } w \in S\\
+            0 & \text{if } w \notin S
+        \end{cases}
+    \end{aligned}
+    \]
+\end{definition}
 
-\noindent Conversely, every decision function \(f\) defines a unique subset of \(\Sigma^*\). We can define a mapping \(C\) from the set of decision functions to the power set \(\mathcal{P}(\Sigma^*)\):
-\[
-\begin{aligned}
-    C: \{f : \Sigma^* \rightarrow \{0,1\}\} &\rightarrow \mathcal{P}(\Sigma^*)\\
-    f &\mapsto \underbrace{\{s \in \Sigma^* \mid f(s) = 1\}}_{f^{-1}(\{1\})}
-\end{aligned}
-\]
-and its inverse mapping \(\chi\) (using the characteristic function) from the power set back to the set of decision functions:
-\[
-\begin{aligned}
-    \chi: \mathcal{P}(\Sigma^*) &\rightarrow \{f : \Sigma^* \rightarrow \{0,1\}\}\\
-    S &\mapsto \chi_S
-\end{aligned}
-\]
+\begin{theorem}{Bijection between Decision Functions and the Power Set}{bij-dec-power}
+    There is a 1:1 correspondence (bijection) between the set of all decision functions on \(\Sigma^*\) and the power set \(\mathcal{P}(\Sigma^*)\).
+    \begin{proof}
+        Every decision function \(f\) defines a unique subset of \(\Sigma^*\). We can define a mapping \(C\) from the set of decision functions to the power set \(\mathcal{P}(\Sigma^*)\):
+        \[
+        \begin{aligned}
+            C: \{f : \Sigma^* \rightarrow \{0,1\}\} &\rightarrow \mathcal{P}(\Sigma^*)\\
+            f &\mapsto \underbrace{\{s \in \Sigma^* \mid f(s) = 1\}}_{f^{-1}(\{1\})}
+        \end{aligned}
+        \]
+        Conversely, we can define an inverse mapping \(\chi\) using the characteristic function (\cref{def:char-func}) from the power set back to the set of decision functions:
+        \[
+        \begin{aligned}
+            \chi: \mathcal{P}(\Sigma^*) &\rightarrow \{f : \Sigma^* \rightarrow \{0,1\}\}\\
+            S &\mapsto \chi_S
+        \end{aligned}
+        \]
+        Because \(C\) and \(\chi\) are inverses of each other (\(C(\chi_S) = S\) and \(\chi_{C(f)} = f\)), they form a bijection. 
+    \end{proof}
+\end{theorem}
 
-\noindent Because \(C\) and \(\chi\) are inverses of each other (\(C(\chi_S) = S\) and \(\chi_{C(f)} = f\)), they form a bijection. This proves that the set of all decision functions has the exact same cardinality as the power set \(\mathcal{P}(\Sigma^*)\). By Cantor's theorem, the power set of a countable infinite set (like \(\Sigma^*,\text{\cref{def:strings}}\)) is strictly larger and uncountable, which reinforces our previous result (\cref{thm:uncount-dec}).
+\noindent This formally proves that the set of all decision functions has the exact same cardinality as the power set \(\mathcal{P}(\Sigma^*)\). By Cantor's theorem, the power set of a countably infinite set (like \(\Sigma^*\), \cref{def:strings}) is strictly larger and therefore uncountable, which mathematically reinforces our previous result (\cref{thm:uncount-dec}).
 
 \lecturestop{15/09/2026}
