@@ -88,7 +88,9 @@ This represents ``The set of all strings on \(\Sigma\) of length \(n\)''.
 \end{definition}
 
 \noindent Based on \cref{def:enumeration} and \cref{def:countable}, we can formally state that the set of strings \(\Sigma^*\) is countable, whereas the set of all decision functions is uncountable.
-
+\begin{definition}{Language}{language}
+    A language is a subset, defined by a decision function, of the set of all strings. \(L\subseteq\Sigma^*\) 
+\end{definition}
 \noindent Furthermore, there is a 1:1 correspondence (bijection) between the set of all decision functions and the power set (the set of all subsets) of \(\Sigma^*\), denoted as \(\mathcal{P}(\Sigma^*)\). 
 
 \begin{definition}{Characteristic Function}{char-func}
@@ -125,6 +127,139 @@ This represents ``The set of all strings on \(\Sigma\) of length \(n\)''.
     \end{proof}
 \end{theorem}
 
-\noindent This formally proves that the set of all decision functions has the exact same cardinality as the power set \(\mathcal{P}(\Sigma^*)\). By Cantor's theorem, the power set of a countably infinite set (like \(\Sigma^*\), \cref{def:strings}) is strictly larger and therefore uncountable, which mathematically reinforces our previous result (\cref{thm:uncount-dec}).
+\noindent \Cref{thm:uncount-dec} is a specific application of a much broader mathematical rule, known as Cantor's Theorem:
 
-\lecturestop{15/09/2026}
+\begin{theorem}{Cantor's Theorem (General)}{set-pwr-set}
+    For any set \(A\), the cardinality of its power set \(|\mathcal{P}(A)|\) is strictly greater than the cardinality of the set itself \(|A|\):
+    \[
+        |\mathcal{P}(A)| > |A|
+    \]
+    Furthermore, if \(A\) is a finite set with a cardinality of \(m\) (\(|A| = m\)), then the cardinality of its power set is exactly \(2^m\):
+    \[
+        |\mathcal{P}(A)| = 2^m
+    \]
+\end{theorem}
+
+\noindent As an example of defining a set using a finite number of symbols, consider the set of prime numbers \(\mathbb{P}\):
+\[
+    \mathbb{P} = \{n \in \mathbb{N} \mid n > 1 \land \forall m \in \mathbb{N},\; 1 < m < n \implies m \nmid n\}
+\]
+An infinite set that can be unambiguously described using a finite string of symbols from a given alphabet is called \textbf{definable}.
+
+\noindent Now, a question arises: \textbf{How many definable sets are there?} \\
+They are infinite in number, but strictly \textbf{countable} (since their finite definitions are just strings, and the set of all strings is countable, as established in \cref{def:strings}).
+
+\begin{concept}{Computable Language (Approximate Definition)}{comp-lang-approx}
+    We can give an approximate definition of a ``computable language''. A language \(L \subseteq \Sigma^*\) is computable if there exists a program \(P\) (e.g., written in Python, C, etc.) such that for any string \(s\):
+    \[
+        P(s) = \begin{cases}
+            1 & \text{if } s \in L \\
+            0 & \text{if } s \notin L
+        \end{cases}
+    \]
+    \textit{Note: The rigorous, formal definition (using Turing Machines) will be introduced later in the course.}
+\end{concept}
+
+\begin{definition}{Definable Language}{definable-language}
+    A language \(L\) is \textbf{definable} if there exists a first-order predicate \(P\) such that:
+    \[
+        P(s) \iff s \in L
+    \]
+\end{definition}
+
+\begin{observation}{Computability vs. Definability}{comp-vs-def}
+    \textbf{All computable languages are definable.} The finite source code of the program that computes the language serves as its definition. 
+    
+    However, \textbf{not all definable languages are computable.} There are languages that can be perfectly defined using formal mathematical logic (such as the Halting Problem) for which no algorithm or program can ever exist.
+\end{observation}
+\subsection{A Computational Model: The Turing Machine}
+
+\begin{observation}{Formulas as Strings}{form-strings}
+    As a foundational premise: every mathematical formula, no matter how complex, can be unambiguously represented by a single finite string (\cref{def:strings}) of symbols.
+\end{observation}
+
+\noindent A program or algorithm can be represented and executed using a theoretical computational model known as a \textbf{Turing Machine}. The machine operates on a one-dimensional tape divided into discrete cells. 
+
+Different definitions of the Turing Machine exist in literature:
+\begin{itemize}
+    \item \textbf{Tape bounds:} Some definitions require a tape with a defined starting point (e.g., a cell \(0\) exists, making it one-way infinite), while others define the tape as infinite in both directions.
+    \item \textbf{Multiple tapes:} Some definitions allow for \(n\)-tapes. However, everything that can be computed on an \(n\)-tape machine can be simulated on a \(1\)-tape machine. Adding more tapes does not increase the computational power (or the class of computable functions) of the machine.
+\end{itemize}
+
+\noindent To process numbers and inputs effectively, we designate a \textbf{blank symbol} (usually denoted as \(\sqcup\)) indicating an empty cell, alongside the standard symbols from our alphabet \(\Sigma\) (\cref{def:alphabet}). 
+
+A strict constraint of the machine is that it can only read one cell at a time and has a finite internal memory. To overcome the memory limitation, the machine leverages the infinite tape for storage during computation, which does not reduce its computational capability.
+
+\begin{definition}{Turing Machine States and Transition Function}{tm-trans-func}
+    The finite internal memory of the machine is represented by a set of \textbf{states}, denoted as \(Q\). There exists a specific initial state \(q_0 \in Q\) where the computation begins. 
+
+    The computation is driven by a \textbf{transition function} \(F\), which maps the current state and the symbol currently being read to a new state, a symbol to write, and a directional head movement (\(\leftarrow\) for left, \(\rightarrow\) for right):
+    \[
+    \begin{aligned}
+        F: \Sigma \times Q &\longrightarrow \Sigma \times Q \times \{\leftarrow, \rightarrow\}\\
+        (\sigma, q) &\longmapsto (\sigma', q', \text{direction})
+    \end{aligned}
+    \]
+    With this simple mechanism, we can represent every computable action, function, or calculation.
+\end{definition}
+
+\begin{observation}{The Halt State}{halt-state}
+    There is a special state called \textsc{halt} that stops the execution of the transition function. Depending on the formalization, this is handled in the domain/codomain in two mathematically equivalent ways:
+    \begin{itemize}
+        \item If we consider \(\textsc{halt} \in Q\), the domain excludes it:
+        \[
+            F: \Sigma \times \left(Q \setminus \{\textsc{halt}\}\right) \longrightarrow \Sigma \times Q \times \{\leftarrow, \rightarrow\}
+        \]
+        \item If we consider \(\textsc{halt} \notin Q\), it is added to the codomain:
+        \[
+            F: \Sigma \times Q \longrightarrow \Sigma \times \left(Q \cup \{\textsc{halt}\}\right) \times \{\leftarrow, \rightarrow\}
+        \]
+    \end{itemize}
+\end{observation}
+
+\subsubsection{Example: Binary Incrementor}
+Assume our alphabet (\cref{def:alphabet}) is \(\Sigma = \{\sqcup, 0, 1\}\), where \(\sqcup\) is the default blank symbol. We want to define a transition function (\cref{def:tm-trans-func}) that adds \(1\) to a binary number already written on the tape. 
+
+We define our states as \(Q = \{R, A\}\) (abbreviating \(q_{\text{right}}\) and \(q_{\text{add\_one}}\)). The machine will first move to the far right of the string, and then move left while performing the binary addition (flipping \(1\)s to \(0\)s and carrying the \(1\) until it finds a \(0\) or a blank).
+
+The transition function \(F\) (\cref{def:tm-trans-func}) can be represented using a state table. Note that when transitioning into the \textsc{halt} state (\cref{obs:halt-state}), the computation terminates immediately:
+
+\begin{center}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{r | c c c}
+        \textbf{State \textbackslash\ Read} & \(\sqcup\)& \(\mathbf{0}\) & \(\mathbf{1}\) \\
+        \hline
+        \(R\) \textit{(move\_right)} & \((\sqcup, A, \leftarrow)\) & \((0, R, \rightarrow)\) & \((1, R, \rightarrow)\) \\
+        \(A\) \textit{(add\_one)} & \((1, \textsc{halt}, \leftarrow)\) & \((1, \textsc{halt}, \leftarrow)\) & \((0, A, \leftarrow)\) \\
+    \end{tabular}
+\end{center}
+
+\noindent Nowadays, automata are frequently represented by a directed graph where nodes represent the states (\cref{def:tm-trans-func}) and directed, labeled arcs represent the transitions. The standard notation for an arc label in a Turing Machine is \(\text{Read} / \text{Write}, \text{Direction}\). 
+
+Thus, our binary incrementor can be visually represented by the following state diagram:
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        >=Stealth, 
+        shorten >=1pt, 
+        auto, 
+        node distance=4.5cm, 
+        semithick,
+        every state/.style={thick, fill=gray!10}
+    ]
+        % Nodes
+        \node[state, initial, initial text=start] (R) {\(R\)};
+        \node[state] (A) [right=of R] {\(A\)};
+        \node[state, accepting] (H) [right=of A] {\textsc{halt}};
+
+        % Edges
+        \path[->]
+        (R) edge [loop above] node[align=center] {\(0 / 0, \rightarrow\) \\ \(1 / 1, \rightarrow\)} (R)
+            edge              node {\(\sqcup / \sqcup, \leftarrow\)} (A)
+        (A) edge [loop above] node {\(1 / 0, \leftarrow\)} (A)
+            edge              node[align=center] {\(0 / 1, \leftarrow\) \\ \(\sqcup / 1, \leftarrow\)} (H);
+    \end{tikzpicture}
+    \caption{Incrementor state graph}
+    \label{fig:incrementor-graph}
+\end{figure}
