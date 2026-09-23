@@ -1,1 +1,163 @@
 \chapter{Pipelining}
+This chapter explores the fundamental architectural concept of pipelining, a key implementation technique used to build high-performance processors.
+
+\begin{definition}{Pipelining}{pipelining}
+    Pipelining is an implementation technique where multiple instructions are overlapped in execution. It divides the elementary operations related to a single instruction into a sequence of smaller, discrete tasks (stages) that \textbf{can be performed in parallel} on different instructions simultaneously.
+\end{definition}
+
+\noindent This method allows the hardware execution units to process different elementary functions of different instructions concurrently. To maximize efficiency, the primary architectural goal is to balance the duration (length) of each pipeline stage. If the stages are perfectly balanced, the average time required per instruction when the pipeline is completely full approaches:
+\[
+    T_{\text{pipelined instruction}} = \frac{T_{\text{unpipelined instruction}}}{N_{\text{stages}}}
+\]
+This means that pipelining fundamentally decreases the average \gls{cpi} (ideally bringing it close to 1.0) without changing the underlying mathematical operations.
+
+\begin{concept}{Ideal Pipeline Performance and Latency}{ideal-pipeline}
+    Ideally, if the pipeline consists of \(p\) perfectly balanced stages and \(T_i\) is the total execution latency of an unpipelined instruction, then the delay of an individual pipeline stage (\(t_s\)) is:
+    \[
+        t_s = \frac{T_i}{p} + t_o
+    \]
+    where \(t_o\) is the overhead latency introduced by each stage boundary (e.g., pipeline register setup time, propagation delay, and clock skew). 
+
+    \tcblower
+
+    \textbf{Latency vs. Throughput:}\\
+    It is important to note that pipelining \textbf{does not} reduce the total time it takes to execute a single instruction from start to finish; in fact, due to the overhead \(t_o\), the total latency slightly increases. 
+
+    Instead, because the execution clocks are shared and overlapped, the effective \gls{cpi} is defined as the number of clock cycles required (on average) to complete an instruction \textit{after the previous one has completed}. Hence, once a pipeline is filled, one instruction finishes every \(t_s\) cycle. Consequently, the \textbf{instruction throughput} of a pipelined architecture is roughly \(p\) times larger than that of an equivalent unpipelined solution.
+\end{concept}
+
+\noindent From now forward, we will consider a theoretical \gls{risc} \gls{cpu} featuring single-sized instructions (32 bits wide). We assume the \gls{isa} consists exclusively of \gls{alu} operations, Load/Store operations, and Branches. Furthermore, \gls{alu} instructions operate exclusively on general-purpose registers (64 bits wide), and \textbf{only} Load/Store instructions are permitted to access main memory.
+
+\section{Instruction Execution Stages}
+Every instruction in this proposed architecture can be executed in at most five distinct clock cycles, mapping to the classic five-stage \gls{risc} pipeline:
+
+\paragraph{Instruction Fetch (IF)} 
+The \gls{pc} is sent to memory to fetch the current instruction from main memory (or the Instruction Cache). Simultaneously, the \gls{pc} is updated (incremented) to point to the next sequential instruction.
+
+\paragraph{Instruction Decode / Register Fetch (ID)} 
+The instruction is decoded while simultaneously reading the required operands from the register file. This simultaneous read is possible because \gls{risc} architectures utilize fixed-field instruction encoding (meaning the register specifiers are always located in the exact same bit positions). If the instruction utilizes an immediate value, this value is extracted and sign-extended.
+
+\paragraph{Execution / Effective Address (EX)} 
+The \gls{alu} operates on the operands prepared in the previous cycle, performing different tasks depending on the specific instruction class:
+\begin{itemize}
+    \item \textbf{Memory Reference (Load/Store):} The \gls{alu} adds the base register value and the sign-extended offset to calculate the effective memory address.
+    \item \textbf{Register-Register (R-R) \gls{alu}:} The \gls{alu} performs the mathematical or logical operation specified by the opcode on the two values read from the register file.
+    \item \textbf{Register-Immediate (R-I) \gls{alu}:} The \gls{alu} performs the operation between the register value and the sign-extended immediate value.
+    \item \textbf{Branch:} The \gls{alu} adds the next instruction's address (\gls{pc}) to the sign-extended immediate offset to calculate the \glsxtrfull{bta}. Simultaneously, the branch condition is evaluated (often via a dedicated comparator).
+\end{itemize}
+
+\paragraph{Memory Access (MEM)} 
+For Load instructions, data is read from the effective memory address calculated during the EX stage. For Store instructions, the data fetched from the register file is written into memory at the calculated effective address. For conditional Branch instructions, if the condition evaluated in the EX stage is met, the \gls{pc} is overwritten by the calculated \gls{bta}. \textit{(Note: If the instruction is a standard \gls{alu} operation, this stage remains idle).}
+
+\paragraph{Write-Back (WB)} 
+The final result is written back into the register file. For \gls{alu} instructions, this is the computed output from the EX stage; for Load instructions, this is the data fetched from memory during the MEM stage. \textit{(Store and Branch instructions do nothing during this stage).}
+
+\begin{table}[!htbp]
+    \centering
+    \renewcommand{\arraystretch}{1.5} % Adds vertical breathing room between stages
+    \begin{tabular}{| >{\raggedright\arraybackslash}p{0.08\textwidth} | >{\raggedright\arraybackslash}p{0.26\textwidth} | >{\raggedright\arraybackslash}p{0.26\textwidth} | >{\raggedright\arraybackslash}p{0.26\textwidth} |}
+         \hline
+         \textbf{Stage} & \textbf{ALU Instruction} & \textbf{Load/Store Instruction} & \textbf{Branch Instruction} \\
+         \hline\hline
+         
+         \textbf{IF} & 
+         \(\text{IR} \leftarrow \text{Mem}[\text{PC}]\) \newline \(\text{NPC} \leftarrow \text{PC} + 4\) & 
+         \(\text{IR} \leftarrow \text{Mem}[\text{PC}]\) \newline \(\text{NPC} \leftarrow \text{PC} + 4\) & 
+         \(\text{IR} \leftarrow \text{Mem}[\text{PC}]\) \newline \(\text{NPC} \leftarrow \text{PC} + 4\) \\
+         \hline
+         
+         \textbf{ID} & 
+         \(\text{A} \leftarrow \text{Rs1}; \quad \text{B} \leftarrow \text{Rs2}\) \newline \(\text{Imm} \leftarrow \text{sign\_extend}(\text{IR})\) & 
+         \(\text{A} \leftarrow \text{Rs1}; \quad \text{B} \leftarrow \text{Rs2}\) \newline \(\text{Imm} \leftarrow \text{sign\_extend}(\text{IR})\) & 
+         \(\text{A} \leftarrow \text{Rs1}; \quad \text{B} \leftarrow \text{Rs2}\) \newline \(\text{Imm} \leftarrow \text{sign\_extend}(\text{IR})\) \\
+         \hline
+         
+         \textbf{EX} & 
+         \(\text{ALUout} \leftarrow \text{A op B}\) \newline \textit{or} \(\text{ALUout} \leftarrow \text{A op Imm}\) & 
+         \(\text{ALUout} \leftarrow \text{A} + \text{Imm}\) & 
+         \(\text{ALUout} \leftarrow \text{NPC} + (\text{Imm} \times 4)\) \newline \(\text{Cond} \leftarrow (\text{A} == 0)\) \\
+         \hline
+         
+         \textbf{MEM} & 
+         \textit{(Idle)} & 
+         \(\text{LMD} \leftarrow \text{Mem}[\text{ALUout}]\) \textit{(Load)} \newline \textit{or} \(\text{Mem}[\text{ALUout}] \leftarrow \text{B}\) \textit{(Store)} & 
+         \(\text{if (Cond) PC} \leftarrow \text{ALUout}\) \\
+         \hline
+         
+         \textbf{WB} & 
+         \(\text{Rd} \leftarrow \text{ALUout}\) & 
+         \(\text{Rd} \leftarrow \text{LMD}\) & 
+         \textit{(Idle)} \\
+         \hline
+    \end{tabular}
+    \caption{Register Transfer Language (RTL) definitions for the 5-Stage \gls{risc} Pipeline}
+    \label{tab:pipeline-rtl}
+\end{table}
+
+\noindent Note that this baseline, unpipelined architecture executes each instruction in at most 5 clock cycles under the supervision of a simplified \gls{cu}. At the end of every clock cycle, all computed values are systematically written into an architectural or intermediate storage element (e.g., main memory, \glspl{gpr}, the \gls{pc}, or temporary pipeline registers). It is important to emphasize that this specific datapath is neither the only possible implementation of our \gls{isa}, nor the most efficient.
+
+\paragraph{Unpipelined CPI Computation Example} 
+Assume a processor operating with a \(1\,\text{ns}\) clock cycle, where \gls{alu} and Branch instructions take 4 cycles to complete, and Memory (Load/Store) instructions require the full 5 cycles. 
+
+Given a typical instruction frequency distribution of:
+\begin{itemize}
+    \item \textbf{\gls{alu}:} $40\%$
+    \item \textbf{Branch:} $20\%$
+    \item \textbf{Memory:} $40\%$
+\end{itemize}
+
+\noindent We can calculate the average \gls{cpi} and the average instruction execution time (\(\overline{T_{\text{inst}}}\)) as follows:
+\begin{align*}
+    \overline{\text{CPI}} &= \left( (0.40 + 0.20) \times 4 \right) + (0.40 \times 5) \\
+                          &= 2.4 + 2.0 = \mathbf{4.4 \text{ cycles/instruction}} \\[1em]
+    \overline{T_{\text{inst}}} &= \text{Clock Period} \times \overline{\text{CPI}} \\
+                               &= 1\,\text{ns} \times 4.4 = \mathbf{4.4\,\text{ns}}
+\end{align*}
+
+\section{Pipelined Execution and Speedup}
+To visualize how pipelining improves instruction throughput, we use a space-time diagram (also known as a pipeline execution diagram). This maps the sequence of instructions (space) against the progression of clock cycles (time). 
+
+In an ideal scenario without any interruptions, once the pipeline is full, every hardware stage is actively processing a different instruction simultaneously.
+
+\begin{table}[!htbp]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+        \hline
+        \textbf{Instruction} & \multicolumn{9}{c|}{\textbf{Clock Cycle Number}} \\
+        \cline{2-10}
+        \textbf{Order} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} & \textbf{9} \\
+        \hline\hline
+        \(i\)     & IF & ID & EX & MEM & WB &    &    &    &    \\
+        \hline
+        \(i+1\)   &    & IF & ID & EX & MEM & WB &    &    &    \\
+        \hline
+        \(i+2\)   &    &    & IF & ID & EX & MEM & WB &    &    \\
+        \hline
+        \(i+3\)   &    &    &    & IF & ID & EX & MEM & WB &    \\
+        \hline
+        \(i+4\)   &    &    &    &    & IF & ID & EX & MEM & WB \\
+        \hline
+    \end{tabular}
+    \caption{Basic 5-Stage Pipelined \gls{risc} Space-Time Diagram (Ideal Execution)}
+    \label{tab:pipeline-diagram}
+\end{table}
+
+\noindent Notice that during Clock Cycle 5, the pipeline is fully saturated: the \gls{cpu} is simultaneously writing back instruction \(i\), accessing memory for \(i+1\), executing \(i+2\), decoding \(i+3\), and fetching \(i+4\).
+
+\paragraph{Pipelined CPI and Speedup Computation}
+In this ideal pipeline, there are no stalls (no structural, data, or control hazards). After the initial \(p-1\) cycles required to fill the pipeline (where \(p=5\) stages), exactly one instruction finishes execution during every single clock cycle. Thus, the ideal pipelined \gls{cpi} remains strictly $1.0$.
+
+However, physical pipelining requires the insertion of intermediate pipeline registers between stages. These registers introduce unavoidable hardware overhead (\(t_o\)), such as register setup time, propagation delay, and clock skew. Assuming this overhead forces our clock cycle period to increase from the unpipelined \(1.0\,\text{ns}\) to \(1.2\,\text{ns}\), the pipelined performance is calculated as follows:
+\begin{align*}
+    \overline{\text{CPI}}_{\text{pipelined}} &= 1.0 \text{ cycle/instruction} \\
+    \overline{T_{\text{pipelined}}} &= \text{Clock Period} \times \overline{\text{CPI}}_{\text{pipelined}} \\
+                                    &= 1.2\,\text{ns} \times 1.0 = \mathbf{1.2\,\text{ns}}
+\end{align*}
+
+\noindent Using the unpipelined architecture from the previous section as our baseline (\(\overline{T_{\text{unpipelined}}} = 4.4\,\text{ns}\)), we can calculate the realistic speedup achieved. Note that while the theoretical maximum speedup is \(5\times\) (the number of stages), our actual speedup is lower due to both the unpipelined \gls{cpu} already optimizing some instructions to 4 cycles, and the hardware overhead added to the clock period:
+\[
+    \text{Speedup} = \frac{\overline{T_{\text{unpipelined}}}}{\overline{T_{\text{pipelined}}}} = \frac{4.4\,\text{ns}}{1.2\,\text{ns}} \approx \mathbf{3.67\times}
+\]
+
+\noindent This calculation beautifully illustrates the core trade-off of \gls{risc} pipelining: we accept hardware overhead (a \(1.2\,\text{ns}\) clock instead of \(1.0\,\text{ns}\)) and force faster instructions to pass through idle stages so that the datapath remains perfectly synchronized. In return, we achieve a massive overall throughput speedup of \(3.67\times\).

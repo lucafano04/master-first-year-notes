@@ -4,7 +4,7 @@
 Fundamentally, an \gls{isa} is composed of an Instruction Set, an Instruction Classification, and Addressing Modes.
 
 \begin{definition}{Instruction Set Architecture (\gls*{isa})}{isa}
-    The \glsxtrfull {isa} includes all the rules describing the functional specification of a given hardware architecture. Each \gls{isa} is characterized by:
+    The \glsxtrfull{isa} includes all the rules describing the functional specification of a given hardware architecture. Each \gls{isa} is characterized by:
     \begin{itemize}
         \item Different classes of instruction operators;
         \item The number and type of operands;
@@ -12,7 +12,7 @@ Fundamentally, an \gls{isa} is composed of an Instruction Set, an Instruction Cl
     \end{itemize}
 \end{definition}
 
-\noindent Architectures can be classified based on instruction complexity and count into \gls{cisc} (\textbf{Complex Instruction Set Computer}), which feature a lower ``semantic gap'' but require a highly complex \glsxtrfull{cu}, and \gls{risc} (\textbf{Reduced Instruction Set Computer}), which rely on a simpler, more modular organization at the cost of larger machine-level programs. Furthermore, ISAs can be distinguished by their internal storage topology: stack architectures, accumulator architectures, and \gls{gpr} (\textbf{General-Purpose Register}) architectures, as well as whether they implement a dedicated \texttt{load}/\texttt{store} paradigm or allow direct Register-Memory operations.
+\noindent Architectures can be classified based on instruction complexity and count into \gls{cisc} (\textbf{Complex Instruction Set Computer}), which feature a lower ``semantic gap'' but require a highly complex \glsxtrfull{cu}, and \gls{risc} (\textbf{Reduced Instruction Set Computer}), which rely on a simpler, more modular organization at the cost of larger machine-level programs. Furthermore, \glspl{isa} can be distinguished by their internal storage topology: stack architectures, accumulator architectures, and \gls{gpr} (\textbf{General-Purpose Register}) architectures, as well as whether they implement a dedicated \texttt{load}/\texttt{store} paradigm or allow direct Register-Memory operations.
 
 \paragraph{Instruction Definition} A machine-level instruction is a multiple-field binary string decoded by the processor's \gls{cu}, acting as the core bridge between hardware and software. Generally, an instruction is composed of an opcode, operand addresses, and a corresponding number of address qualifiers.
 
@@ -28,19 +28,8 @@ Fundamentally, an \gls{isa} is composed of an Instruction Set, an Instruction Cl
 \end{itemize}
 While all computer architectures provide a full foundational set for Arithmetic, Data Transfer, and Control, system functions vary widely among architectures.
 
-\subsection{Why RISC?} 
-Statistical profiling reported that across 5 representative programs from the \gls{spec} benchmark suite running on x86 architectures, \textbf{96\% of executed instructions fell within the 10 simplest instruction types}. 
-
-In accordance with Amdahl's Law (\cref{thm:amdahl-law}), optimizing the common case yields vastly superior returns compared to over-engineering rare pathways. 
-
-\begin{observation}{Amdahl's Law Application}{amdahl-application}
-    Amdahl's law dictates that the overall performance improvement gained by optimizing a single part of a system is limited by the fraction of time that the targeted part is actually used. Consequently, focusing hardware optimization on the most frequent instructions provides maximum effectiveness.
-\end{observation}
-
-\noindent Consequently, \gls{risc} architectures are inherently more efficient. Modern hybrids (such as x86 processors) maintain internal hardware optimization layers that decode \gls{cisc} instructions dynamically into RISC-like micro-operations, balancing software complexity compatibility with high-performance execution cores.
-
 \subsubsection{Arithmetic Instructions}
-Self-explanatory instructions include basic operations: \texttt{Add}, \texttt{Sub}, \texttt{Mul}, \texttt{And}, \texttt{Or}, and \texttt{Not}. 
+Basic arithmetic and logical instructions are largely self-explanatory: \texttt{Add}, \texttt{Sub}, \texttt{Mul}, \texttt{And}, \texttt{Or}, and \texttt{Not}. 
 
 \noindent Shift and rotate operations are typically categorized into:
 \begin{itemize}
@@ -52,7 +41,7 @@ Self-explanatory instructions include basic operations: \texttt{Add}, \texttt{Su
 \noindent Additionally, \textbf{comparison instructions} store no explicit destination result. Instead, they execute a subtraction or logical evaluation, and the \gls{alu} outputs update processor condition flags (such as Zero, Sign, Overflow, and Carry) to inform subsequent control flow decisions.
 
 \subsubsection{Multimedia Instructions}
-Multimedia operands are often narrower than the native 64-bit data word of modern processors. Rather than wasting 64-bit \glspl{alu} capacity when operating on narrower bit-widths, multimedia instructions operate on several smaller data items in parallel. For example, a 64-bit register can be \textbf{partitioned} into four 16-bit segments, allowing a dedicated execution unit to perform four simultaneous additions in a single clock cycle. Similarly, this concept applies to floating-point operations. These parallel operations are formally classified as \glsxtrfull{simd} or vector instructions.
+Multimedia operands are often narrower than the native 64-bit data word of modern processors. Rather than wasting 64-bit \gls{alu} capacity when operating on narrower bit-widths, multimedia instructions operate on several smaller data items in parallel. For example, a 64-bit register can be \textbf{partitioned} into four 16-bit segments, allowing a dedicated execution unit to perform four simultaneous additions in a single clock cycle. Similarly, this concept applies to floating-point operations. These parallel operations are formally classified as \glsxtrfull{simd} or vector instructions.
 
 \subsubsection{Data Transfer Instructions} 
 Data transfer instructions are dedicated commands that load data from main memory into registers, or store data from registers back to memory. This category also encompasses register-to-register moves and memory-to-memory transfers (though the latter is rarely implemented in \gls{risc} architectures). Finally, stack manipulation operations (pushing and popping) and hardware I/O communications through specific memory-mapped ports belong to this class.
@@ -85,6 +74,17 @@ Most control flow is managed by conditional branches. For pipeline optimization,
 
 \subsubsection{System and Other Instructions}
 All remaining non-standard instructions fall into this category. This includes, but is not limited to, virtual memory management, system calls, interrupt handling, peripheral management, complex bit manipulations, and iterative execution sequences (such as hardware division and square root operations).
+
+\subsection{Why RISC?} 
+Statistical profiling reported that across 5 representative programs from the \gls{spec} benchmark suite running on x86 architectures, \textbf{96\% of executed instructions fell within the 10 simplest instruction types}. 
+
+In accordance with Amdahl's Law (\cref{thm:amdahl-law}), optimizing the common case yields vastly superior returns compared to over-engineering rare pathways. 
+
+\begin{observation}{Amdahl's Law Application}{amdahl-application}
+    Amdahl's law dictates that the overall performance improvement gained by optimizing a single part of a system is limited by the fraction of time that the targeted part is actually used. Consequently, focusing hardware optimization on the most frequent instructions provides maximum effectiveness.
+\end{observation}
+
+\noindent Consequently, \gls{risc} architectures are inherently more efficient. Modern hybrids (such as x86 processors) maintain internal hardware optimization layers that decode \gls{cisc} instructions dynamically into RISC-like micro-operations, balancing software complexity compatibility with high-performance execution cores.
 
 \section{Addressing Modes}
 Before detailing specific addressing modes, we must classify how architectures handle operand access. Specifically, instruction sets can be categorized by where they store operands and results.
@@ -204,7 +204,7 @@ DLX instructions are strictly fixed at 32-bits wide with a 6-bit opcode. The arc
 \end{figure}
 
 \subsection{Specific \glsfmtshort{isa} features in \glsfmtfullpl{dsp}}
-Digital signal processors are widely used in several embedded applications, including wireless communications, consumer audio, hard disk drives, multimedia, instrumentation, and the automotive industry. Compared to other embedded applications, \glspl{dsp} are differentiated by: computationally demanding numeric algorithms (often relying on vector dot products), high sensitivity to small numeric errors, strict real-time requirements, continuous analog-to-digital data streams, high data bandwidth, and highly predictable memory access and program flow. For these reasons, a dedicated \gls{isa} for \glspl{dsp} must be highly optimized for mathematical calculations and support complex addressing modes.
+Digital signal processors are widely used in several embedded applications, including wireless communications, consumer audio, hard disk drives, multimedia, instrumentation, and the automotive industry. Compared to other embedded applications, \glspl{dsp} are characterized by: computationally demanding numeric algorithms (often relying on vector dot products), high sensitivity to small numeric errors, strict real-time requirements, continuous analog-to-digital data streams, high data bandwidth, and highly predictable memory access and program flow. For these reasons, a dedicated \gls{isa} for \glspl{dsp} must be highly optimized for mathematical calculations and support complex addressing modes.
 
 \paragraph{\glsxtrfull{mac}} 
 The sum of products is the foundational operation for most digital signal processing algorithms:
@@ -219,7 +219,7 @@ The sum of products is the foundational operation for most digital signal proces
 In accordance with Amdahl's law (\cref{thm:amdahl-law}), since these calculations constitute the bulk of execution time, all modern \glspl{dsp} are provisioned with a dedicated hardware Multiply-Accumulate unit and a corresponding \gls{mac} instruction in their \glspl{isa}.
 
 \paragraph{Zero-Overhead Looping (\texttt{Repeat})} 
-DSP applications require the repeated execution of a small number of arithmetic or multiplication instructions. In general-purpose processors, software looping uses branch and compare instructions to jump back to the beginning of the loop, and a loop counter must be actively maintained and incremented. Both of these actions require an extra register and consume data path clock cycles. To circumvent this, \glspl{dsp} provide specific hardware \texttt{repeat} instructions that execute loops with zero instruction-fetch overhead.
+\gls{dsp} applications require the repeated execution of a small number of arithmetic or multiplication instructions. In general-purpose processors, software looping uses branch and compare instructions to jump back to the beginning of the loop, and a loop counter must be actively maintained and incremented. Both of these actions require an extra register and consume data path clock cycles. To circumvent this, \glspl{dsp} provide specific hardware \texttt{repeat} instructions that execute loops with zero instruction-fetch overhead.
 
 \subsubsection{Addressing and Memory Requirements} 
 Most \gls{dsp} algorithms require access to large amounts of (usually sequential) data. They need the ability to perform multiple memory accesses within a single instruction cycle, and the ability to rapidly calculate new addresses in parallel with ongoing arithmetic operations. This is resolved through a modified Harvard (or Super-Harvard) dual-memory architecture, a large variety of flexible register-indirect addressing modes, and a dedicated functional unit devoted exclusively to calculating data addresses: the \glsxtrfull{agu}.
@@ -241,8 +241,8 @@ Bit-reversed addressing is specifically targeted to speed up \glsxtrfull{fft} al
 The Texas Instruments TMS320C54x is a classic 16-bit fixed-point \gls{dsp} designed specifically for low-power, high-performance telecommunications applications. Its architecture is built around an advanced modified Harvard bus structure, allowing concurrent instruction and multi-operand data fetches. The main characteristics of this processor include:
 \begin{itemize}
     \item \textbf{Modified Harvard Architecture:} Features dual-access memory managed through multiple 16-bit buses (including a program bus and dedicated data buses like CB and DB), allowing parallel instruction fetching and dual data loads.
-    \item \textbf{40-bit ALU:} While it is fundamentally a 16-bit processor, the \gls{alu} is 40 bits wide. This accommodates 32-bit results from the multiplier, while reserving 8 extra "guard bits" to prevent numerical overflow during prolonged \gls{mac} accumulation loops.
+    \item \textbf{40-bit ALU:} While it is fundamentally a 16-bit processor, the \gls{alu} is 40 bits wide. This accommodates 32-bit results from the multiplier, while reserving 8 extra ``guard bits'' to prevent numerical overflow during prolonged \gls{mac} accumulation loops.
     \item \textbf{Hardware Multiplier:} A dedicated $16 \times 16$-bit hardware multiplier that generates a 32-bit product in a single clock cycle.
     \item \textbf{Dual 40-bit Accumulators:} Two independent accumulators allow parallel processing and temporary storage of wide mathematical results without having to route them back to main memory.
-    \item \textbf{Advanced Multiplexing (MUX):} Most operand combinations can be fed directly to the \gls{alu} inputs through appropriate internal multiplexers, bypassing the register file and avoiding bottleneck delays.
+    \item \textbf{Advanced Multiplexing:} Most operand combinations can be fed directly to the \gls{alu} inputs through appropriate internal multiplexers, bypassing the register file and avoiding bottleneck delays.
 \end{itemize}
