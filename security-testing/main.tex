@@ -1,4 +1,12 @@
-\documentclass[11pt,a4paper, twoside, titlepage]{article}
+\documentclass[11pt, a4paper, twoside, titlepage]{scrbook}
+
+% ==========================================
+% KOMA-SCRIPT FONT SETTINGS
+% ==========================================
+% Force serif font (classic look) for all headings, labels, and headers/footers
+\setkomafont{disposition}{\normalfont\bfseries}
+\setkomafont{descriptionlabel}{\normalfont\bfseries}
+\setkomafont{pageheadfoot}{\normalfont\small}
 
 % ==========================================
 % PACKAGES
@@ -16,7 +24,6 @@
 \usepackage{geometry}
 % Usiamo inner/outer per il fronte-retro e un offset per la rilegatura
 \geometry{a4paper, inner=2.5cm, outer=2.5cm, bindingoffset=0.5cm, top=2.5cm, bottom=2.5cm}
-\usepackage{fancyhdr}
 \usepackage{float} % Aggiunto per supportare [H] nelle figure
 \usepackage{ccicons} % Added for CC icons
 
@@ -26,42 +33,6 @@
 \usepackage{tikz} % Per grafi, automi, architetture
 \usetikzlibrary{automata, positioning, arrows, arrows.meta}
 
-% Box per Teoremi, Definizioni, Algoritmi
-\usepackage{tcolorbox}
-\tcbuselibrary{theorems, breakable, skins}
-
-% Codice e Pseudocodice
-\usepackage{listings}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
-
-% Link e Riferimenti
-\usepackage{hyperref}
-% Clever references
-\usepackage{cleveref}
-
-% ==========================================
-% GLOSSARIES / ACRONYMS
-% ==========================================
-\usepackage[acronym,toc]{glossaries}
-\makeglossaries
-
-\newacronym{cia}{CIA}{Confidentiality, Integrity, and Availability}
-\newacronym{cwe}{CWE}{Common Weakness Enumeration}
-\newacronym{cve}{CVE}{Common Vulnerabilities and Exposures}
-\newacronym{cvss}{CVSS}{Common Vulnerability Scoring System}
-\newacronym{nvd}{NVD}{National Vulnerability Database}
-\newacronym{euvd}{EUVD}{European Union Vulnerability Database}
-\newacronym{enisa}{ENISA}{European Union Agency for Cybersecurity}
-\newacronym{os}{OS}{Operating System}
-\newacronym{fs}{FS}{File System}
-\newacronym{sto}{STO}{Security Through Obscurity}
-\newacronym{cert}{CERT}{Computer Emergency Response Team}
-\newacronym{sdlc}{SDLC}{System Development Life Cycle}
-\newacronym{ssdlc}{sSDLC}{Secure System Development Life Cycle}
-\newacronym{qa}{QA}{Quality Assurance}
-\newacronym{srs}{SRS}{Software Requirements Specification}
-
 % ==========================================
 % CUSTOMIZATION & BRANDING (UNITN STYLE)
 % ==========================================
@@ -69,15 +40,38 @@
 \definecolor{unitnred}{RGB}{178, 35, 52}
 \definecolor{codebg}{RGB}{245, 245, 245}
 
-\hypersetup{
-    colorlinks=true,
-    linkcolor=unitnred,
-    filecolor=magenta,      
-    urlcolor=unitnred,
-    citecolor=blue,
-    pdftitle={Lecture Notes - Security Testing},
-    pdfauthor={Luca Facchini},
-}
+% ==========================================
+% HEADER & FOOTER (KOMA-Script Native)
+% ==========================================
+\usepackage[headsepline=0.4pt, footsepline=0.4pt, plainfootsepline]{scrlayer-scrpage}
+\clearpairofpagestyles
+
+% Attiva i marker dinamici: Capitolo a sinistra (pari), Sezione a destra (dispari)
+\automark[section]{chapter}
+
+% Intestazioni (ohead = outer, ihead = inner)
+\ohead{\headmark} % Nome del capitolo/sezione corrente
+\ihead{\textbf{Security Testing}} % Nome del corso fisso all'interno
+
+% Piè di pagina
+% L'argomento opzionale [...] definisce lo stile per le pagine dei capitoli (plain)
+\ifoot[A.Y. 2026/2027 -- \textit{Notes by Luca Facchini}]{A.Y. 2026/2027 -- \textit{Notes by Luca Facchini}}
+\ofoot[Page \pagemark]{Page \pagemark}
+
+% Customizzazione linee (entrambe in rosso UniTn per simmetria)
+\addtokomafont{headsepline}{\color{unitnred}}
+\addtokomafont{footsepline}{\color{unitnred}}
+\setlength{\headheight}{24pt}
+
+% ==========================================
+% BOXES, CODE & ALGORITHMS
+% ==========================================
+\usepackage{tcolorbox}
+\tcbuselibrary{theorems, breakable, skins}
+
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 % Stile del Codice
 \lstset{
@@ -95,9 +89,53 @@
 }
 
 % ==========================================
+% LINKS, REFERENCING & GLOSSARIES
+% ==========================================
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=unitnred,
+    filecolor=magenta,      
+    urlcolor=unitnred,
+    citecolor=blue,
+    pdftitle={Lecture Notes - Security Testing},
+    pdfauthor={Luca Facchini},
+}
+
+\usepackage[acronym,toc]{glossaries-extra}
+\makeglossaries
+
+\usepackage{cleveref}
+
+\usepackage{microtype}
+
+% ==========================================
+% ACRONYMS DEFINITIONS
+% ==========================================
+\newacronym{cia}{CIA}{Confidentiality, Integrity, and Availability}
+\newacronym{cwe}{CWE}{Common Weakness Enumeration}
+\newacronym{cve}{CVE}{Common Vulnerabilities and Exposures}
+\newacronym{cvss}{CVSS}{Common Vulnerability Scoring System}
+\newacronym{nvd}{NVD}{National Vulnerability Database}
+\newacronym{euvd}{EUVD}{European Union Vulnerability Database}
+\newacronym{enisa}{ENISA}{European Union Agency for Cybersecurity}
+\newacronym{os}{OS}{Operating System}
+\newacronym{fs}{FS}{File System}
+\newacronym{sto}{STO}{Security Through Obscurity}
+\newacronym{cert}{CERT}{Computer Emergency Response Team}
+\newacronym{sdlc}{SDLC}{System Development Life Cycle}
+\newacronym{ssdlc}{sSDLC}{Secure System Development Life Cycle}
+\newacronym{qa}{QA}{Quality Assurance}
+\newacronym{srs}{SRS}{Software Requirements Specification}
+\newacronym{dds}{DDS}{Detailed Design Specification}
+\newacronym{uaf}{UAF}{Use-After-Free}
+\newacronym{capec}{CAPEC}{Common Attack Pattern Enumeration and Classification}
+\newacronym{sast}{SAST}{Static Application Security Testing}
+
+% ==========================================
 % TCOLORBOX THEOREMS & DEFINITIONS
 % ==========================================
-\newtcbtheorem[number within=section,
+\newtcbtheorem[number within=chapter,
   crefname={definition}{definitions},
   Crefname={Definition}{Definitions},
   list inside=deflist
@@ -105,7 +143,7 @@
   colback=unitnred!5,colframe=unitnred!80!black,fonttitle=\bfseries, breakable%
 }{def}
 
-\newtcbtheorem[number within=section,
+\newtcbtheorem[number within=chapter,
   crefname={theorem}{theorems},
   Crefname={Theorem}{Theorems},
   list inside=thmlist
@@ -113,7 +151,7 @@
   colback=blue!5,colframe=blue!80!black,fonttitle=\bfseries, breakable%
 }{thm}
 
-\newtcbtheorem[number within=section,
+\newtcbtheorem[number within=chapter,
   crefname={lemma}{lemmas},
   Crefname={Lemma}{Lemmas},
   list inside=lemlist
@@ -121,7 +159,7 @@
   colback=cyan!5,colframe=cyan!80!black,fonttitle=\bfseries, breakable%
 }{lem}
 
-\newtcbtheorem[number within=section,
+\newtcbtheorem[number within=chapter,
   crefname={observation}{observations},
   Crefname={Observation}{Observations},
   list inside=obslist
@@ -129,32 +167,13 @@
   colback=orange!5,colframe=orange!80!black,fonttitle=\bfseries, breakable%
 }{obs}
 
-\newtcbtheorem[number within=section,
+\newtcbtheorem[number within=chapter,
   crefname={concept}{concepts},
   Crefname={Concept}{Concepts},
   list inside=cptlist
 ]{concept}{Concept}{%
   colback=green!5!white,colframe=green!60!black,fonttitle=\bfseries, breakable%
 }{cpt}
-
-% ==========================================
-% HEADER & FOOTER 
-% ==========================================
-\pagestyle{fancy}
-\fancyhf{}
-% Intestazioni (L=Left, R=Right, E=Even, O=Odd)
-\fancyhead[LE,RO]{\textbf{Security Testing}} % Esterno pagina
-\fancyhead[RE,LO]{A.Y. 2026/2027}             % Interno pagina
-
-% Piè di pagina
-\fancyfoot[RE,LO]{\textit{Notes by Luca Facchini - Matr. 273741}} % Interno pagina
-\fancyfoot[LE,RO]{Page \thepage}                                  % Esterno pagina
-
-\renewcommand{\headrulewidth}{0.4pt}
-\renewcommand{\headrule}{\hbox to\headwidth{\color{unitnred}\leaders\hrule height \headrulewidth\hfill}}
-\renewcommand{\footrulewidth}{0.4pt}
-
-\setlength{\headheight}{23.2pt}
 
 \newcommand{\lecturestop}[1]{%
     \par\vspace{1em}
@@ -175,13 +194,9 @@
 % ==========================================
 % TITLE PAGE INFO
 % ==========================================
-\title{
-    \vspace{-1.5cm}
-    \includegraphics[width=4cm]{UniTn.jpg} 
-    \vspace{0.5cm}\\
-    \Huge \textbf{Security Testing} \\ 
-    \Large \vspace{0.2cm} Lecture Notes
-}
+\titlehead{\centering\includegraphics[width=4cm]{UniTn.jpg}}
+\title{Security Testing}
+\subtitle{Lecture Notes}
 \author{
     \textbf{Luca Facchini} \\
     \textit{Master's Degree in Computer Science} \\
@@ -190,14 +205,14 @@
     \href{mailto:luca@fc-software.it}{luca@fc-software.it}
 }
 \date{Last updated: \today}
-
+\raggedbottom
 % ==========================================
 % DOCUMENT BEGINS
 % ==========================================
 \begin{document}
+\frontmatter
 
 % --- TITLE PAGE ---
-\pagestyle{empty}
 \maketitle
 
 % --- COPYRIGHT / LEGAL PAGE (Back of Title Page) ---
@@ -222,13 +237,12 @@ This material is provided ``AS IS'', without warranty of any kind, express or im
 \cleardoublepage
 
 % --- TABLE OF CONTENTS ---
-\pagestyle{fancy} % Turn headers back on for the TOC and beyond
 \tableofcontents
 \cleardoublepage
+\mainmatter
 
 % --- PREFACE / SCOPE ---
-\section*{Preface: Scope and Purpose}
-\addcontentsline{toc}{section}{Preface: Scope and Purpose} % Adds this unnumbered section to the TOC
+\addchap{Preface: Scope and Purpose}
 
 \noindent \textbf{The Motivation}\\
 These notes were initially born out of a personal need: the desire to organize, synthesize, and rigorously typeset the vast amount of information presented during the lectures. Writing and structuring this material in \LaTeX\ served as my primary method of active recall and study. However, recognizing how challenging it can be to study from scattered slides, recordings, and fragmented notes, I decided to open-source this project. The goal is to provide current and future students of the Master's Degree in Computer Science with a unified, structured, and accessible study companion.
@@ -256,12 +270,12 @@ BSc Graduate in Computer Science
 % LECTURES BEGIN
 % ==========================================
 
-\section{Introduction to the Course [10/09/2026]}
+\chapter{Introduction to the Course [10/09/2026]}
 The objective of the course is to provide principles, techniques, and tools for Security Testing.
 
 The project, as part of the exam, is written in Java, but the course also explores other programming languages like C/C++, Python, PHP, and SQL. This is because different programming languages suffer from different vulnerabilities.
 
-\subsection{Contents of the Course}
+\section{Contents of the Course}
 The main topics of the course are described below:
 
 \paragraph{Introduction to Security Testing} An overview of the security testing life-cycle, vulnerabilities, bugs, and secure coding.
@@ -271,7 +285,7 @@ The main topics of the course are described below:
 \paragraph{Tools} For these analyses, tools need to be provided; they will be analyzed and discussed.
 \paragraph{[OPTIONAL] Advanced Topics} 
 
-\subsection{Exam}
+\section{Exam}
 The exam is composed of two parts:
 \begin{itemize}
     \item A written test with exercises as well as open and closed-form questions (maximum two (2) hours) - About 60\% of the grade.
@@ -281,7 +295,7 @@ It is permitted to attend both in one session or in distinct sessions with no ex
 
 A simulation of the written part will be performed. Some laboratories will be devoted to working on the exam project.
 
-\subsubsection{Project Rules}
+\subsection{Project Rules}
 \begin{itemize}
     \item Groups can be composed of one or two students.
     \item The project can be submitted a maximum of two non-consecutive times.
@@ -295,7 +309,7 @@ A simulation of the written part will be performed. Some laboratories will be de
 
 \noindent This applies to both the project and the written test.
 
-\section{Concepts, Notions, and Context [10-14/09/2026]}
+\chapter{Concepts, Notions, and Context [10-14/09/2026]}
 We will start by defining Software and Security.
 
 \begin{definition}{Software}{software}
@@ -387,7 +401,7 @@ Many security issues are related to vulnerabilities due to bugs, defects, or des
 \paragraph{\gls{nvd} and \gls{euvd}} 
 The \gls{nvd} is a publicly available database with \gls{cve} entries. This database contains a large number of vulnerabilities and provides methods to search and explore the stored \glspl{cve}. The equivalent in Europe is the \gls{euvd}; this is part of the NIS2 directive. The EU mandated \gls{enisa} to develop and maintain the \textbf{EU}ropean \textbf{V}ulnerability \textbf{D}atabase. \gls{enisa} cooperates with MITRE and other non-EU operators working with the \gls{cve} system, putting together various sources to enrich it.
 
-\subsection{Bug Exploitation}
+\section{Bug Exploitation}
 While a typical bug might just lead to a software crash, an attacker (who is \textbf{not} a normal user) will actively attempt to find bugs/defects through unusual/unexpected interactions and features. They will work to exploit them to do much worse.
 
 \begin{definition}{Exploitation}{exploitation}
@@ -407,7 +421,7 @@ As per the previous definitions, an attacker might need several steps to achieve
 Usually, an exploit can be very complex, but some patterns can be identified. CAPEC is trying to enumerate and classify the most common attacks. 
 Also, exploit databases exist that collect \gls{cvss}-compliant exploits and vulnerable software (e.g., ATT\&CK).
 
-\subsection{Achieving Security}
+\section{Achieving Security}
 Security in computer software systems is hard and complicated due to great complexity and dependency on the \gls{os}, \gls{fs}, Network, and physical access. Also, system/software security is \textbf{difficult to measure}; there are no perfect metrics and not enough powerful security testing tools and procedures. From a business perspective, there are deadlines to meet, clients do not demand security (it's often not considered a \textbf{user requirement}), and finally, few to no developers have a culture and knowledge regarding security.
 
 \paragraph{Software Size} 
@@ -423,7 +437,7 @@ Since absolute security is \textbf{unachievable}, a \textbf{trade-off} must be m
 \end{center}
 Indeed, security measures (see \cref{cpt:security-policy}) should be as invisible as possible to the end-user, and an appropriate level relevant to the need should be chosen.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
     \centering
     \begin{tikzpicture}[
         scale=0.8,
@@ -511,10 +525,10 @@ Usually, an association between security and cryptography is made; however, many
 \end{center}
 Not on the next version.
 
-\section{System Development Life Cycle [14/09/2026]}
+\chapter{System Development Life Cycle [14/09/2026]}
 The \gls{ssdlc} is defined similarly to the traditional \gls{sdlc}, but it focuses on the development of software and applications in a manner that significantly reduces security risks, eliminates security vulnerabilities, and reduces costs. The \gls{ssdlc}, like the \gls{sdlc}, is divided into phases. 
 
-\subsection{Defining}
+\section{Defining}
 In this phase, the product's requirements must be defined and documented, then approved by the customer (or via market analysis) to form a \gls{srs}. 
 
 It produces the working plan that outlines the expected output of the developing team with security milestones, certifications, risk assessments, key security resources, and required third-party resources.
@@ -536,7 +550,7 @@ Before outlining the security deliverables of this phase, we must formally defin
     \item \textbf{Third-Party Software Tracking}: (This will be discussed in later chapters).
 \end{enumerate}
 
-\subsubsection{Threat Modeling}
+\subsection{Threat Modeling}
 
 \begin{definition}{Asset}{asset}
     An asset is relevant data, a service, or a component that is the objective of protection.
@@ -574,13 +588,185 @@ Before outlining the security deliverables of this phase, we must formally defin
     \item Decide which threats to respond to, using established risk thresholds.
     \item Decide on mitigation and control actions for the selected threats. 
 \end{enumerate}
-
-\subsubsection{Third-Party Software Tracking}
-
 \lecturestop{14/09/2026}
 
-\cleardoublepage
-\appendix
+\subsection{Third-Party Software Tracking}
+Modern software development heavily relies on code reuse, integrating both open-source and commercial third-party components. Consequently, maintaining a systematic inventory of all third-party software is critical. 
+
+\begin{concept}{Third-Party Software Tracking}{third-party-tracking}
+    The systematic process of inventorying, auditing, and monitoring open-source and commercial third-party components integrated into modern software to quickly detect and mitigate upstream vulnerabilities.
+\end{concept}
+
+\noindent This tracking allows organizations to audit dependencies and identify when a component becomes vulnerable.
+
+\section{Designing}
+During the design phase, architects establish the structural blueprint of the product by creating a formal design specification.
+
+\begin{definition}{Detailed Design Specification (DDS)}{dds}
+    A \glsxtrfull{dds} is a comprehensive architectural blueprint that defines system structure and behavior based on several key factors: risk assessments (\cref{def:risk-assessment}), product robustness, design modularity, budget limitations, and time constraints.
+\end{definition}
+
+\noindent The resulting architecture is partitioned into the overall project structure and the specific architecture of individual modules. Furthermore, it is crucial to precisely define the data flows between the system, external entities, and third-party modules.
+
+\begin{concept}{Secure Architectural Principles}{secure-arch-principles}
+    The fundamental rules for secure code development include:
+    \begin{itemize}
+        \item \textbf{Modularity:} Encapsulating functionality into distinct components, modules, and functions.
+        \item \textbf{Isolation:} Ensuring each component functions independently to contain potential failures.
+        \item \textbf{Reusability:} Combining modularity and isolation safely.
+        \item \textbf{Hierarchical Organization:} Structuring system dependencies logically.
+        \item \textbf{Simplicity:} Keeping designs clean and understandable to minimize hidden flaws.
+    \end{itemize}
+\end{concept}
+
+\paragraph{Design Review} The design requires rigorous review from a developer's perspective. This process must incorporate a full evaluation of security aspects alongside functional features. During this security review, developers must proactively adopt an attacker's mindset to discover potential feature vulnerabilities. If a flaw is identified, developers should rely on established secure design checklists that enforce controls such as the mandatory logging of security events and failures.
+
+\section{Implementation}
+Once the \gls{dds} is finalized, the implementation phase begins, translating specifications into code. If the design phase has been conducted rigorously, coding proceeds with structured clarity. The choice of programming language depends heavily on the specific domain and nature of the software being developed.
+
+\noindent From a security perspective, we recall that a bug represents a deviation from design intent (\cref{def:bug}), while a vulnerability is a causal chain starting with a bug and resulting in an error that, if exploited, leads to a security failure (\cref{def:vulnerability}). Many security incidents stem from vulnerabilities introduced by bugs, defects, or design flaws. To mitigate these risks during coding, developers should:
+\begin{itemize}
+    \item Follow established security guidelines;
+    \item Critically evaluate the security implications of implementation choices;
+    \item Reuse trusted and vetted code;
+    \item Write high-quality, readable, and maintainable code;
+    \item Conduct thorough code reviews;
+    \item Verify and test both individual components and the overall system.
+\end{itemize}
+
+\begin{concept}{Secure Coding Guidelines}{secure-coding-guidelines}
+    General secure coding guidelines encompass core industry best practices, such as:
+    \begin{itemize}
+        \item Treating all input data as untrusted;
+        \item Enforcing strict allowlisting (accepting only valid characters and formats);
+        \item Strictly separating data from code (e.g., to prevent injection attacks);
+        \item Protecting sensitive information through proper encryption and secure storage;
+        \item Never trusting the client-side state.
+    \end{itemize}
+    Frameworks can significantly enhance the adoption of these practices, as framework code is actively maintained and audited for vulnerabilities.
+\end{concept}
+
+\paragraph{Code Review} Numerous security defects can be detected directly in source code. 
+
+\begin{definition}{Code Review}{code-review}
+    A manual or automated code inspection process focused on identifying implementation-level bugs, anti-patterns, and common code security pitfalls by leveraging standardized review checklists.
+\end{definition}
+
+\paragraph{Overall View} As previously noted, during the implementation phase, primary security verification relies on \textbf{static analysis} and \textbf{vulnerability scanning}, because the complete system is not yet operational or ready to execute in a live environment.
+
+\section{Testing}
+Testing must not be treated as a single, isolated phase at the end of development; rather, it should be performed iteratively across all stages of the product development lifecycle. Identified defects must be systematically reported, tracked, fixed, and retested. This feedback loop is repeated continuously until the software quality fully satisfies the requirements specified in the \gls{srs}. 
+
+\noindent From an advanced security perspective, testing incorporates dynamic and active methodologies:
+
+\begin{concept}{Dynamic Application Security Testing (DAST)}{dast}
+    Analyzing the running application in real-time to catch runtime anomalies, memory leakage, and execution errors.
+\end{concept}
+
+\begin{concept}{Fuzzing}{fuzzing}
+    An automated testing technique that feeds semi-random, malformed, or unexpected inputs into the system to expose hidden crash bugs and memory corruption vulnerabilities.
+\end{concept}
+
+\begin{concept}{Penetration Testing (Pentest)}{pentest}
+    Engaging third-party security experts to actively simulate real-world attacks against the system to discover exploitable weaknesses.
+\end{concept}
+
+\section{Deployment and Maintenance}
+Once the software passes rigorous verification and testing phases, it transitions into deployment and long-term maintenance. 
+
+\begin{itemize}
+    \item \textbf{Alpha/Beta Releases:} Initial restricted releases (alpha/beta) deployed to collect real-world user feedback on software usage, usability, and unanticipated edge cases.
+    \item \textbf{Final Security Milestones:} Concluding the deployment pipeline with a final gap analysis and comprehensive security audits before pushing updates to production.
+\end{itemize}
+
+\subsection{The Economics of Bug Fixing}
+A foundational principle in software engineering and security is that \textbf{bugs (including security vulnerabilities) should be fixed as soon as possible}. 
+
+\begin{observation}{Cost of Fixing Defects}{cost-defects}
+    According to studies by the IBM Systems Science Institute, the relative cost of fixing a software defect increases exponentially the later it is discovered in the life cycle. Fixing a vulnerability during the requirements or design phase is vastly cheaper than fixing it after deployment in a production environment. 
+\end{observation}
+
+\noindent Consequently, security cannot be bolted on as an afterthought once implementation is complete; doing so is fundamentally ineffective and high-risk. Instead, security must be integrated natively into every phase of the \gls{ssdlc}.
+
+\subsection{DevOps and DevSecOps}
+Modern software engineering heavily relies on \textbf{DevOps} (a compound of ``Development'' and ``Operations''), which aims to bridge the gap between building software and running it reliably in production.
+
+\begin{concept}{DevOps Practices}{devops-practices}
+    DevOps is structured around iterative delivery cycles (such as Scrum and Agile) designed for rapid feature delivery and quick feedback loops (promoting a ``fail fast, fix fast'' culture). Its core practices include:
+    \begin{itemize}
+        \item \textbf{Continuous Integration (CI):} Developers regularly merge code changes into a central repository multiple times a day, triggering automated builds and test suites to catch bugs immediately.
+        \item \textbf{Continuous Delivery (CD):} Code changes that pass automated testing are automatically prepared and staged for immediate production deployment, ensuring the repository always maintains a deployment-ready artifact.
+        \item \textbf{Supporting Practices:} Utilization of microservices, infrastructure as code (IaC), centralized monitoring/logging, and cross-functional team communication.
+    \end{itemize}
+\end{concept}
+
+\noindent When security practices, automated security testing, and vulnerability checks are fully embedded into this DevOps pipeline, the methodology evolves into \textbf{DevSecOps}—ensuring that rapid velocity does not compromise safety, integrity, or compliance.
+
+
+\chapter{\glsfmtfull{cwe}}
+Recalling our earlier definitions of a bug (\cref{def:bug}) and a weakness (\cref{def:vulnerability}), we observe that software weaknesses are fundamentally rooted in code implementation choices. However, recognizing typical code patterns that lead to security issues is insufficient on its own; vulnerability manifestation depends heavily on the execution environment, compiler optimizations, and system context. Consequently, mastery of secure programming guidelines and knowing precisely what patterns to target during security analysis and testing are critical.
+
+\noindent As previously introduced, the \gls{cwe} provides a standardized, publicly available catalog of the most common software and hardware weaknesses. Each \gls{cwe} entry is characterized by several structured fields, including a unique identifier, abstraction level, and a hierarchical organization (e.g., *parent of*, *child of*, *member of*). Furthermore, lists like the \textit{CWE Top 25} highlight the most dangerous software weaknesses across various systems by scoring entries based on how frequently they map to known \glspl{cve} and averaging their real-world severity.
+
+\section{CWE-416:\glsfmtfull{uaf}}
+A \textbf{\gls{uaf}} vulnerability occurs when a product reuses or references memory after it has been freed. Subsequent operations can result in that memory region being reallocated and assigned to a different pointer. Any operations performed via the original (dangling) pointer are no longer valid, as the memory now belongs to data processed by completely different components.
+
+\paragraph{Prevention} To prevent \gls{uaf} vulnerabilities, developers should immediately set pointers to \texttt{NULL} after freeing them, or utilize programming languages equipped with automatic memory management (garbage collection).
+
+\paragraph{Detection} Fuzzing, automated \gls{sast}, and dynamic runtime analysis.
+
+\paragraph{Related Attacks} Code injection (\gls{capec}-242), Buffer Overflow (\gls{capec}-100).
+
+\paragraph{Notes} \gls{uaf} is not restricted strictly to memory pointers; it can also affect abstract resources such as file handlers, sockets, and network connections. Hence, \gls{uaf} vulnerabilities can occasionally manifest even in memory-managed languages if underlying resource lifecycles are mismanaged.
+
+\paragraph{Real-World Examples (\glspl{cve})}
+\begin{itemize}
+    \item \textbf{CVE-2022-20141:} Insufficient resource locking in the Android system kernel (CWE-413) leading to a \gls{uaf} condition;
+    \item \textbf{CVE-2022-2621:} Two concurrent threads in a web browser attempt to share a resource (CWE-366), allowing one thread to destroy the resource before the other completes execution;
+    \item \textbf{CVE-2020-6819:} A race condition (CWE-362) leading to a \gls{uaf} exploit vector;
+    \item \textbf{CVE-2010-4168:} A \gls{uaf} triggered by closing a network connection while data transmission is still actively ongoing.
+\end{itemize}
+
+\section{CWE-122: Heap-based Buffer Overflow}
+A heap overflow condition is a buffer overflow where the buffer that can be overwritten is allocated in the \underline{heap portion of memory}, generally meaning that the buffer was allocated dynamically.
+
+\paragraph{Prevention} Using automatic buffer overflow detection mechanisms, implementing strict bounds checking on input, and avoiding the use of dangerous functions such as \texttt{gets} (ensuring safe equivalents are used instead).
+
+\paragraph{Detection} Fuzzing, automated \gls{sast}.
+
+\paragraph{Related Attacks} Forced Integer Overflow (\gls{capec}-92), Overflow Buffers (\gls{capec}-100).
+
+\paragraph{Real-World Examples (\glspl{cve})}
+\begin{itemize}
+    \item \textbf{CVE-2021-29529:} A machine-learning product suffers from a heap-based buffer overflow (CWE-122) when integer-oriented bounds are calculated using \texttt{ceiling()} and \texttt{floor()} on floating-point values (CWE-1339);
+    \item \textbf{CVE-2021-43537}: In a web browser, an unsigned 64-bit integer is forcibly cast to a 32-bit integer (CWE-681), potentially leading to an integer overflow (CWE-190) and subsequent heap memory corruption (CWE-122);
+    \item \textbf{CVE-2007-4268}: An integer signedness error (CWE-195) bypasses signed comparison, leading to a heap overflow;
+    \item \textbf{CVE-2009-2523}: A product fails to handle non-\texttt{NULL}-terminated input strings (CWE-170), leading to buffer over-read or heap-based buffer overflow.
+\end{itemize}
+
+\section{CWE-787: Out-of-bounds Write}
+The product writes data past the intended limit of a buffer, often resulting in memory corruption or arbitrary code execution outside the buffer's valid boundaries.
+
+\paragraph{Prevention} Implement rigorous checks on size and initial position before utilizing the buffer; replace unbounded copy functions with safer alternatives that support length arguments (e.g., replacing \texttt{strcpy} with \texttt{strncpy}), and implement custom bounds checks if safe APIs are unavailable.
+
+\paragraph{Detection} Automated \gls{sast}, automated dynamic analysis with fuzzing and fault-injection-based testing.
+
+\paragraph{Notes} The classic ``buffer overflow'' is a specific type of out-of-bounds write that occurs within structured buffers (e.g., arrays).
+
+\paragraph{Related Attacks} Overflow Buffers (\gls{capec}-100), Code Injection (\gls{capec}-242).
+
+\paragraph{Related \glspl{cwe}} \textbf{CWE-119}: Improper Restriction of Operations within the Bounds of a Memory Buffer (performing read or write operations outside a buffer's intended boundaries).
+
+\paragraph{Real-World Examples (\glspl{cve})}
+\begin{itemize}
+    \item \textbf{CVE-2021-21220}: Insufficient input validation (CWE-20) in a browser component allows heap corruption;
+    \item \textbf{CVE-2020-17087}: Integer truncation (CWE-197) causes a small buffer allocation, leading to an out-of-bounds write;
+    \item \textbf{CVE-2019-1010006}: Compiler optimization (CWE-733) improperly removes or modifies code designed to detect integer overflow;
+    \item \textbf{CVE-2020-0968}: A remote code execution vulnerability in the Internet Explorer scripting engine handling objects in memory (Scripting Engine Memory Corruption Vulnerability).
+\end{itemize}
+
+\backmatter
+\chapter{Appendix}
 
 % Generate automated lists of definitions, concepts, and theorems
 \tcblistof[\section]{deflist}{List of Definitions}
@@ -593,6 +779,7 @@ Before outlining the security deliverables of this phase, we must formally defin
 
 % Span the section title across both columns
 \begin{multicols}{2}[\section{List of Acronyms}]
+    \raggedright
     % Disable the default glossary title so it doesn't print twice
     \renewcommand{\glossarysection}[2][]{}
     \printglossary[type=\acronymtype]
