@@ -1,0 +1,248 @@
+\chapter{Instruction Set Architecture Principles}
+
+\section{ISA Principles}
+Fundamentally, an \gls{isa} is composed of an Instruction Set, an Instruction Classification, and Addressing Modes.
+
+\begin{definition}{Instruction Set Architecture (\gls*{isa})}{isa}
+    The \glsxtrfull {isa} includes all the rules describing the functional specification of a given hardware architecture. Each \gls{isa} is characterized by:
+    \begin{itemize}
+        \item Different classes of instruction operators;
+        \item The number and type of operands;
+        \item Supported addressing modes.
+    \end{itemize}
+\end{definition}
+
+\noindent Architectures can be classified based on instruction complexity and count into \gls{cisc} (\textbf{Complex Instruction Set Computer}), which feature a lower ``semantic gap'' but require a highly complex \glsxtrfull{cu}, and \gls{risc} (\textbf{Reduced Instruction Set Computer}), which rely on a simpler, more modular organization at the cost of larger machine-level programs. Furthermore, ISAs can be distinguished by their internal storage topology: stack architectures, accumulator architectures, and \gls{gpr} (\textbf{General-Purpose Register}) architectures, as well as whether they implement a dedicated \texttt{load}/\texttt{store} paradigm or allow direct Register-Memory operations.
+
+\paragraph{Instruction Definition} A machine-level instruction is a multiple-field binary string decoded by the processor's \gls{cu}, acting as the core bridge between hardware and software. Generally, an instruction is composed of an opcode, operand addresses, and a corresponding number of address qualifiers.
+
+\noindent High-level instructions are typically classified into several major operator categories:
+\begin{itemize}
+    \item \textbf{Arithmetic:} Including basic arithmetic and logical operations;
+    \item \textbf{Data Transfer:} Moving data between registers and memory;
+    \item \textbf{Control:} Branching, jumping, and flow redirection;
+    \item \textbf{System:} Privileged operations and hardware management;
+    \item \textbf{\gls{fp}:} Specialized arithmetic for real numbers handled by an optional \gls{fpu} ISA extension;
+    \item \textbf{Decimal and String:} Legacy primitives historically used for commercial data processing (largely deprecated in modern architectures);
+    \item \textbf{Graphics and Multimedia:} \glsxtrfull{simd}-style instructions operating on multiple smaller data elements in parallel (e.g., executing four 16-bit operations within a single 64-bit operand).
+\end{itemize}
+While all computer architectures provide a full foundational set for Arithmetic, Data Transfer, and Control, system functions vary widely among architectures.
+
+\subsection{Why RISC?} 
+Statistical profiling reported that across 5 representative programs from the \gls{spec} benchmark suite running on x86 architectures, \textbf{96\% of executed instructions fell within the 10 simplest instruction types}. 
+
+In accordance with Amdahl's Law (\cref{thm:amdahl-law}), optimizing the common case yields vastly superior returns compared to over-engineering rare pathways. 
+
+\begin{observation}{Amdahl's Law Application}{amdahl-application}
+    Amdahl's law dictates that the overall performance improvement gained by optimizing a single part of a system is limited by the fraction of time that the targeted part is actually used. Consequently, focusing hardware optimization on the most frequent instructions provides maximum effectiveness.
+\end{observation}
+
+\noindent Consequently, \gls{risc} architectures are inherently more efficient. Modern hybrids (such as x86 processors) maintain internal hardware optimization layers that decode \gls{cisc} instructions dynamically into RISC-like micro-operations, balancing software complexity compatibility with high-performance execution cores.
+
+\subsubsection{Arithmetic Instructions}
+Self-explanatory instructions include basic operations: \texttt{Add}, \texttt{Sub}, \texttt{Mul}, \texttt{And}, \texttt{Or}, and \texttt{Not}. 
+
+\noindent Shift and rotate operations are typically categorized into:
+\begin{itemize}
+    \item \textbf{Arithmetic shifts:} Shift left (inserting zeros) and shift right (extending the sign bit to preserve numerical sign);
+    \item \textbf{Logical shifts:} Shift left and shift right, filling all vacant bit positions uniformly with zeros;
+    \item \textbf{Circular (rotate) shifts:} Bit rotation where bits shifted out on one end wrap around to the other (e.g., left rotate moves MSB into LSB; right rotate moves LSB into MSB).
+\end{itemize}
+
+\noindent Additionally, \textbf{comparison instructions} store no explicit destination result. Instead, they execute a subtraction or logical evaluation, and the \gls{alu} outputs update processor condition flags (such as Zero, Sign, Overflow, and Carry) to inform subsequent control flow decisions.
+
+\subsubsection{Multimedia Instructions}
+Multimedia operands are often narrower than the native 64-bit data word of modern processors. Rather than wasting 64-bit \glspl{alu} capacity when operating on narrower bit-widths, multimedia instructions operate on several smaller data items in parallel. For example, a 64-bit register can be \textbf{partitioned} into four 16-bit segments, allowing a dedicated execution unit to perform four simultaneous additions in a single clock cycle. Similarly, this concept applies to floating-point operations. These parallel operations are formally classified as \glsxtrfull{simd} or vector instructions.
+
+\subsubsection{Data Transfer Instructions} 
+Data transfer instructions are dedicated commands that load data from main memory into registers, or store data from registers back to memory. This category also encompasses register-to-register moves and memory-to-memory transfers (though the latter is rarely implemented in \gls{risc} architectures). Finally, stack manipulation operations (pushing and popping) and hardware I/O communications through specific memory-mapped ports belong to this class.
+
+\subsubsection{Control Flow Instructions}
+To translate high-level constructs like \texttt{if} statements and \texttt{while} loops, the \gls{isa} must provide low-level equivalent instructions. These include unconditional jumps, conditional branches, subroutine calls, and returns. Furthermore, managing the temporary interruption of program execution is critical; this is achieved via \texttt{trap}, \texttt{exception}, and \texttt{wait} instructions. Additionally, some \glspl{dsp} feature specialized hardware \texttt{repeat} instructions for zero-overhead loop control.
+
+\paragraph{Conditional Branches}
+Most control flow is managed by conditional branches. For pipeline optimization, how the architecture evaluates the branch condition is a critical design choice. Generally, three approaches are used:
+
+\begin{table}[!htbp]
+    \centering
+    \renewcommand{\arraystretch}{1.3} 
+    \begin{tabular}{| >{\raggedright\arraybackslash}p{0.15\textwidth} | >{\raggedright\arraybackslash}p{0.12\textwidth} | >{\raggedright\arraybackslash}p{0.23\textwidth} | >{\raggedright\arraybackslash}p{0.15\textwidth} | >{\raggedright\arraybackslash}p{0.20\textwidth} |}
+         \hline
+         \textbf{Name} & \textbf{Examples} & \textbf{Enforcement} & \textbf{Advantages} & \textbf{Disadvantages}\\
+         \hline\hline
+         \textbf{\gls{cc}} & 80x86, ARM, PowerPC & Special bits are set by \gls{alu} operations, possibly under program control. & Sometimes conditions are already set implicitly by previous operations. & \gls{cc} introduces extra architectural state and constrains the ordering of instructions.\\
+         \hline
+         \textbf{Condition Register} & Alpha, MIPS & Tests evaluate an arbitrary register containing the boolean result of a comparison. & Simple hardware implementation and usage. & Consumes a general-purpose register.\\
+         \hline
+         \textbf{Compare and Branch} & PA-RISC, VAX & The comparison logic is integrated directly into the branch instruction itself. & Only one instruction is needed for a conditional branch. & May require too much work per instruction in heavily pipelined architectures. \\
+         \hline
+    \end{tabular}
+    \caption{Comparison of Architectural Branch Condition Evaluation Strategies}
+    \label{tab:branch-strategies}
+\end{table}
+
+\noindent Furthermore, since the vast majority of branch comparisons evaluate against zero, some architectures choose to treat comparisons-to-zero as a heavily optimized special case in hardware.
+
+\subsubsection{System and Other Instructions}
+All remaining non-standard instructions fall into this category. This includes, but is not limited to, virtual memory management, system calls, interrupt handling, peripheral management, complex bit manipulations, and iterative execution sequences (such as hardware division and square root operations).
+
+\section{Addressing Modes}
+Before detailing specific addressing modes, we must classify how architectures handle operand access. Specifically, instruction sets can be categorized by where they store operands and results.
+
+\begin{concept}{Operand Storage Architectures}{operand-storage}
+    Architectures define how operands are accessed and where results are stored. The four primary models are:
+    \begin{description}
+        \item[Stack:] Operands are implicitly pushed to and popped from the top of the stack.
+        \item[Accumulator:] One operand is fetched from memory, while the other is implicitly located in the accumulator register, which also stores the final result.
+        \item[Register-Memory:] One operand is fetched from memory, while the other is located in a register. The result is typically stored back into a register.
+        \item[Register-Register (Load/Store):] Both operands must be loaded from memory into registers before execution. The \gls{alu} operates exclusively on registers, and the result is stored in a (potentially different) register.
+    \end{description}
+\end{concept}
+
+\noindent Instructions typically feature 2 or 3 operands; in either case, one operand usually designates the destination location where the result shall be stored.
+
+\begin{definition}{Addressing Modes}{addressing-modes}
+    An addressing mode specifies how to calculate the effective memory address of an operand by using information held in registers and/or constants contained within a machine instruction. The primary modes include:
+    \begin{description}
+        \item[Immediate:] The operand is a constant explicitly specified within the instruction itself. Small data words are embedded directly into the instruction, while larger constants may be appended in the memory word immediately following the instruction.
+        \item[Register:] The required operands are located in explicitly specified processor registers.
+        \item[Register Indirect:] The operand is located in main memory at the address stored in a specified register. This allows for natural pointer manipulation.
+        \begin{itemize}
+            \item \textbf{Autoincrement Variant:} The pointer register's content is automatically updated (incremented or decremented) either before or after the memory access.
+            \item \textbf{Displacement/Indexed Variant:} The effective address is calculated by adding a constant (displacement) or the value of another register (indexed) to the base pointer register.
+        \end{itemize}
+        \item[Memory Direct:] The operand is fetched from an explicit, absolute memory address provided directly within the instruction (or in the following word).
+        \item[\gls{pc}-Relative:] A special case of displacement addressing where the base register is the \glsxtrfull{pc}. This is highly useful for calculating the destination addresses of branch instructions, which are typically known at compile time.
+    \end{description}
+\end{definition}
+
+\section{Instruction Encoding}
+Assembly language is a symbolic representation of the machine language of a specific processor, invented to abstract and simplify hardware-level programming. An assembly language source file fundamentally consists of two components: \textbf{instructions} and \textbf{directives}. 
+
+The former are human-readable mnemonics of machine-level instructions that map directly to the processor's \gls{isa}. The latter (directives, sometimes called pseudo-operations) serve as meta-instructions for the assembler and the linker. Unlike assembly instructions, directives do not translate directly into executable machine code; rather, they control the assembly process, dictate memory alignment, allocate space for data, and organize the output binary structure.
+
+\noindent Common assembly directives include:
+\begin{description}
+    \item[\texttt{.align n}] Forces the next instruction or data element to be loaded at the next available memory address where the lowest \(n\) bits are zero (effectively aligning memory to a \(2^n\) byte boundary).
+    \item[\texttt{.ascii "string"}] Allocates sequential memory bytes to store the characters of the provided string.
+    \item[\texttt{.byte}] Stores a list of explicitly provided 8-bit values into sequentially available memory.
+    \item[\texttt{.data}] Instructs the assembler to place the subsequent items into the data segment (typically used for initialized global or static variables).
+    \item[\texttt{.double} | \texttt{.int}] Allocates memory and sequentially stores the provided numbers as double-precision \gls{fp} or integer values, respectively.
+    \item[\texttt{.global label}] Exports the specified label, making it globally visible to the linker and available for cross-referencing by code in other object files.
+    \item[\texttt{.text}] Instructs the assembler to place the subsequent instructions into the text segment (the memory area strictly reserved for executable code).
+\end{description}
+
+Instruction encoding fundamentally affects two aspects of a computing system: the size of the compiled programs and the complexity of the processor's hardware implementation. To address varying architectural needs, three primary encoding schemes are utilized:
+\begin{description}
+    \item[Variable:] Suitable for architectures that support many addressing modes. The \texttt{opcode} length and the number of operands can vary, minimizing program size but significantly complicating the \gls{cu} decoder.
+    \item[Fixed:] The \texttt{opcode} and the number of operands have a fixed length. This is ideal for architectures with few addressing modes and simplifies hardware decoding, though it typically leads to larger overall program sizes.
+    \item[Hybrid:] The format length is dictated by the \texttt{opcode}. It combines a fixed-length base with one or two optional extension fields, balancing code density with decoding simplicity.
+\end{description}
+
+\paragraph{DLX Instruction Set}
+DLX instructions are strictly fixed at 32-bits wide with a 6-bit opcode. The architecture allows for only three formats (Immediate, Register, and Jump) and explicitly supports only three addressing modes: Register, Immediate, and Displacement.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{tikzpicture}[
+        % Base style for instruction fields
+        cell/.style={draw, rectangle, minimum height=8mm, align=center, fill=codebg, font=\sffamily\footnotesize},
+        bitlabel/.style={font=\sffamily\tiny\color{gray}},
+        typelabel/.style={font=\sffamily\bfseries, anchor=east}
+    ]
+        
+        % ---------------------------------------------------
+        % R-TYPE INSTRUCTION
+        % ---------------------------------------------------
+        \node[typelabel] at (-0.5, 0) {R-Type};
+        
+        % 6 bits = 2.4cm, 5 bits = 2.0cm
+        \node[cell, minimum width=2.4cm, anchor=west] (R_op) at (0,0) {Opcode};
+        \node[cell, minimum width=2.0cm, anchor=west] (R_rs) at (2.4,0) {rs};
+        \node[cell, minimum width=2.0cm, anchor=west] (R_rt) at (4.4,0) {rt};
+        \node[cell, minimum width=2.0cm, anchor=west] (R_rd) at (6.4,0) {rd};
+        \node[cell, minimum width=2.0cm, anchor=west] (R_sh) at (8.4,0) {shamt};
+        \node[cell, minimum width=2.4cm, anchor=west] (R_fn) at (10.4,0) {funct};
+        
+        % Bit length labels
+        \node[bitlabel, above=1mm of R_op] {6 bits};
+        \node[bitlabel, above=1mm of R_rs] {5 bits};
+        \node[bitlabel, above=1mm of R_rt] {5 bits};
+        \node[bitlabel, above=1mm of R_rd] {5 bits};
+        \node[bitlabel, above=1mm of R_sh] {5 bits};
+        \node[bitlabel, above=1mm of R_fn] {6 bits};
+
+        % ---------------------------------------------------
+        % I-TYPE INSTRUCTION
+        % ---------------------------------------------------
+        \node[typelabel] at (-0.5, -1.5) {I-Type};
+        
+        % 16 bits = 6.4cm
+        \node[cell, minimum width=2.4cm, anchor=west] (I_op) at (0,-1.5) {Opcode};
+        \node[cell, minimum width=2.0cm, anchor=west] (I_rs) at (2.4,-1.5) {rs};
+        \node[cell, minimum width=2.0cm, anchor=west] (I_rt) at (4.4,-1.5) {rt};
+        \node[cell, minimum width=6.4cm, anchor=west] (I_im) at (6.4,-1.5) {Immediate};
+        
+        % Bit length labels
+        \node[bitlabel, above=1mm of I_im] {16 bits};
+
+        % ---------------------------------------------------
+        % J-TYPE INSTRUCTION
+        % ---------------------------------------------------
+        \node[typelabel] at (-0.5, -3.0) {J-Type};
+        
+        % 26 bits = 10.4cm
+        \node[cell, minimum width=2.4cm, anchor=west] (J_op) at (0,-3.0) {Opcode};
+        \node[cell, minimum width=10.4cm, anchor=west] (J_of) at (2.4,-3.0) {PC Offset};
+        
+        % Bit length labels
+        \node[bitlabel, above=1mm of J_of] {26 bits};
+
+    \end{tikzpicture}
+    \caption{DLX 32-bit Instruction Encoding Formats}
+    \label{fig:dlx-encoding}
+\end{figure}
+
+\subsection{Specific \glsfmtshort{isa} features in \glsfmtfullpl{dsp}}
+Digital signal processors are widely used in several embedded applications, including wireless communications, consumer audio, hard disk drives, multimedia, instrumentation, and the automotive industry. Compared to other embedded applications, \glspl{dsp} are differentiated by: computationally demanding numeric algorithms (often relying on vector dot products), high sensitivity to small numeric errors, strict real-time requirements, continuous analog-to-digital data streams, high data bandwidth, and highly predictable memory access and program flow. For these reasons, a dedicated \gls{isa} for \glspl{dsp} must be highly optimized for mathematical calculations and support complex addressing modes.
+
+\paragraph{\glsxtrfull{mac}} 
+The sum of products is the foundational operation for most digital signal processing algorithms:
+\[
+\begin{aligned}
+    \text{FIR Filter} &\qquad y(n) = \sum_{k=0}^M a_k x(n-k)\\
+    \text{IIR Filter} &\qquad y(n) = \sum_{k=0}^M a_k x(n-k) + \sum_{k=1}^N b_k y(n-k)\\
+    \text{Convolution} &\qquad y(n) = \sum_{k=0}^N x(k) h(n-k)\\
+    \dots&\qquad\dots
+\end{aligned}
+\]
+In accordance with Amdahl's law (\cref{thm:amdahl-law}), since these calculations constitute the bulk of execution time, all modern \glspl{dsp} are provisioned with a dedicated hardware Multiply-Accumulate unit and a corresponding \gls{mac} instruction in their \glspl{isa}.
+
+\paragraph{Zero-Overhead Looping (\texttt{Repeat})} 
+DSP applications require the repeated execution of a small number of arithmetic or multiplication instructions. In general-purpose processors, software looping uses branch and compare instructions to jump back to the beginning of the loop, and a loop counter must be actively maintained and incremented. Both of these actions require an extra register and consume data path clock cycles. To circumvent this, \glspl{dsp} provide specific hardware \texttt{repeat} instructions that execute loops with zero instruction-fetch overhead.
+
+\subsubsection{Addressing and Memory Requirements} 
+Most \gls{dsp} algorithms require access to large amounts of (usually sequential) data. They need the ability to perform multiple memory accesses within a single instruction cycle, and the ability to rapidly calculate new addresses in parallel with ongoing arithmetic operations. This is resolved through a modified Harvard (or Super-Harvard) dual-memory architecture, a large variety of flexible register-indirect addressing modes, and a dedicated functional unit devoted exclusively to calculating data addresses: the \glsxtrfull{agu}.
+
+\paragraph{The \glsfmtshort{agu}}
+The \gls{agu} is a dedicated piece of hardware consisting of a specific \gls{alu} and separate registers intended strictly for calculating memory addresses. Thus, address generation for subsequent instructions can be executed strictly in parallel with the main \gls{alu} datapath.
+
+% AGU Schema Placeholder
+
+\paragraph{Special Addressing Mode: Circular}
+As previously discussed, \glspl{dsp} deal with iterative computations on continuous sets of data. \glsxtrfull{fifo} buffers and circular buffers are used to store data in adjacent memory locations. Normally, a program must maintain one read pointer and one write pointer, checking at the end of each operation if the buffer boundary has been reached.
+
+\noindent To optimize this, the \gls{agu} contains special registers (often denoted \texttt{Rx}) that are automatically updated with a pre- or post-increment value \(k\). Address generation is based on modulo arithmetic. The programmer stores the length of the circular buffer into a \textit{modifier} (e.g., \texttt{Mx}) or \textit{modulo register} within the \gls{agu}. Each modifier is associated with at least one base register. While the starting address of the buffer can theoretically be arbitrary, circular buffers usually must be aligned to \(2^x\)-word boundaries, where \(2^x \geq \text{buffer size}\).
+
+\paragraph{Special Addressing Mode: Bit-Reversed}
+Bit-reversed addressing is specifically targeted to speed up \glsxtrfull{fft} algorithms. The output (or input, depending on the decimation strategy) of an \gls{fft} algorithm maps to bit-reversed array indices (e.g., index \(4_{10} = 100_2 \Longleftrightarrow 001_2 = 1_{10}\)). This mechanism is implemented in hardware via a real bit-reversal routing block or a reverse-carry arithmetic adder within the \gls{agu}.
+
+\subsection{The TI-TMS320C54x \glsfmtshort{dsp}}
+The Texas Instruments TMS320C54x is a classic 16-bit fixed-point \gls{dsp} designed specifically for low-power, high-performance telecommunications applications. Its architecture is built around an advanced modified Harvard bus structure, allowing concurrent instruction and multi-operand data fetches. The main characteristics of this processor include:
+\begin{itemize}
+    \item \textbf{Modified Harvard Architecture:} Features dual-access memory managed through multiple 16-bit buses (including a program bus and dedicated data buses like CB and DB), allowing parallel instruction fetching and dual data loads.
+    \item \textbf{40-bit ALU:} While it is fundamentally a 16-bit processor, the \gls{alu} is 40 bits wide. This accommodates 32-bit results from the multiplier, while reserving 8 extra "guard bits" to prevent numerical overflow during prolonged \gls{mac} accumulation loops.
+    \item \textbf{Hardware Multiplier:} A dedicated $16 \times 16$-bit hardware multiplier that generates a 32-bit product in a single clock cycle.
+    \item \textbf{Dual 40-bit Accumulators:} Two independent accumulators allow parallel processing and temporary storage of wide mathematical results without having to route them back to main memory.
+    \item \textbf{Advanced Multiplexing (MUX):} Most operand combinations can be fed directly to the \gls{alu} inputs through appropriate internal multiplexers, bypassing the register file and avoiding bottleneck delays.
+\end{itemize}
