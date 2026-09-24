@@ -161,3 +161,76 @@ However, physical pipelining requires the insertion of intermediate pipeline reg
 \]
 
 \noindent This calculation beautifully illustrates the core trade-off of \gls{risc} pipelining: we accept hardware overhead (a \(1.2\,\text{ns}\) clock instead of \(1.0\,\text{ns}\)) and force faster instructions to pass through idle stages so that the datapath remains perfectly synchronized. In return, we achieve a massive overall throughput speedup of \(3.67\times\).
+
+\section{Hazards and Stalls}
+The presence of several instructions simultaneously active within the pipeline may lead to various types of dependencies which turn into \textbf{hazards}. These reduce overall performance by forcing the pipeline to \textbf{stall} (insert idle cycles, often called ``bubbles'') until the source of the hazard is resolved. Hazards are fundamentally divided into three categories:
+\begin{description}
+    \item[Structural:] Arise from hardware resource conflicts when multiple instructions require the same functional unit simultaneously.
+    \item[Data:] Occur when an instruction depends on the computed result of a previous, still-in-flight instruction.
+    \item[Control:] Arise from the pipelining of branches or other instructions that modify the \gls{pc}.
+\end{description}
+
+\subsection{Structural Hazards}
+A structural hazard arises when two instructions attempt to use the same hardware component at the same time (e.g., if one instruction wants to write to memory in its \texttt{MEM} stage while another wants to fetch an instruction from memory in its \texttt{IF} stage). 
+
+To solve this, the simplest solution is to stall the subsequent instruction until the hardware hazard has passed. However, this inevitably produces a reduction in throughput. More advanced solutions involve hardware resource splitting/replication (such as splitting a unified memory into separate Instruction and Data caches) or software-level instruction reordering by the compiler. 
+
+The negative impact on the \gls{cpi} is strictly proportional to the probability of a stall. Assuming a 20\% stall rate (i.e., $1/5$), it is calculated as follows:
+\[
+    \text{\gls{cpi}} = \frac{N_{\text{clocks}}}{N_{\text{inst}}} = \frac{\gls{ic-inst} + \left(\frac{\gls{ic-inst}}{5} - 1\right)}{\gls{ic-inst}} = \frac{6}{5} - \frac{1}{\gls{ic-inst}}
+\]
+For an asymptotically large \gls{ic-inst}, this limits the performance to:
+\[
+    \lim_{\gls{ic-inst} \to \infty} \text{\gls{cpi}} = 1.2
+\]
+
+\subsection{Data Dependencies and Hazards}
+Data hazards are strictly related to data dependencies. Two instructions are data-dependent if they access a common register or memory location (unless both instructions are exclusively reading the data). Data dependencies can occur in straight-line code (subsequent instructions) or across loop iterations. There are three kinds of data dependencies:
+\begin{itemize}
+    \item \textbf{\glsxtrfull{raw}:} Flow or true dependence.
+    \item \textbf{\glsxtrfull{war}:} Anti-dependence.
+    \item \textbf{\glsxtrfull{waw}:} Output dependence.
+\end{itemize}
+
+While \gls{war} and \gls{waw} are considered \textit{false dependencies} (which can often be resolved in modern architectures through hardware register renaming), \gls{raw} hazards are \textit{true dependencies}. They cannot be eliminated, but they can be mitigated in certain situations by instruction scheduling or dedicated hardware routing. To avoid data hazards, the \gls{cu} must dynamically:
+\begin{enumerate}
+    \item Check the source registers (\(Rs_1, Rs_2\)) of the current instruction against the destination register (\(Rd\)) of all older, incomplete instructions currently in the pipeline (requiring up to 6 simultaneous hardware comparisons).
+    \item If a hazard is detected, the \gls{cu} must stall the conflicting instruction in the \texttt{ID} stage until the required data is written back.
+\end{enumerate}
+
+The impact of unmodified data hazards on the \gls{cpi} can be tremendous. Assuming one data dependency occurs every six operations, and each causes three stall cycles, the performance degrades significantly:
+\[
+    \text{\gls{cpi}} = 1 + \frac{3}{6} = 1.5
+\]
+This represents a massive 50\% performance penalty compared to the ideal pipeline \gls{cpi} of 1.0.
+
+\paragraph{Stall Penalty Reduction: Forwarding (Bypassing)} 
+This stall penalty can be drastically reduced through a hardware technique called \textbf{forwarding} (or bypassing). Because source operands are typically only necessary at the beginning of the \texttt{EX} stage for instruction \(I_{k+1}\), and the required destination result is already computed by the end of the \texttt{EX} stage for instruction \(I_k\), the output can be re-routed. A hardware bypass routes the result directly back to the \gls{alu} input, completely skipping the delay of waiting for the \texttt{WB} stage.
+
+To implement this, the source inputs of the \gls{alu} must be managed by multiplexers (MUXes). The \gls{cu} switches these MUX inputs from the standard \texttt{ID/EX} pipeline registers to either the \texttt{EX/MEM} or \texttt{MEM/WB} pipeline registers, dynamically routing the freshest data based on the proximity of the dependent instructions.
+
+\subsection{Control Dependencies and Hazards}
+Similar to data hazards, control hazards are strictly related to control dependencies. These are sequential constraints dictated by the control flow of the program. All branch instructions create a control dependency, and the ratio between branch instructions and straight-line code heavily depends on the specific application being executed. 
+
+\noindent If a conditional branch changes the \gls{pc} to the target address, it is referred to as a \textbf{taken} branch; if it falls through to the next sequential instruction, it is \textbf{not taken} (or untaken). Control hazards arise from the risk of fetching the wrong instructions into the pipeline following a conditional branch before the branch condition is actually resolved. These hazards can seriously decrease \gls{cpu} performance.
+
+\paragraph{Simple Control Hazard Solutions} 
+There are several methods to mitigate control hazards. The simplest four approaches are:
+\begin{itemize}
+    \item \textbf{Stall / Freeze:} Hold or delete any instruction fetched after the branch until the \gls{bta} and branch outcome are completely resolved.
+    \item \textbf{Predict Not Taken:} Assume the branch will fall through. If it is actually taken, flush the incorrectly fetched instructions.
+    \item \textbf{Predict Taken:} Assume the branch will be taken and fetch from the target (requires knowing the \gls{bta} immediately). If it is not taken, flush the instructions.
+    \item \textbf{Delayed Branch:} The compiler reorders the code to move independent instructions (which must be executed regardless of the branch outcome) into the ``delay slots'' immediately following the branch instruction.
+\end{itemize}
+
+Although theoretical branch delay slots can be multiple instructions long, in practice, it is difficult for compilers to find enough independent instructions to fill more than one delay slot. To reduce the control hazard time penalty entirely, architects can shift the branch condition evaluation and the \gls{bta} calculation from the \texttt{EX} stage back to the \texttt{ID} stage. This requires adding a dedicated adder and comparator to the \texttt{ID} stage hardware, but it successfully decreases the branch penalty from three stalls down to just one.
+
+\subsection{\glsfmtshort{cpi} and Speedup after Hazards}
+\begin{concept}{Realistic CPI and Speedup with Hazards}{realistic-cpi}
+    The actual speedup of a pipelined processor, explicitly accounting for the delays introduced by data and control hazards, is calculated as follows:
+    \[\text{Speedup} = \frac{\overline{\text{CPI}}_{\text{unpipelined}}}{\overline{\text{CPI}}_{\text{pipelined}}} \times \frac{T_{\text{clk, unpipelined}}}{T_{\text{clk, pipelined}}}\]
+    Assuming \(\overline{N}_{\text{stalls}}\) represents the average number of stall cycles introduced per instruction due to hazards, the pipelined \gls{cpi} is:
+    \[\overline{\text{CPI}}_{\text{pipelined}} = \text{Ideal CPI} + \overline{N}_{\text{stalls}} = 1.0 + \overline{N}_{\text{stalls}}\]
+    If we ignore the clock cycle hardware overhead (assuming \(T_{\text{clk, unpipelined}} = T_{\text{clk, pipelined}}\)) and assume all instructions in the unpipelined baseline architecture take a number of cycles equal to the pipeline depth, the simplified speedup equation becomes:
+    \[\text{Speedup} = \frac{\overline{\text{CPI}}_{\text{unpipelined}}}{1 + \overline{N}_{\text{stalls}}} = \frac{\text{Pipeline Depth}}{1 + \overline{N}_{\text{stalls}}}\]
+\end{concept}
