@@ -1,0 +1,176 @@
+\chapter{System Development Life Cycle [14/09/2026]}
+The \gls{ssdlc} is defined similarly to the traditional \gls{sdlc}, but it focuses on the development of software and applications in a manner that significantly reduces security risks, eliminates security vulnerabilities, and reduces costs. The \gls{ssdlc}, like the \gls{sdlc}, is divided into phases. 
+
+\section{Defining}
+In this phase, the product's requirements must be defined and documented, then approved by the customer (or via market analysis) to form a \gls{srs}. 
+
+It produces the working plan that outlines the expected output of the developing team with security milestones, certifications, risk assessments, key security resources, and required third-party resources.
+
+Before outlining the security deliverables of this phase, we must formally define risk and its assessment:
+
+\begin{definition}{Risk}{risk}
+    The potential that a given \textbf{threat will exploit vulnerabilities} of an asset or group of assets, thereby having a negative impact on those identified assets. An asset is relevant information, data, a service, or a product.
+\end{definition}
+
+\begin{definition}{Risk Assessment}{risk-assessment}
+    The process of \textbf{identifying and determining risks} that affect an organization's operations, assets, individuals, other organizations, and the nation.
+\end{definition}
+
+\noindent In terms of security, the Defining phase includes:
+\begin{enumerate}
+    \item \textbf{Gap Analysis}: Defining the security requirements for developers, designers, architects, and \gls{qa} by focusing on secure design principles, security issues, web security, and encryption. This also includes organizing security awareness sessions—both technical-specific training for developers and general sessions for the broader team.
+    \item \textbf{Risk Assessment}: The practical execution of the processes defined in \cref{def:risk} and \cref{def:risk-assessment}.
+    \item \textbf{Third-Party Software Tracking}: (This will be discussed in later chapters).
+\end{enumerate}
+
+\subsection{Threat Modeling}
+
+\begin{definition}{Asset}{asset}
+    An asset is relevant data, a service, or a component that is the objective of protection.
+\end{definition}
+
+\begin{definition}{Threat}{threat}
+    A potential cause of an unwanted incident, which may result in harm to a system or organization (e.g., malicious actors, malware, or natural disasters).
+\end{definition}
+
+\begin{definition}{Impact}{impact}
+    The magnitude of harm or loss that can be expected if a specific vulnerability is successfully exploited by a threat.
+\end{definition}
+
+\begin{definition}{Probability (Likelihood)}{probability}
+    The chance or frequency with which a specific threat is expected to successfully exploit a vulnerability.
+\end{definition}
+
+\begin{definition}{Quantitative Risk}{quantitative-risk}
+    Risk can be calculated as the product of the impact (\cref{def:impact}) resulting from a successful attack on a certain asset (\cref{def:asset}) and the probability (\cref{def:probability}) of that attack occurring.
+    \[
+        \text{Risk} = \text{Impact} \cdot \text{Probability}
+    \]
+    The output is a numerical value that is typically mapped to a qualitative severity level (e.g., High, Medium, Low).
+\end{definition}
+
+\noindent The threat modeling process is composed of the following steps:
+\begin{enumerate}
+    \item Identify and characterize the system.
+    \item Identify assets (\cref{def:asset}).
+    \item Identify threats (\cref{def:threat}).
+    \item Identify vulnerabilities (\cref{def:vulnerability}).
+    \item Estimate the impact on assets (\cref{def:impact}).
+    \item Estimate the probability of exploitation (\cref{def:probability}).
+    \item Rank the threats by their calculated risk (\cref{def:quantitative-risk}).
+    \item Decide which threats to respond to, using established risk thresholds.
+    \item Decide on mitigation and control actions for the selected threats. 
+\end{enumerate}
+\lecturestop{14/09/2026}
+
+\subsection{Third-Party Software Tracking}
+Modern software development heavily relies on code reuse, integrating both open-source and commercial third-party components. Consequently, maintaining a systematic inventory of all third-party software is critical. 
+
+\begin{concept}{Third-Party Software Tracking}{third-party-tracking}
+    The systematic process of inventorying, auditing, and monitoring open-source and commercial third-party components integrated into modern software to quickly detect and mitigate upstream vulnerabilities.
+\end{concept}
+
+\noindent This tracking allows organizations to audit dependencies and identify when a component becomes vulnerable.
+
+\section{Designing}
+During the design phase, architects establish the structural blueprint of the product by creating a formal design specification.
+
+\begin{definition}{Detailed Design Specification (DDS)}{dds}
+    A \glsxtrfull{dds} is a comprehensive architectural blueprint that defines system structure and behavior based on several key factors: risk assessments (\cref{def:risk-assessment}), product robustness, design modularity, budget limitations, and time constraints.
+\end{definition}
+
+\noindent The resulting architecture is partitioned into the overall project structure and the specific architecture of individual modules. Furthermore, it is crucial to precisely define the data flows between the system, external entities, and third-party modules.
+
+\begin{concept}{Secure Architectural Principles}{secure-arch-principles}
+    The fundamental rules for secure code development include:
+    \begin{itemize}
+        \item \textbf{Modularity:} Encapsulating functionality into distinct components, modules, and functions.
+        \item \textbf{Isolation:} Ensuring each component functions independently to contain potential failures.
+        \item \textbf{Reusability:} Combining modularity and isolation safely.
+        \item \textbf{Hierarchical Organization:} Structuring system dependencies logically.
+        \item \textbf{Simplicity:} Keeping designs clean and understandable to minimize hidden flaws.
+    \end{itemize}
+\end{concept}
+
+\paragraph{Design Review} The design requires rigorous review from a developer's perspective. This process must incorporate a full evaluation of security aspects alongside functional features. During this security review, developers must proactively adopt an attacker's mindset to discover potential feature vulnerabilities. If a flaw is identified, developers should rely on established secure design checklists that enforce controls such as the mandatory logging of security events and failures.
+
+\section{Implementation}
+Once the \gls{dds} is finalized, the implementation phase begins, translating specifications into code. If the design phase has been conducted rigorously, coding proceeds with structured clarity. The choice of programming language depends heavily on the specific domain and nature of the software being developed.
+
+\noindent From a security perspective, we recall that a bug represents a deviation from design intent (\cref{def:bug}), while a vulnerability is a causal chain starting with a bug and resulting in an error that, if exploited, leads to a security failure (\cref{def:vulnerability}). Many security incidents stem from vulnerabilities introduced by bugs, defects, or design flaws. To mitigate these risks during coding, developers should:
+\begin{itemize}
+    \item Follow established security guidelines;
+    \item Critically evaluate the security implications of implementation choices;
+    \item Reuse trusted and vetted code;
+    \item Write high-quality, readable, and maintainable code;
+    \item Conduct thorough code reviews;
+    \item Verify and test both individual components and the overall system.
+\end{itemize}
+
+\begin{concept}{Secure Coding Guidelines}{secure-coding-guidelines}
+    General secure coding guidelines encompass core industry best practices, such as:
+    \begin{itemize}
+        \item Treating all input data as untrusted;
+        \item Enforcing strict allowlisting (accepting only valid characters and formats);
+        \item Strictly separating data from code (e.g., to prevent injection attacks);
+        \item Protecting sensitive information through proper encryption and secure storage;
+        \item Never trusting the client-side state.
+    \end{itemize}
+    Frameworks can significantly enhance the adoption of these practices, as framework code is actively maintained and audited for vulnerabilities.
+\end{concept}
+
+\paragraph{Code Review} Numerous security defects can be detected directly in source code. 
+
+\begin{definition}{Code Review}{code-review}
+    A manual or automated code inspection process focused on identifying implementation-level bugs, anti-patterns, and common code security pitfalls by leveraging standardized review checklists.
+\end{definition}
+
+\paragraph{Overall View} As previously noted, during the implementation phase, primary security verification relies on \textbf{static analysis} and \textbf{vulnerability scanning}, because the complete system is not yet operational or ready to execute in a live environment.
+
+\section{Testing}
+Testing must not be treated as a single, isolated phase at the end of development; rather, it should be performed iteratively across all stages of the product development lifecycle. Identified defects must be systematically reported, tracked, fixed, and retested. This feedback loop is repeated continuously until the software quality fully satisfies the requirements specified in the \gls{srs}. 
+
+\noindent From an advanced security perspective, testing incorporates dynamic and active methodologies:
+
+\begin{concept}{Dynamic Application Security Testing (DAST)}{dast}
+    Analyzing the running application in real-time to catch runtime anomalies, memory leakage, and execution errors.
+\end{concept}
+
+\begin{concept}{Fuzzing}{fuzzing}
+    An automated testing technique that feeds semi-random, malformed, or unexpected inputs into the system to expose hidden crash bugs and memory corruption vulnerabilities.
+\end{concept}
+
+\begin{concept}{Penetration Testing (Pentest)}{pentest}
+    Engaging third-party security experts to actively simulate real-world attacks against the system to discover exploitable weaknesses.
+\end{concept}
+
+\section{Deployment and Maintenance}
+Once the software passes rigorous verification and testing phases, it transitions into deployment and long-term maintenance. 
+
+\begin{itemize}
+    \item \textbf{Alpha/Beta Releases:} Initial restricted releases (alpha/beta) deployed to collect real-world user feedback on software usage, usability, and unanticipated edge cases.
+    \item \textbf{Final Security Milestones:} Concluding the deployment pipeline with a final gap analysis and comprehensive security audits before pushing updates to production.
+\end{itemize}
+
+\subsection{The Economics of Bug Fixing}
+A foundational principle in software engineering and security is that \textbf{bugs (including security vulnerabilities) should be fixed as soon as possible}. 
+
+\begin{observation}{Cost of Fixing Defects}{cost-defects}
+    According to studies by the IBM Systems Science Institute, the relative cost of fixing a software defect increases exponentially the later it is discovered in the life cycle. Fixing a vulnerability during the requirements or design phase is vastly cheaper than fixing it after deployment in a production environment. 
+\end{observation}
+
+\noindent Consequently, security cannot be bolted on as an afterthought once implementation is complete; doing so is fundamentally ineffective and high-risk. Instead, security must be integrated natively into every phase of the \gls{ssdlc}.
+
+\subsection{DevOps and DevSecOps}
+Modern software engineering heavily relies on \textbf{DevOps} (a compound of ``Development'' and ``Operations''), which aims to bridge the gap between building software and running it reliably in production.
+
+\begin{concept}{DevOps Practices}{devops-practices}
+    DevOps is structured around iterative delivery cycles (such as Scrum and Agile) designed for rapid feature delivery and quick feedback loops (promoting a ``fail fast, fix fast'' culture). Its core practices include:
+    \begin{itemize}
+        \item \textbf{Continuous Integration (CI):} Developers regularly merge code changes into a central repository multiple times a day, triggering automated builds and test suites to catch bugs immediately.
+        \item \textbf{Continuous Delivery (CD):} Code changes that pass automated testing are automatically prepared and staged for immediate production deployment, ensuring the repository always maintains a deployment-ready artifact.
+        \item \textbf{Supporting Practices:} Utilization of microservices, infrastructure as code (IaC), centralized monitoring/logging, and cross-functional team communication.
+    \end{itemize}
+\end{concept}
+
+\noindent When security practices, automated security testing, and vulnerability checks are fully embedded into this DevOps pipeline, the methodology evolves into \textbf{DevSecOps}—ensuring that rapid velocity does not compromise safety, integrity, or compliance.
