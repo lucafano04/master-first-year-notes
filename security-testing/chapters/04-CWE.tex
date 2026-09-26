@@ -1,0 +1,156 @@
+\chapter{\glsfmtfull{cwe}}
+Recalling our earlier definitions of a bug (\cref{def:bug}) and a weakness (\cref{def:vulnerability}), we observe that software weaknesses are fundamentally rooted in code implementation choices. However, recognizing typical code patterns that lead to security issues is insufficient on its own; vulnerability manifestation depends heavily on the execution environment, compiler optimizations, and system context. Consequently, mastery of secure programming guidelines and knowing precisely what patterns to target during security analysis and testing are critical.
+
+\noindent As previously introduced, the \gls{cwe} provides a standardized, publicly available catalog of the most common software and hardware weaknesses. Each \gls{cwe} entry is characterized by several structured fields, including a unique identifier, abstraction level, and a hierarchical organization (e.g., *parent of*, *child of*, *member of*). Furthermore, lists like the \textit{CWE Top 25} highlight the most dangerous software weaknesses across various systems by scoring entries based on how frequently they map to known \glspl{cve} and averaging their real-world severity.
+
+\section{CWE-416:\glsfmtfull{uaf}}
+A \textbf{\gls{uaf}} vulnerability occurs when a product reuses or references memory after it has been freed. Subsequent operations can result in that memory region being reallocated and assigned to a different pointer. Any operations performed via the original (dangling) pointer are no longer valid, as the memory now belongs to data processed by completely different components.
+
+\paragraph{Prevention} To prevent \gls{uaf} vulnerabilities, developers should immediately set pointers to \texttt{NULL} after freeing them, or utilize programming languages equipped with automatic memory management (garbage collection).
+
+\paragraph{Detection} Fuzzing, automated \gls{sast}, and dynamic runtime analysis.
+
+\paragraph{Related Attacks} Code injection (\gls{capec}-242), Buffer Overflow (\gls{capec}-100).
+
+\paragraph{Notes} \gls{uaf} is not restricted strictly to memory pointers; it can also affect abstract resources such as file handlers, sockets, and network connections. Hence, \gls{uaf} vulnerabilities can occasionally manifest even in memory-managed languages if underlying resource lifecycles are mismanaged.
+
+\paragraph{Real-World Examples (\glspl{cve})}
+\begin{itemize}
+    \item \textbf{CVE-2022-20141:} Insufficient resource locking in the Android system kernel (CWE-413) leading to a \gls{uaf} condition;
+    \item \textbf{CVE-2022-2621:} Two concurrent threads in a web browser attempt to share a resource (CWE-366), allowing one thread to destroy the resource before the other completes execution;
+    \item \textbf{CVE-2020-6819:} A race condition (CWE-362) leading to a \gls{uaf} exploit vector;
+    \item \textbf{CVE-2010-4168:} A \gls{uaf} triggered by closing a network connection while data transmission is still actively ongoing.
+\end{itemize}
+
+\section{CWE-122: Heap-based Buffer Overflow}
+A heap overflow condition is a buffer overflow where the buffer that can be overwritten is allocated in the \underline{heap portion of memory}, generally meaning that the buffer was allocated dynamically.
+
+\paragraph{Prevention} Using automatic buffer overflow detection mechanisms, implementing strict bounds checking on input, and avoiding the use of dangerous functions such as \texttt{gets} (ensuring safe equivalents are used instead).
+
+\paragraph{Detection} Fuzzing, automated \gls{sast}.
+
+\paragraph{Related Attacks} Forced Integer Overflow (\gls{capec}-92), Overflow Buffers (\gls{capec}-100).
+
+\paragraph{Real-World Examples (\glspl{cve})}
+\begin{itemize}
+    \item \textbf{CVE-2021-29529:} A machine-learning product suffers from a heap-based buffer overflow (CWE-122) when integer-oriented bounds are calculated using \texttt{ceiling()} and \texttt{floor()} on floating-point values (CWE-1339);
+    \item \textbf{CVE-2021-43537}: In a web browser, an unsigned 64-bit integer is forcibly cast to a 32-bit integer (CWE-681), potentially leading to an integer overflow (CWE-190) and subsequent heap memory corruption (CWE-122);
+    \item \textbf{CVE-2007-4268}: An integer signedness error (CWE-195) bypasses signed comparison, leading to a heap overflow;
+    \item \textbf{CVE-2009-2523}: A product fails to handle non-\texttt{NULL}-terminated input strings (CWE-170), leading to buffer over-read or heap-based buffer overflow.
+\end{itemize}
+
+\section{CWE-787: Out-of-bounds Write}
+The product writes data past the intended limit of a buffer, often resulting in memory corruption or arbitrary code execution outside the buffer's valid boundaries.
+
+\paragraph{Prevention} Implement rigorous checks on size and initial position before utilizing the buffer; replace unbounded copy functions with safer alternatives that support length arguments (e.g., replacing \texttt{strcpy} with \texttt{strncpy}), and implement custom bounds checks if safe APIs are unavailable.
+
+\paragraph{Detection} Automated \gls{sast}, automated dynamic analysis with fuzzing and fault-injection-based testing.
+
+\paragraph{Notes} The classic ``buffer overflow'' is a specific type of out-of-bounds write that occurs within structured buffers (e.g., arrays).
+
+\paragraph{Related Attacks} Overflow Buffers (\gls{capec}-100), Code Injection (\gls{capec}-242).
+
+\paragraph{Related \glspl{cwe}} \textbf{CWE-119}: Improper Restriction of Operations within the Bounds of a Memory Buffer (performing read or write operations outside a buffer's intended boundaries).
+
+\paragraph{Real-World Examples (\glspl{cve})}
+\begin{itemize}
+    \item \textbf{CVE-2021-21220}: Insufficient input validation (CWE-20) in a browser component allows heap corruption;
+    \item \textbf{CVE-2020-17087}: Integer truncation (CWE-197) causes a small buffer allocation, leading to an out-of-bounds write;
+    \item \textbf{CVE-2019-1010006}: Compiler optimization (CWE-733) improperly removes or modifies code designed to detect integer overflow;
+    \item \textbf{CVE-2020-0968}: A remote code execution vulnerability in the Internet Explorer scripting engine handling objects in memory (Scripting Engine Memory Corruption Vulnerability).
+\end{itemize}
+
+\section{CWE-78: OS Command Injection}
+The product constructs an OS command using externally-influenced input, but it does not (or incorrectly) neutralize special elements that could modify the intended OS command.
+
+\paragraph{Prevention} Use dedicated, built-in language libraries or APIs rather than spawning external processes to recreate the desired functionality. Furthermore, security checks performed on the client side \textbf{MUST} be strictly replicated on the server side. When executing commands, consider passing user-supplied arguments via standard input (stdin) or securely parameterized APIs rather than appending them directly to command-line execution strings.
+
+\paragraph{Detection} Automated static analysis is often insufficient on its own. A robust dynamic analysis approach—incorporating fuzzing and fault-injection-based testing—is much more adequate for discovering execution context vulnerabilities.
+
+\paragraph{Related Attacks} OS Command Injection (CAPEC-88), Command Line Execution through SQL Injection (CAPEC-108).
+
+\paragraph{Real-World Examples (\glspl{cve})}
+\begin{itemize}
+    \item \textbf{CVE-2020-10987}: OS command injection in a Wi-Fi router; allows remote attackers to execute arbitrary system commands via the \texttt{deviceName} POST parameter.
+    \item \textbf{CVE-2020-9054}: Improper input validation (CWE-20) in a username parameter, ultimately leading to OS command injection.
+    \item \textbf{CVE-1999-0067}: A CGI program fails to neutralize the ``\texttt{|}'' metacharacter when invoking a phonebook application.
+    \item \textbf{CVE-2003-0041}: An FTP client fails to filter ``\texttt{|}'' from filenames returned by the server, allowing for client-side OS command injection.
+\end{itemize}
+
+\section{CWE-20: Improper Input Validation}
+The product receives input values but does not (or incorrectly) validates them. Input validation is a fundamental and frequently used technique for checking potentially dangerous inputs to ensure they are safe for processing. In the absence of proper validation, unintended input values can maliciously alter the program's control flow.
+
+\paragraph{Prevention} Implement a robust input validation framework. Adopt a zero-trust approach: assume all inputs are malicious, check all potentially untrusted inputs against a strict allowlist (positive validation), and enforce strict type, length, and format constraints.
+
+\paragraph{Detection} Automated and manual static analysis combined with dynamic analysis (such as fuzzing).
+
+\paragraph{Related Attacks} Command Line Execution through SQL Injection (CAPEC-108), Format String Injection (CAPEC-135), Input Data Manipulation (CAPEC-153), Blind SQL Injection (CAPEC-7), Server-Side Request Forgery (SSRF) (CAPEC-664), Cross-Site Scripting (XSS) (CAPEC-63).
+
+\paragraph{Real-World Examples (\glspl{cve})}
+\begin{itemize}
+    \item \textbf{CVE-2024-37032}: Large language model (LLM) management tool does not validate the format of a digest value from a private, untrusted model registry.
+    \item \textbf{CVE-2020-9054}: Improper input validation in username parameter, leading to OS command injection.
+    \item \textbf{CVE-2021-30860}: Improper input validation leads to integer overflow in mobile OS, as exploited in the wild.
+    \item \textbf{CVE-2021-22205}: Backslash followed by a newline can bypass a validation step, leading to eval injection, as exploited in the wild.
+\end{itemize}
+
+\section{CWE-502: Deserialization of Untrusted Data}
+In numerous occasions, it is convenient to serialize objects for communication or storage. This vulnerability occurs when the product deserializes untrusted data without sufficiently verifying that the resulting data will be valid and safe. Serialized data (or code) can be maliciously altered to bypass standard accessor functions if there is no cryptographic mechanism protecting its integrity.
+
+\paragraph{Prevention} When processing serialized data, extract the primitive fields to populate a new, safe object rather than directly instantiating complex types from the untrusted stream. Furthermore, ensure the integrity of the data has not been compromised by enforcing digital signatures or \glspl{hmac} (Hash-based Message Authentication Codes) before attempting to deserialize it. 
+
+\paragraph{Detection} Automated static analysis is generally sufficient to detect the presence of unchecked deserialization calls (e.g., insecure uses of \texttt{ObjectInputStream} in Java or \texttt{pickle} in Python).
+
+\paragraph{Related Attacks} Object Injection (CAPEC-586).
+
+\paragraph{Real-World Examples (\glspl{cve})}
+\begin{itemize}
+    \item \textbf{CVE-2019-12799}: Bypass of untrusted deserialization issue (CWE-502) by using an assumed-trusted class.
+    \item \textbf{CVE-2015-8103}: Deserialization issue in commonly-used Java library allows remote execution.
+    \item \textbf{CVE-2013-1465}: Use of PHP unserialize function on untrusted input allows attacker to modify application configuration.
+\end{itemize}
+
+\section{CWE-22: Path Traversal}
+The full name is: ``Improper Limitation of a Pathname to a Restricted Directory.'' This means the product uses external input to construct a pathname for a file or a directory located within a restricted parent directory. This is a classic situation of improper neutralization of input, since the inserted path can resolve to a different location than the one intended (e.g., by using traversal separators such as \texttt{../} or \texttt{/}).
+
+\paragraph{Prevention} Assume all input is malicious. Store library, include, and utility files outside the web document root whenever possible. When the set of acceptable objects (filenames, URLs, etc.) is known and limited, create a strict mapping from fixed, safe input values to the actual target filenames.
+
+\paragraph{Detection} Automated and manual static analysis, coupled with automated dynamic analysis and vulnerability scanning.
+
+\paragraph{Real-World Examples (\glspl{cve})}
+\begin{itemize}
+    \item \textbf{CVE-2024-4315}: Local File Inclusion (LFI) in \texttt{lollms} due to insufficient path sanitization of Windows-style backward slashes.
+    \item \textbf{CVE-2019-20916}: Path traversal in Python \texttt{pip} allowing arbitrary file overwrite via a crafted wheel (\texttt{.whl}) filename.
+    \item \textbf{CVE-2022-31503}: Absolute path traversal in the \texttt{orchest} GitHub repository due to unsafe use of the Flask \texttt{send\_file} function.
+\end{itemize}
+
+\section{CWE-918: Server-Side Request Forgery (SSRF)}
+Assuming there exists a server-to-server or service-to-service trust relationship, a security vulnerability in a server could allow an attacker to cause the server-side application to make forged requests to an unintended location. The attacker can bypass access control measures by means of the trusted server, using it as a proxy to conduct activities such as port scanning on hosts within an internal network.
+
+\noindent Note that this attack is not limited to targeting other servers; it can also be used to access restricted local files residing on the original server itself.
+
+\paragraph{Prevention} Limit outbound traffic from the original application server. Build a strict allowlist (not a denylist) of trusted domains and IP addresses, and rigorously sanitize user input to prevent potential execution risks.
+
+\paragraph{Detection} Automated static analysis.
+
+\paragraph{Related Attacks} Server-Side Request Forgery (CAPEC-664).
+
+\paragraph{Real-World Examples (\glspl{cve})}
+\begin{itemize}
+    \item \textbf{CVE-2021-26855}: Microsoft Exchange Server SSRF vulnerability (ProxyLogon) allowing unauthenticated attackers to send arbitrary HTTP requests.
+    \item \textbf{CVE-2021-21973}: SSRF in VMware vSphere Client due to improper validation of URLs in a vCenter Server plugin, leading to information disclosure.
+    \item \textbf{CVE-2016-4029}: WordPress SSRF bypass achieved by using octal and hexadecimal IP address formats to evade intranet address checks.
+    \item \textbf{CVE-2002-1484}: DB4Web server verbose debugging feature allows remote attackers to use the server as a proxy to conduct TCP port scans.
+\end{itemize}
+
+\section{Other \glsfmtshortpl{cwe} in the Top 25}
+\begin{itemize}
+    \item \textbf{CWE-79}: Improper Neutralization of Input During Web Page Generation (Cross-Site Scripting / XSS).
+    \item \textbf{CWE-89}: Improper Neutralization of Special Elements used in an SQL Command (SQL Injection).
+    \item \textbf{CWE-352}: Cross-Site Request Forgery (CSRF).
+    \item \textbf{CWE-476}: NULL Pointer Dereference.
+    \item \textbf{CWE-190}: Integer Overflow or Wraparound.
+    \item \textbf{CWE-362}: Concurrent Execution using Shared Resource with Improper Synchronization (Race Condition).
+    \item \textbf{CWE-306}: Missing Authentication for Critical Function.
+    \item \textbf{CWE-94}: Improper Control of Generation of Code (Code Injection).
+\end{itemize}

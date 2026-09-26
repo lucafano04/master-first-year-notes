@@ -1,0 +1,215 @@
+\chapter{Concepts, Notions, and Context [10-14/09/2026]}
+We will start by defining Software and Security.
+
+\begin{definition}{Software}{software}
+    Software is composed of a set of programs and data which provide functionality. Often, it can be part of a cyber-physical system.
+\end{definition}
+
+\begin{definition}{Security}{security}
+    Understanding and identifying software-induced security risks and determining how to manage them.
+\end{definition}
+
+With these definitions, we can conclude that software plays a crucial role in providing security, but it is also a significant \textbf{source of security issues} and problems. Meanwhile, the relevance of security has been increasing but still not enough. Indeed, programming courses do not pay much attention to it, and many developers have limited training in software security or no training at all. This is exacerbated by the fact that the primary goal is usually just to develop the software.
+
+\paragraph{Why is software a source of security vulnerabilities/issues?}
+Most developers produce \textbf{insecure code}. Some relevant factors are:
+\begin{itemize}
+    \item Limited training.
+    \item Textbooks do not focus on security.
+    \item Limited security audits.
+    \item Developers focus on feature implementation and not security.
+    \item Security is complex and expensive, requiring time and resources.
+    \item Legacy software is often unsafe.
+\end{itemize}
+
+Security is frequently considered a \textbf{secondary factor}; often it is a \textbf{trade-off (or conflict)} between: \textbf{Security}, \textbf{Functionality}, and Convenience/Opportunities.
+
+\begin{definition}{Secure Software}{secure_software}
+    A software system is \textbf{secure if it satisfies specified security objectives}.
+
+    E.g., \gls{cia} requirements for the system's data and functionality.
+\end{definition}
+
+In general, the \gls{cia} triad is not enough; there are other properties like Authentication, Authorization, Privacy, Anonymity, Non-repudiation, Reliability, Audit, etc. \\
+Security is about \textbf{preventing risks and imposing countermeasures to reduce threats} to relevant assets to acceptable levels.
+
+\begin{concept}{Security Policy}{security-policy}
+    A security policy specifies what security requirements and goals the countermeasures are intended to achieve.
+\end{concept}
+
+\begin{concept}{Security Mechanisms}{security_mechanisms}
+    Security mechanisms and controls are applied to enforce the security policy as defined in \cref{cpt:security-policy}.
+\end{concept}
+
+\begin{concept}{Security by Design}{sec_by_design}
+    Security by Design refers to when security is addressed during the design, implementation, and testing phases (i.e., each phase) of software development.
+\end{concept}
+
+A system is only as secure as its weakest element. A typical system is composed of several actors:
+\begin{description}
+    \item[System] Provides data and services.
+    \item[Honest user] Uses the system as intended.
+    \item[Dishonest attacker] Attempts to find issues using unusual interactions and features to produce harmful effects. Such as disrupting an honest user's access (Integrity and Availability), learning information intended for honest users only (Confidentiality), or intercepting communications (Confidentiality).
+    \item[Defender] Protects against possible attacks (known and unknown).
+\end{description}
+
+It is important to distinguish between safety and security:
+\begin{concept}{Safety vs Security}{safety_security}
+    Safety is about protecting from accidental risks, while security is about mitigating \textbf{risks of dangers caused by intentional, malicious actions}.
+\end{concept}
+
+\begin{concept}{Security Software Failure}{sec_software_failure}
+    A Security software failure is a scenario in which the software does not achieve its security objectives/requirements. Software issues that can cause such failures exist.
+\end{concept}
+
+Most software has no clear and specific absolute objectives; rather, these objectives are often specific and case-dependent. Usually, they are traded off against non-functional requirements. For this reason, software design and implementation issues (e.g., bugs) can lead to a \textbf{substantial disruption of the software} and its behavior.
+
+Therefore, \textbf{Security} is a \textbf{system property, not a feature}, and it is a core part of reliability.
+
+\lecturestop{10/09/2026}
+
+\paragraph{Design and Implementation Issues}
+There are multiple kinds of implementation issues, such as: \textbf{Bugs in software and environments} (like in architecture, infrastructure, components, etc.), \textbf{inappropriate features} in the infrastructure or reused software (like libraries), and \textbf{inappropriate use} of features provided by the infrastructure or reused software. Possible causes of these are mainly: Unclear or missing requirements, complexity of features, time pressure, characteristics of the programming language, and developer/manager errors.
+
+\begin{definition}{Bug}{bug}
+    The system isn't behaving as it's designed to behave.
+\end{definition}
+
+\begin{definition}{Vulnerability}{vulnerability}
+    A chain of \textbf{weaknesses} linked by causality; it starts with a bug (\cref{def:bug}) and ends with an error which, if exploited, leads to a security failure (\cref{cpt:sec_software_failure}).
+\end{definition}
+
+Many security issues are related to vulnerabilities due to bugs, defects, or design flaws in a targeted software system.
+
+\paragraph{Common Weakness Enumeration (\gls{cwe})}
+\gls{cwe} provides a publicly available list of the most common software (and hardware) weaknesses that can contribute to security vulnerabilities. Each \gls{cwe} is described by several fields. Why is this done? If the needed function is in a package affected by a known \gls{cwe}, the weakness can be isolated and mitigated during the design of the application before deployment. Also, fixing a weakness before a vulnerability is introduced is much more cost-effective. 
+
+\paragraph{Common Vulnerabilities and Exposures (\gls{cve})}
+\gls{cve} is a publicly available list of entries that describes vulnerabilities in widely-used software components. Each \gls{cve} is described by several fields.
+
+\paragraph{\gls{nvd} and \gls{euvd}} 
+The \gls{nvd} is a publicly available database with \gls{cve} entries. This database contains a large number of vulnerabilities and provides methods to search and explore the stored \glspl{cve}. The equivalent in Europe is the \gls{euvd}; this is part of the NIS2 directive. The EU mandated \gls{enisa} to develop and maintain the \textbf{EU}ropean \textbf{V}ulnerability \textbf{D}atabase. \gls{enisa} cooperates with MITRE and other non-EU operators working with the \gls{cve} system, putting together various sources to enrich it.
+
+\section{Bug Exploitation}
+While a typical bug might just lead to a software crash, an attacker (who is \textbf{not} a normal user) will actively attempt to find bugs/defects through unusual/unexpected interactions and features. They will work to exploit them to do much worse.
+
+\begin{definition}{Exploitation}{exploitation}
+    An activity in which an attacker uses a bug/defect (vulnerability, see \cref{def:vulnerability}) to achieve their goals.
+\end{definition}
+
+\begin{definition}{Exploit}{exploit}
+    A cleverly crafted input, or a series of (unusually unintuitive) interactions with the system, that triggers a bug or a flaw to benefit the attacker.
+\end{definition}
+
+As per the previous definitions, an attacker might need several steps to achieve their attack goals; these steps are called an attack path.
+
+\begin{definition}{Attack Path}{attack-path}
+    An attack path is a series of exploits (\cref{def:exploit}) or atomic attacks.
+\end{definition}
+
+Usually, an exploit can be very complex, but some patterns can be identified. CAPEC is trying to enumerate and classify the most common attacks. 
+Also, exploit databases exist that collect \gls{cvss}-compliant exploits and vulnerable software (e.g., ATT\&CK).
+
+\section{Achieving Security}
+Security in computer software systems is hard and complicated due to great complexity and dependency on the \gls{os}, \gls{fs}, Network, and physical access. Also, system/software security is \textbf{difficult to measure}; there are no perfect metrics and not enough powerful security testing tools and procedures. From a business perspective, there are deadlines to meet, clients do not demand security (it's often not considered a \textbf{user requirement}), and finally, few to no developers have a culture and knowledge regarding security.
+
+\paragraph{Software Size} 
+From a technical POV, the use of software is growing, and along with it, its complexity and size. Also, the reuse and maintenance of pieces of code are growing. Both lead to more bugs and flaws since complex software is difficult to debug and audit for bugs. While it's more probable to find a vulnerability, it is also more difficult and time-consuming for an attacker to find a way in.
+
+\paragraph{Roles and Responsibilities} 
+Who is responsible for software security? In our view, Developers and Pen-testers.
+
+\paragraph{How much security?} 
+Since absolute security is \textbf{unachievable}, a \textbf{trade-off} must be made:
+\begin{center}
+    More Security \(\Rightarrow\) More Cost \(\Rightarrow\) Less convenience 
+\end{center}
+Indeed, security measures (see \cref{cpt:security-policy}) should be as invisible as possible to the end-user, and an appropriate level relevant to the need should be chosen.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{tikzpicture}[
+        scale=0.8,
+        >=Stealth,
+        box/.style={
+            rounded corners=5pt,
+            minimum width=3cm,
+            minimum height=0.8cm,
+            align=center,
+            font=\sffamily\bfseries,
+            text=white
+        },
+        green/.style={box, fill=green!60!black},
+        red/.style={box, fill=red},
+        arrow/.style={->, thick, draw=blue!60},
+        label/.style={font=\sffamily\scriptsize, fill=white, inner sep=2pt}
+    ]
+    
+    % --- Node Placement on a Grid ---
+    \node[green] (owners)          at (0, 0)      {Owners};
+    \node[green] (availability)    at (5, 0)      {Availability\\usefulness / \ldots};
+    \node[green] (countermeasures) at (0, -2.5)   {Countermeasures};
+    \node[red]   (vulnerabilities) at (0, -5)     {Vulnerabilities};
+    \node[red]   (threats)         at (-4.5, -5)  {Threats};
+    \node[red]   (attackers)       at (-9, -5)    {Attackers};
+    \node[red]   (risks)           at (4.5, -5)   {Risks};
+    \node[green] (assets)          at (4.5, -8)   {Assets};
+    
+    % --- Edges and Labels ---
+    % Owners
+    \draw[arrow] (owners) -- node[label, above] {want to maximize} (availability);
+    \draw[arrow] (owners) -- node[label, left] {impose} (countermeasures);
+    \draw[arrow] (owners.west) to[bend right=45] node[label, left] {want to minimize} (vulnerabilities.west);
+    
+    % Countermeasures & Vulnerabilities
+    \draw[arrow] (countermeasures.250) -- node[label, left] {reduce} (vulnerabilities.110);
+    \draw[arrow] (vulnerabilities.70) -- node[label, right] {require} (countermeasures.290);
+    
+    % Vulnerabilities & Risks
+    \draw[arrow] (vulnerabilities.20) to[bend left=15] node[label, above] {lead to} (risks.160);
+    \draw[arrow] (vulnerabilities.340) to[bend right=15] node[label, below] {may have} (risks.200);
+    
+    % Attackers, Threats, Vulnerabilities
+    \draw[arrow] (attackers) -- node[label, above] {give rise to} (threats);
+    \draw[arrow] (threats) -- node[label, above] {exploit} (vulnerabilities);
+    
+    % Threats to Risks (Sweeps elegantly under vulnerabilities)
+    \draw[arrow] (threats.south) to[bend right=25] node[label, below] {increase} (risks.south);
+    
+    % Attackers to Assets (L-shape routing under the entire graph)
+    \draw[arrow] (attackers.south) |- node[label, near start, right] {want to abuse} (assets.west);
+    
+    % Risks to Assets
+    \draw[arrow] (risks) -- node[label, right] {to} (assets);
+    
+    % Availability to Assets & Risks
+    \draw[arrow] (availability.south) to[bend left=15] node[label, right] {increase} (assets.east);
+    \draw[arrow] (availability.250) to[bend right=15] node[label, right] {of} (risks.45);
+    
+    \end{tikzpicture}
+    \caption{Security meta-model definition}
+    \label{fig:sec-meta-model}
+\end{figure}
+
+\paragraph{How to realize security objectives?}
+To minimize risks, there are 3 pillars:
+\begin{description}
+    \item[Methods] Proactive, Detective, Reactive.
+    \subitem[Proactive] Prevent possible issues and flaws at the very beginning.
+    \subitem[Detective] Predict/catch issues.
+    \subitem[Reactive] Recover assets, repair damage, prosecute offenders.
+    \item[Know The Attacker] Types/typical attacks and commonly exploited security issues.
+    \item[Existing issues] The attacker does not create security issues and vulnerabilities; they exploit existing ones. 
+\end{description}
+
+\paragraph{Security through obscurity} 
+\gls{sto} means hiding design and implementation details to gain security. This \textbf{DOES NOT WORK} because it is difficult to keep secrets in coding; if the entire security mechanism relies on a single secret, the whole system is compromised once it is revealed. Also, secret algorithms and unreviewed code mean flaws will not be spotted nor fixed. Security \textbf{and} obscurity can work together, but not ONLY obscurity.
+
+\paragraph{Cryptography} 
+Usually, an association between security and cryptography is made; however, many security problems cannot be solved by cryptography. Cryptography and its use have intrinsic limitations. Furthermore, 85\% of \gls{cert} security advisories could not have been solved or prevented with cryptography alone.
+
+\paragraph{When to Start}
+\begin{center}
+    IMMEDIATELY
+\end{center}
+Not on the next version.
