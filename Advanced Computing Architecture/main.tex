@@ -1,10 +1,15 @@
 \documentclass[11pt, a4paper, twoside, titlepage]{scrbook}
 \usepackage{ccicons}
+\usepackage{fontawesome5} % Required for the cover watermark
 
 % ==========================================
-% KOMA-SCRIPT FONT SETTINGS
+% KOMA-SCRIPT FONT SETTINGS & PREMIUM FONTS
 % ==========================================
-\setkomafont{disposition}{\normalfont\bfseries}
+\usepackage{newpxtext, newpxmath}       % Palatino font for body and math
+\usepackage[scaled=0.95]{inconsolata}   % Sleek modern monospace font for code
+\usepackage[scaled=0.92]{helvet}       % Clean sans-serif for headings
+
+\setkomafont{disposition}{\sffamily\bfseries}
 \setkomafont{descriptionlabel}{\normalfont\bfseries}
 \setkomafont{pageheadfoot}{\normalfont\small}
 
@@ -14,6 +19,12 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
+\usepackage{etoolbox}
+
+% --- PREVENT \Bbbk AND \openbox COLLISIONS ---
+\let\Bbbk\undefined
+\let\openbox\undefined
+% ---------------------------------------------
 
 % Matematica e Informatica Teorica
 \usepackage{amsmath, amssymb, amsthm, mathtools}
@@ -46,6 +57,25 @@
 \definecolor{codebg}{RGB}{245, 245, 245}
 
 % ==========================================
+% MODERN CHAPTER HEADINGS
+% ==========================================
+\makeatletter
+\renewcommand*{\chapterlinesformat}[3]{%
+  \Ifstr{#1}{chapter}{%
+    \parbox[b]{\textwidth}{%
+      \raggedright
+      \Ifstr{#2}{}{}{% If there is a chapter number
+        {\fontsize{70}{75}\selectfont\color{unitnred!20}#2}\\[-2ex]
+      }%
+      \Huge\bfseries\sffamily\color{black}#3\par\vspace{1cm}
+    }%
+  }{% For unnumbered chapters (like Preface/Appendix)
+    \@hangfrom{#2}{#3}%
+  }%
+}
+\makeatother
+
+% ==========================================
 % LINKS, REFERENCING & GLOSSARIES
 % ==========================================
 \usepackage{hyperref}
@@ -62,6 +92,27 @@
 
 \usepackage[acronym,toc]{glossaries-extra}
 \makeglossaries
+
+% --- AUTOMATED ACRONYM USAGE COUNTER HOOKS ---
+\makeatletter
+\appto\glslinkpostsetkeys{%
+    \ifcsundef{acrocount@\glslabel}{%
+        \csgdef{acrocount@\glslabel}{1}%
+    }{%
+        \csxdef{acrocount@\glslabel}{\the\numexpr\csuse{acrocount@\glslabel} + 1\relax}%
+    }%
+}
+
+\renewcommand{\glsxtrpostdescacronym}{%
+    \ifcsdef{acrocount@\glscurrententrylabel}{%
+        \ifnum\csuse{acrocount@\glscurrententrylabel}=1\relax
+            \space \textit{[1]}%
+        \else
+            \space \textit{[\csuse{acrocount@\glscurrententrylabel}]}%
+        \fi
+    }{}%
+}
+\makeatother
 
 \usepackage{array}
 
@@ -96,7 +147,7 @@
 \newacronym{fp}{FP}{Floating-Point}
 \newacronym{fpu}{FPU}{Floating-Point Unit}
 \newacronym{alu}{ALU}{Arithmetic Logic Unit}
-\newacronym{dsp}{DSP}{Digital Signal Proecssor}
+\newacronym{dsp}{DSP}{Digital Signal Processor}
 \newacronym{cc}{CC}{Condition Code}
 \newacronym{pc}{PC}{Program Counter}
 \newacronym{agu}{AGU}{Address Generation Unit}
@@ -106,7 +157,7 @@
 \newacronym{iir}{IIR}{Infinite Impulse Response}
 \newacronym{fft}{FFT}{Fast Fourier Transform}
 \newacronym{bta}{BTA}{Branch Target Address}
-\newacronym{ic-inst}{IC}{Istruction Count}
+\newacronym{ic-inst}{IC}{Instruction Count}
 \newacronym{raw}{RAW}{Read After Write}
 \newacronym{war}{WAR}{Write After Read}
 \newacronym{waw}{WAW}{Write After Write}
@@ -203,29 +254,61 @@
 }
 
 % ==========================================
-% TITLE PAGE INFO
-% ==========================================
-\titlehead{\centering\includegraphics[width=4cm]{UniTn.jpg}}
-\title{Advanced Computing Architectures}
-\subtitle{Lecture Notes}
-\author{
-    \textbf{Luca Facchini} \\
-    \textit{Master's Degree in Computer Science} \\
-    University of Trento \\
-    \href{mailto:luca.facchini-1@studenti.unitn.it}{luca.facchini-1@studenti.unitn.it}\\
-    \href{mailto:luca@fc-software.it}{luca@fc-software.it}
-}
-\date{Last updated: \today}
-\raggedbottom
-
-% ==========================================
 % DOCUMENT BEGINS
 % ==========================================
 \begin{document}
 \frontmatter
 
 % --- TITLE PAGE ---
-\maketitle
+\begin{titlepage}
+    % Full-page background graphics using Ti*k*Z
+    \begin{tikzpicture}[remember picture, overlay]
+        % 1. Bold UniTn red vertical bar on the left edge
+        \fill[unitnred] (current page.south west) rectangle ([xshift=1.5cm]current page.north west);
+        % 2. Subtle gray geometric accent at the bottom right
+        \fill[gray!10] (current page.south east) -- ([yshift=6cm]current page.south east) -- ([xshift=-8cm]current page.south east) -- cycle;
+        % 3. Giant faint watermark icon in background
+        \node[text=gray!10, font=\fontsize{250}{250}\selectfont, anchor=center] at (current page.center) {\faMicrochip};
+    \end{tikzpicture}
+    
+    % Push content down and to the right to clear the red bar
+    \vspace*{2cm}
+    \noindent\hspace{1cm}%
+    \begin{minipage}{\dimexpr\textwidth-1cm\relax}
+        
+        % University Logo
+        \includegraphics[width=4.5cm]{UniTn.jpg} 
+        
+        \vspace{4cm}
+        
+        % Main Title Area
+        {\Huge \bfseries \sffamily \color{unitnred} Advanced Computing Architectures\par}
+        \vspace{0.5cm}
+        {\LARGE \itshape Lecture Notes\par}
+        \vspace{0.5cm}
+        {\Large A.Y. 2026/2027\par}
+        
+        \vfill
+        
+        % Author Info Block
+        \begin{flushleft}
+            {\Large \textbf{Luca Facchini}}\\[0.2cm]
+            \textit{Master's Degree in Computer Science}\\
+            University of Trento\\[0.3cm]
+            \href{mailto:luca.facchini-1@studenti.unitn.it}{\texttt{luca.facchini-1@studenti.unitn.it}}\\
+            \href{mailto:luca@fc-software.it}{\texttt{luca@fc-software.it}}
+        \end{flushleft}
+        
+        \vspace{1.5cm}
+        
+        % Footer line and date
+        \textcolor{gray}{\rule{\linewidth}{0.8pt}}
+        \vspace{0.2cm}\\
+        {\small \textbf{Last updated:} \today \hfill \textit{University of Trento}}
+        
+    \end{minipage}
+\end{titlepage}
+\cleardoublepage
 
 % --- COPYRIGHT / LEGAL PAGE (Back of Title Page) ---
 \newpage
@@ -249,6 +332,8 @@ This material is provided ``AS IS'', without warranty of any kind, express or im
 \cleardoublepage
 
 % --- TABLE OF CONTENTS ---
+\addtokomafont{chapterentry}{\color{unitnred}}
+\addtokomafont{chapterentrypagenumber}{\color{unitnred}}
 \tableofcontents
 \cleardoublepage
 \mainmatter
