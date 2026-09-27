@@ -44,6 +44,7 @@
 % HEADER & FOOTER (KOMA-Script Native)
 % ==========================================
 \usepackage[headsepline=0.4pt, footsepline=0.4pt, plainfootsepline]{scrlayer-scrpage}
+\usepackage{fontawesome5}
 \clearpairofpagestyles
 
 % Attiva i marker dinamici: Capitolo a sinistra (pari), Sezione a destra (dispari)
@@ -62,6 +63,23 @@
 \addtokomafont{headsepline}{\color{unitnred}}
 \addtokomafont{footsepline}{\color{unitnred}}
 \setlength{\headheight}{24pt}
+
+% --- MODERN CHAPTER HEADINGS ---
+\makeatletter
+\renewcommand*{\chapterlinesformat}[3]{%
+  \Ifstr{#1}{chapter}{%
+    \parbox[b]{\textwidth}{%
+      \raggedright
+      \Ifstr{#2}{}{}{% If there is a chapter number
+        {\fontsize{70}{75}\selectfont\color{unitnred!20}#2}\\[-2ex]
+      }%
+      \Huge\bfseries\sffamily\color{black}#3\par\vspace{1cm}
+    }%
+  }{% For unnumbered chapters (like Preface/Appendix)
+    \@hangfrom{#2}{#3}%
+  }%
+}
+\makeatother
 
 % ==========================================
 % BOXES, CODE & ALGORITHMS
@@ -105,9 +123,38 @@
 \usepackage[acronym,toc]{glossaries-extra}
 \makeglossaries
 
+\makeatletter
+% 1. Silently and GLOBALLY count EACH time ANY link-generating acronym command is used
+\appto\glslinkpostsetkeys{%
+    \ifcsundef{acrocount@\glslabel}{%
+        \csgdef{acrocount@\glslabel}{1}%
+    }{%
+        % \csxdef forces the math to be saved globally, surviving any local groups
+        \csxdef{acrocount@\glslabel}{\the\numexpr\csuse{acrocount@\glslabel} + 1\relax}%
+    }%
+}
+
+% 2. Use the native glossaries-extra hook to append the count in the printed glossary
+\renewcommand{\glsxtrpostdescacronym}{%
+    \ifcsdef{acrocount@\glscurrententrylabel}{%
+        \ifnum\csuse{acrocount@\glscurrententrylabel}=1\relax
+            \space \textit{[1]}%
+        \else
+            \space \textit{[\csuse{acrocount@\glscurrententrylabel}]}%
+        \fi
+    }{}%
+}
+\makeatother
+
 \usepackage{cleveref}
 
 \usepackage{microtype}
+% --- PREMIUM FONTS ---
+\usepackage{newpxtext, newpxmath} % Palatino font for body and math
+\usepackage[scaled=0.95]{inconsolata} % Sleek, modern monospace font for code
+\usepackage[scaled=0.92]{helvet} % Clean sans-serif for headings
+% Set all section headings to use the sans-serif font
+\setkomafont{disposition}{\sffamily\bfseries}
 
 % ==========================================
 % ACRONYMS DEFINITIONS
@@ -132,6 +179,18 @@
 \newacronym{capec}{CAPEC}{Common Attack Pattern Enumeration and Classification}
 \newacronym{sast}{SAST}{Static Application Security Testing}
 \newacronym{hmac}{HMAC}{Hash-based Message Authentication Code}
+\newacronym{owasp}{OWASP}{Open Worldwide Application Security Project}
+\newacronym{xss}{XSS}{Cross-Site Scripting}
+\newacronym{sql}{SQL}{Structured Query Language}
+\newacronym{sqli}{SQLi}{\gls{sql} Injection}
+\newacronym{api}{API}{Application Programming Interface}
+\newacronym{csrf}{CSRF}{Cross-Site Request Forgery}
+\newacronym{ssrf}{SSRF}{Server-Side Request Forgery}
+\newacronym{sbom}{SBOM}{Software Bill of Materials}
+\newacronym{gdpr}{GDPR}{General Data Protection Regulation}
+\newacronym{pcidss}{PCI DSS}{Payment Card Industry Data Security Standard}
+\newacronym{orm}{ORM}{Object-Relational Mapping}
+\newacronym{ux}{UX}{User Experience}
 
 % ==========================================
 % TCOLORBOX THEOREMS & DEFINITIONS
@@ -195,27 +254,60 @@
 % ==========================================
 % TITLE PAGE INFO
 % ==========================================
-\titlehead{\centering\includegraphics[width=4cm]{UniTn.jpg}}
-\title{Security Testing}
-\subtitle{Lecture Notes}
-\author{
-    \textbf{Luca Facchini} \\
-    \textit{Master's Degree in Computer Science} \\
-    University of Trento \\
-    \href{mailto:luca.facchini-1@studenti.unitn.it}{luca.facchini-1@studenti.unitn.it}\\
-    \href{mailto:luca@fc-software.it}{luca@fc-software.it}
-}
-\date{Last updated: \today}
-\raggedbottom
-% ==========================================
-% DOCUMENT BEGINS
-% ==========================================
 \begin{document}
 \frontmatter
 
 % --- TITLE PAGE ---
-\maketitle
-
+\begin{titlepage}
+    % Full-page background graphics using Ti*k*Z
+    \begin{tikzpicture}[remember picture, overlay]
+        % 1. Bold UniTn red vertical bar on the left edge
+        \fill[unitnred] (current page.south west) rectangle ([xshift=1.5cm]current page.north west);
+        % 2. Subtle gray geometric accent at the bottom right
+        \fill[gray!10] (current page.south east) -- ([yshift=6cm]current page.south east) -- ([xshift=-8cm]current page.south east) -- cycle;
+        
+        % 3. Giant faint security watermark (Requires \usepackage{fontawesome5} in preamble)
+        \node[text=gray!10, font=\fontsize{250}{250}\selectfont, anchor=center] at (current page.center) {\faShield*};
+    \end{tikzpicture}
+    
+    % Push content down and to the right to clear the red bar
+    \vspace*{2cm}
+    \noindent\hspace{1cm}%
+    \begin{minipage}{\dimexpr\textwidth-1cm\relax}
+        
+        % University Logo
+        \includegraphics[width=4.5cm]{UniTn.jpg} 
+        
+        \vspace{4cm}
+        
+        % Main Title Area
+        {\Huge \bfseries \sffamily \color{unitnred} Security Testing\par}
+        \vspace{0.5cm}
+        {\LARGE \itshape Lecture Notes\par}
+        \vspace{0.5cm}
+        {\Large A.Y. 2026/2027\par}
+        
+        \vfill
+        
+        % Author Info Block
+        \begin{flushleft}
+            {\Large \textbf{Luca Facchini}}\\[0.2cm]
+            \textit{Master's Degree in Computer Science}\\
+            University of Trento\\[0.3cm]
+            \href{mailto:luca.facchini-1@studenti.unitn.it}{\texttt{luca.facchini-1@studenti.unitn.it}}\\
+            \href{mailto:luca@fc-software.it}{\texttt{luca@fc-software.it}}
+        \end{flushleft}
+        
+        \vspace{1.5cm}
+        
+        % Footer line and date
+        \textcolor{gray}{\rule{\linewidth}{0.8pt}}
+        \vspace{0.2cm}\\
+        {\small \textbf{Last updated:} \today \hfill \textit{University of Trento}}
+        
+    \end{minipage}
+\end{titlepage}
+\clearpage
 % --- COPYRIGHT / LEGAL PAGE (Back of Title Page) ---
 \newpage
 \thispagestyle{empty}
@@ -238,6 +330,10 @@ This material is provided ``AS IS'', without warranty of any kind, express or im
 \cleardoublepage
 
 % --- TABLE OF CONTENTS ---
+% Color the Chapter entries in the TOC
+\addtokomafont{chapterentry}{\color{unitnred}}
+% Color the Chapter page numbers in the TOC
+\addtokomafont{chapterentrypagenumber}{\color{unitnred}}
 \tableofcontents
 \cleardoublepage
 \mainmatter
@@ -291,7 +387,7 @@ BSc Graduate in Computer Science
 
 % Span the section title across both columns
 \begin{multicols}{2}[\section{List of Acronyms}]
-    \raggedright
+    % \raggedright
     % Disable the default glossary title so it doesn't print twice
     \renewcommand{\glossarysection}[2][]{}
     \printglossary[type=\acronymtype]
