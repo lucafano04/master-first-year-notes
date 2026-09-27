@@ -1,1 +1,100 @@
-\chapter{Top 10 OWASP}
+\chapter{The \glsfmtshort{owasp} Top 10}
+As established in previous sections, a single \gls{cwe} or a chain of \glspl{cwe} can lead to a specific \gls{cve}. While each represents a distinct security risk, analyzing them individually is inefficient at scale. Fortunately, we can group them into broader ``security issue types.'' 
+
+Characterization and classification are the foundational steps in vulnerability investigation. Grouping issues allows security teams to focus on the most relevant and impactful threats, design more effective testing strategies, improve the \gls{sdlc}, and drive prioritized bug-fixing. Before diving into the \gls{owasp} Top 10 itself, it is important to understand the broader context of how and why these classifications are made.
+
+\section{Classification Criteria for Security Errors}
+To properly classify software security errors, several theoretical and practical criteria are used by the industry and academia. Classification goes beyond simple impact; it analyzes the root cause, location, and timing of the defect.
+
+\begin{description}
+    \item[Severity] The technical impact that the bug or error has on the system. It answers the questions: How severe is the vulnerability? How critical is the potential damage? (Typically measured on a scale such as High, Medium, Low, or via the \gls{cvss}).
+    \item[Priority] How quickly the issue should be resolved based on business context and exploitability. A vulnerability might have high severity but low priority if it exists in an unreachable, isolated internal network.
+    \item[Nature and Domain] The technical characteristics of the bugs. Are they functional defects, pure security flaws, or architectural design errors? Furthermore, are they code-specific (e.g., C++ memory leaks) or technology-related (e.g., SQL misconfigurations)?
+    \item[Genesis (Intent)] Security errors are often classified by their genesis: whether they are \textit{unintentional} (e.g., logic bugs, typos, memory management errors by honest developers) or \textit{intentional} (e.g., malicious logic, backdoors, or logic bombs inserted by a rogue insider).
+    \item[Time of Introduction] Flaws can be categorized by the exact phase of the \gls{sdlc} in which they were introduced—such as requirement gathering, architectural design, implementation, or deployment/maintenance. Fixing an error introduced during the design phase is notoriously more expensive than fixing an implementation bug.
+\end{description}
+
+\section{Context: Prominent Industry Taxonomies}
+Several standardized taxonomies exist to help developers and testers navigate the vast landscape of security errors. While this section focuses heavily on the \gls{owasp} Top 10, it is part of a broader ecosystem of security classifications:
+
+\paragraph{The \gls{cwe} Top 25} 
+Maintained by MITRE, the \gls{cwe} Top 25 list highlights the most dangerous software weaknesses across all applications and systems, regardless of the specific domain. These weaknesses are scored based on two main metrics: \textit{prevalence} (how often a \gls{cwe} is mapped to a real-world \gls{cve}) and \textit{severity} (the potential for damage). A distinct subset, the \gls{cwe} Top 10, is specifically aggregated based on actively \textbf{known exploited vulnerabilities} in the wild.
+
+\paragraph{The 24 Deadly Sins of Software Security} 
+Coined by security experts Michael Howard, David LeBlanc, and John Viega, the ``24 Deadly Sins'' is a highly practical, developer-centric taxonomy. Rather than focusing purely on abstract theoretical models, it groups vulnerabilities by programming flaws that developers make every day. The sins are categorized into four distinct areas: \textit{Web Application Flaws} (e.g., \gls{xss}, \gls{sqli}), \textit{Implementation Flaws} (e.g., Buffer overflows in C/C++, integer overflows), \textit{Cryptographic Flaws} (e.g., using weak algorithms or hardcoded keys), and \textit{Networking/Operational Flaws}.
+
+\paragraph{The \gls{owasp} Top 10} 
+The \gls{owasp} Top 10 is the globally recognized standard awareness document for developers and web application security. Unlike the \gls{cwe} list, which covers all software (including \glspl{os} and embedded systems), \gls{owasp} focuses strictly on web application vulnerabilities (e.g., Broken Access Control, Cryptographic Failures, Injection). It represents a broad consensus about the most critical security risks to web applications.
+
+It is important to note that the \gls{owasp} Top 10 is updated approximately every four years (the latest edition being 2025). Between iterations, vulnerabilities are sometimes merged, split, or re-ranked based on current threat intelligence, and entirely new typologies can be introduced.
+
+\section{A01-2025: Broken Access Control}
+Access control normally enforces policies such that users cannot act outside of their intended permissions. Abnormalities in this mechanism lead to unauthorized information disclosure, modification, or destruction of data by allowing the execution of actions outside the user's granted limits.
+
+\paragraph{Prevention} A \textit{deny-by-default} policy should be implemented. Furthermore, access control is only effective in trusted server-side code and/or server-less \glspl{api}, where the attacker cannot modify the access control checks or metadata. Rate limiting on the \gls{api} controllers must be enforced to minimize the danger of automated attacks. Finally, stateful session identifiers must be invalidated on the server immediately after logout.
+
+\paragraph{Real-World Examples (\glspl{cwe})}
+\begin{itemize}
+    \item \textbf{CWE-22}: Improper Limitation of a Pathname to a Restricted Directory (Path Traversal)
+    \item \textbf{CWE-23}: Relative Path Traversal
+    \item \textbf{CWE-352}: \glsxtrfull{csrf}
+    \item \textbf{CWE-601}: URL Redirection to Untrusted Site (Open Redirect)
+    \item \textbf{CWE-566}: Authorization Bypass Through User-Controlled SQL Primary Key
+    \item \textbf{CWE-377}: Insecure Temporary File
+    \item \textbf{CWE-200}: Exposure of Sensitive Information to an Unauthorized Actor
+    \item \textbf{CWE-918}: \glsxtrfull{ssrf}
+\end{itemize}
+
+\noindent \textit{Notice that diverse \glspl{cwe}—ranging from path traversal to server-side request forgery—can all culminate in the same overarching security risk of broken access control.}
+
+\section{A02-2025: Security Misconfiguration}
+This category refers to all situations where there is missing (or improperly configured) security hardening across any part of the application stack. It includes scenarios where unnecessary features are enabled or installed, default accounts and passwords are still active and unchanged, error handling reveals sensitive stack traces, or the software itself is out of date.
+
+\paragraph{Prevention} To prevent this, a secure, repeatable installation process should be implemented. Additionally, routine automated tasks to review, audit, and upgrade these installations and configurations must be scheduled regularly.
+
+\paragraph{Real-World Examples (\glspl{cwe})}
+\begin{itemize}
+    \item \textbf{CWE-13}: ASP.NET Misconfiguration: Password in Configuration File
+    \item \textbf{CWE-15}: External Control of System or Configuration Setting
+    \item \textbf{CWE-537}: Java Runtime Error Message Containing Sensitive Information
+    \item \textbf{CWE-756}: Missing Custom Error Page
+\end{itemize}
+
+\section{A03-2025: Software Supply Chain Failures}
+This category groups all failures that cause breakdowns in the process of building, distributing, or updating software. These breakdowns are often caused by vulnerabilities or malicious changes in third-party code, build tools, or other external dependencies.
+
+\paragraph{Prevention} To prevent this, organizations must maintain and manage a comprehensive \glsxtrfull{sbom} and continuously monitor libraries and third-party components. Developers must track all direct and transitive dependencies, actively removing unused or unnecessary features, components, and files. Finally, there must be constant monitoring of \glspl{cve} via the \gls{nvd} for newly discovered vulnerabilities.
+
+\paragraph{Real-World Examples (\glspl{cwe})}
+\begin{itemize}
+    \item \textbf{CWE-1104}: Use of Unmaintained Third-Party Components
+    \item \textbf{CWE-1395}: Dependency on Vulnerable Third-Party Component
+    \item \textbf{CWE-1329}: Reliance on Component That is Not Updateable
+\end{itemize}
+
+\section{A04-2025: Cryptographic Failures}
+This category encompasses all violations of the protection needs for sensitive data, such as passwords, credit card numbers, health records, personal information, and business secrets. All of the aforementioned data require extra protection, especially since they are usually governed by strict privacy laws and regulations like the \glsxtrfull{gdpr} or the \glsxtrfull{pcidss}.
+
+\paragraph{Prevention} Ensure the proper encryption of all sensitive data both \textit{at rest} and \textit{in transit}. Furthermore, ensure the correct and secure configuration of all applied cryptographic mechanisms (e.g., using strong, modern algorithms, proper key management, and avoiding deprecated hash functions).
+
+\paragraph{Real-World Examples (\glspl{cwe})}
+\begin{itemize}
+    \item \textbf{CWE-261}: Weak Encoding for Password
+    \item \textbf{CWE-319}: Cleartext Transmission of Sensitive Information
+    \item \textbf{CWE-321}: Use of Hard-coded Cryptographic Key
+\end{itemize}
+
+\section{A05-2025: Injection}
+An application is vulnerable to injection attacks in any of the following cases: user data is neither validated nor sanitized; dynamic queries are constructed directly without parameterized calls or context-aware escaping; hostile data is used within \glsxtrfull{orm} search parameters to extract additional sensitive records; or hostile data is directly used or concatenated into interpreters.
+
+\paragraph{Prevention} To prevent an injection, untrusted data must be kept strictly separate from commands and queries. Robust server-side input validation must be implemented (supplemented by client-side validation for improved \glsxtrfull{ux}). Furthermore, all special characters must be properly escaped, and the permissions or returned records of \gls{sql} queries should be strictly limited (e.g., using \texttt{LIMIT} and enforcing the principle of least privilege).
+
+\paragraph{Real-World Examples (\glspl{cwe})}
+\begin{itemize}
+    \item \textbf{CWE-20}: Improper Input Validation
+    \item \textbf{CWE-78}: Improper Neutralization of Special Elements used in an \gls{os} Command (OS Command Injection)
+    \item \textbf{CWE-79}: Improper Neutralization of Input During Web Page Generation (\glsxtrfull{xss})
+    \item \textbf{CWE-89}: Improper Neutralization of Special Elements used in an \gls{sql} Command (\glsxtrfull{sqli})
+    \item \textbf{CWE-94}: Improper Control of Generation of Code (Code Injection)
+    \item \textbf{CWE-116}: Improper Encoding or Escaping of Output
+\end{itemize}
