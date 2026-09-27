@@ -1,5 +1,5 @@
-\section{Computability}
-\subsection{Basic Definitions}
+\chapter{Computability}
+\section{Basic Definitions}
 
 \begin{definition}{Alphabet}{alphabet}
     An alphabet is a set with a finite number of symbols.
@@ -172,7 +172,7 @@ They are infinite in number, but strictly \textbf{countable} (since their finite
     
     However, \textbf{not all definable languages are computable.} There are languages that can be perfectly defined using formal mathematical logic (such as the Halting Problem) for which no algorithm or program can ever exist.
 \end{observation}
-\subsection{A Computational Model: The Turing Machine}
+\section{A Computational Model: The Turing Machine}
 
 \begin{observation}{Formulas as Strings}{form-strings}
     As a foundational premise: every mathematical formula, no matter how complex, can be unambiguously represented by a single finite string (\cref{def:strings}) of symbols.
@@ -217,7 +217,7 @@ A strict constraint of the machine is that it can only read one cell at a time a
     \end{itemize}
 \end{observation}
 
-\subsubsection{Example: Binary Incrementor}
+\subsection{Example: Binary Incrementor}
 Assume our alphabet (\cref{def:alphabet}) is \(\Sigma = \{\sqcup, 0, 1\}\), where \(\sqcup\) is the default blank symbol. We want to define a transition function (\cref{def:tm-trans-func}) that adds \(1\) to a binary number already written on the tape. 
 
 We define our states as \(Q = \{R, A\}\) (abbreviating \(q_{\text{right}}\) and \(q_{\text{add\_one}}\)). The machine will first move to the far right of the string, and then move left while performing the binary addition (flipping \(1\)s to \(0\)s and carrying the \(1\) until it finds a \(0\) or a blank).
