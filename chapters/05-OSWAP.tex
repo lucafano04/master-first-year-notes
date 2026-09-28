@@ -131,3 +131,68 @@ In these vulnerabilities, an attacker tricks the application into recognizing an
     \item \textbf{CWE-1391}: Use of Weak Credentials
     \item \textbf{CWE-613}: Insufficient Session Expiration
 \end{itemize}
+
+\section{A08-2025: Software and Data Integrity Failures}
+This category groups infrastructure-level flaws that fail to protect against integrity violations, such as relying on plugins, libraries, or modules from untrusted sources. Furthermore, auto-update mechanisms can introduce vulnerabilities if they lack proper cryptographic validation; attackers may upload malicious updates to simultaneously compromise all distributed installations.
+
+\paragraph{Prevention} Ensure that all consumed components originate from trusted sources, and utilize cryptographic verification signatures to guarantee data authenticity before execution or integration.
+
+\paragraph{Real-World Examples (\glspl{cwe})}
+\begin{itemize}
+    \item \textbf{CWE-345}: Insufficient Verification of Data Authenticity
+    \item \textbf{CWE-494}: Download of Code Without Integrity Check
+    \item \textbf{CWE-502}: Deserialization of Untrusted Data
+    \item \textbf{CWE-830}: Inclusion of Web Functionality from an Untrusted Source
+\end{itemize}
+
+
+\section{A09-2025: Logging and Alerting Failures} 
+Software systems must actively log and monitor their actions to quickly detect and respond to attacks. Insufficient (or non-existent) logging, continuous monitoring, and alerting drastically increase incident response times. Conversely, a system becomes vulnerable to information leakage if logs and alerting events are improperly exposed to unauthorized users or attackers.
+
+\paragraph{Prevention} Implement comprehensive logging and monitoring to achieve full system visibility, ensuring sensitive data is sanitized from the records. Additionally, organizations must establish and adopt a formal incident response and recovery plan.
+
+\begin{observation}{The Dangers of Over-Logging}{over-logging}
+    Logging too much information can be just as dangerous as logging too little. Verbose logs risk recording sensitive user credentials, personal data, or system tokens, directly leading to a \gls{cia} confidentiality breach if the log files are ever exposed.
+\end{observation}
+
+\paragraph{Real-World Examples (\glspl{cwe})}
+\begin{itemize}
+    \item \textbf{CWE-117}: Improper Output Neutralization for Logs
+    \item \textbf{CWE-223}: Omission of Security-relevant Information
+    \item \textbf{CWE-532}: Insertion of Sensitive Information into Log File
+    \item \textbf{CWE-778}: Insufficient Logging
+\end{itemize}
+
+
+\section{A10-2025: Mishandling of Exceptional Conditions}
+When exceptions are mishandled—such as ignoring errors or managing them only when strictly enforced by the compiler—the platform might crash unexpectedly or enter an undefined state. This unpredictable behavior significantly lowers the barrier for attackers to exploit the system. These exceptions are typically triggered by missing or poor input validation, or by unexpected environmental states.
+
+\paragraph{Prevention} The prevention strategy is straightforward: implement robust exception handling. This is achieved by systematically catching and managing exceptional conditions so the software fails securely without revealing its internal state. Adopting rate limiting, quotas, and throttling can prevent resource-based exceptions. Finally, user input must always be validated through sanitization and escaping, backed by secure error handling routines.
+
+\paragraph{Real-World Examples (\glspl{cwe})}
+\begin{itemize}
+    \item \textbf{CWE-209}: Generation of Error Message Containing Sensitive Information
+    \item \textbf{CWE-215}: Insertion of Sensitive Information Into Debugging Code
+    \item \textbf{CWE-248}: Uncaught Exception
+    \item \textbf{CWE-476}: NULL Pointer Dereference
+    \item \textbf{CWE-756}: Missing Custom Error Page
+\end{itemize}
+
+\section{Summing Up}
+Now that we have explored the \gls{owasp} classification, we can draw the following conclusions:
+\begin{enumerate}
+    \item A \gls{cwe} (or a chain of \glspl{cwe}) \textbf{can} lead to a \gls{cve}.
+    \item Both \glspl{cwe} and \glspl{cve} represent tangible security risks.
+    \item These weaknesses and vulnerabilities can be systematically categorized using the \gls{owasp} framework.
+\end{enumerate}
+
+\paragraph{\gls{owasp} Vulnerable Web Applications Directory (\gls{vwad})}
+The \gls{vwad} is a comprehensive registry created by \gls{owasp} that catalogs currently available vulnerable web and mobile applications. These applications are intentionally flawed so they can be safely used for practice during testing, allowing students and security professionals to experiment with security tools and existing offensive techniques. The primary goal of the \gls{vwad} is to provide a standardized list of vulnerable targets for ethical hacking and offensive/defensive training. 
+
+The vulnerable applications within the directory are classified into four main categories:
+\begin{itemize}
+    \item Mobile
+    \item Offline
+    \item Online
+    \item Containerized
+\end{itemize}

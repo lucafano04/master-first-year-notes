@@ -80,6 +80,29 @@
   }%
 }
 \makeatother
+% ==========================================
+% MODERN PART HEADINGS
+% ==========================================
+\makeatletter
+\renewcommand*{\partlineswithprefixformat}[3]{%
+  % Draw a full-page red background
+  \begin{tikzpicture}[remember picture, overlay]
+    \fill[unitnred] (current page.south west) rectangle (current page.north east);
+  \end{tikzpicture}%
+  % Push the text down to the middle of the page
+  \vspace*{5cm}%
+  \begin{center}
+    \Ifstr{#2}{}{}{% If there is a part number (e.g., "Part I")
+      {\fontsize{40}{45}\selectfont\sffamily\bfseries\color{white!50}#2}\par\vspace{1cm}%
+    }%
+    % The actual part title
+    {\fontsize{55}{65}\selectfont\sffamily\bfseries\color{white}#3}%
+  \end{center}
+}
+\makeatother
+
+% Ensure the page numbers and headers disappear on the solid red Part pages
+\renewcommand*{\partpagestyle}{empty}
 
 % ==========================================
 % BOXES, CODE & ALGORITHMS
@@ -194,6 +217,7 @@
 \newacronym{mfa}{MFA}{Multi-Factor Authentication}
 \newacronym{http}{HTTP}{Hypertext Transfer Protocol}
 \newacronym{ui}{UI}{User Interface}
+\newacronym{vwad}{VWAD}{Vulnerable Web Applications Directory}
 
 % ==========================================
 % TCOLORBOX THEOREMS & DEFINITIONS
@@ -334,12 +358,14 @@
 % LECTURES BEGIN
 % ==========================================
 
-
+\part{Introduction on the couse}
 \include{chapters/01-Introduction}
 \include{chapters/02-FirstConcepts}
 \include{chapters/03-SDLC}
 \include{chapters/04-CWE}
 \include{chapters/05-OSWAP}
+\part{Vulnerabilities}
+\include{chapters/06-SQL}
 \backmatter
 \chapter{Appendix}
 
