@@ -263,3 +263,111 @@ Thus, our binary incrementor can be visually represented by the following state 
     \caption{Incrementor state graph}
     \label{fig:incrementor-graph}
 \end{figure}
+
+\subsection{Multiple-Tape Turing Machines}
+In the previous definitions, we formalized a Turing machine with a single infinite tape. However, designing algorithms on a single tape can be exceedingly tedious, as the machine must constantly move its head back and forth to keep track of different variables. 
+
+To simplify algorithmic design, we can introduce the \textbf{Multiple-Tape Turing Machine}. A $k$-tape Turing machine has $k$ independent tapes and $k$ independent read/write heads.
+
+\begin{definition}{$k$-Tape Turing Machine Transition Function}{k-tape-tm}
+    For a Turing machine with $k$ tapes, the finite set of states $Q$ and the alphabet $\Sigma$ remain conceptually the same, but the transition function $F$ must simultaneously read from and write to all $k$ tapes, as well as move all $k$ heads independently:
+    \[
+        F: \Sigma^k \times Q \longrightarrow \Sigma^k \times Q \times \{\leftarrow, \rightarrow\}^k
+    \]
+\end{definition}
+
+While a $k$-tape machine is significantly easier to program, it raises a fundamental question in computability theory: \textit{Does adding more tapes allow the machine to compute functions that a single-tape machine cannot?} The answer is no. 
+
+\begin{theorem}{$k$-Tape Turing Machine Emulation}{k-tape-emulation}
+    Any language recognized or function computed by a $k$-tape Turing machine $M_k$ can be recognized or computed by a standard 1-tape Turing machine $M_1$. 
+    \begin{proof}
+        To emulate $M_k$ on $M_1$, we must represent the contents of all $k$ tapes and the positions of all $k$ heads on a single tape. 
+        
+        We accomplish this by dividing the single tape of $M_1$ into $2k$ interleaved ``tracks'' (implemented by radically expanding the alphabet). For every tape $i$ in $M_k$, $M_1$ uses two tracks:
+        \begin{enumerate}
+            \item One track contains the actual symbols of tape $i$.
+            \item One track acts as a boolean flag (containing only blanks or a special marker, e.g., $\bullet$) indicating the exact position of head $i$.
+        \end{enumerate}
+        
+        To simulate a single transition of $M_k$, the machine $M_1$ performs the following routine:
+        \begin{enumerate}
+            \item It scans its entire active tape from the far left to the far right to locate all $k$ head markers.
+            \item It stores the $k$ read symbols in its internal finite state memory.
+            \item It determines what $M_k$ would do based on its transition function.
+            \item It makes a second pass over the tape to update the symbols and move the $k$ head markers according to the transition rule.
+        \end{enumerate}
+        Because $M_1$ can perfectly replicate every step of $M_k$, they are computationally equivalent. (Note: While they compute the same functions, $M_1$ is quadratically slower, requiring $\mathcal{O}(t^2)$ steps to simulate $t$ steps of $M_k$).
+    \end{proof}
+\end{theorem}
+
+\subsection{Alphabet Size and Binary Emulation}
+Another apparent limitation of our mathematical model might be the size of the alphabet $\Sigma$. Some problems are naturally expressed using massive alphabets (e.g., the entire ASCII or Unicode character sets). Does a machine with a larger alphabet possess more computational power?
+
+\begin{theorem}{Emulation by a Two-Symbol Turing Machine}{two-symbol-emulation}
+    Any Turing Machine $M$ operating on an arbitrary finite alphabet $\Sigma$ can be perfectly emulated by a Turing Machine $M_2$ operating on a binary alphabet (e.g., $\Sigma_2 = \{0, 1\}$).
+    \begin{proof}
+        Let $|\Sigma| = m$ be the number of symbols in the original alphabet. We can encode every unique symbol in $\Sigma$ as a distinct binary string of fixed length $l = \lceil \log_2 m \rceil$. 
+        
+        The emulating machine $M_2$ will represent each single cell of $M$ using a contiguous block of $l$ cells. To simulate one single step of $M$, $M_2$ must:
+        \begin{enumerate}
+            \item Read $l$ consecutive binary cells, using its internal states to ``remember'' the sequence of bits.
+            \item Once the $l$-bit block is read, $M_2$ knows which original symbol from $\Sigma$ it represents.
+            \item $M_2$ transitions to a new state and writes the new $l$-bit encoded symbol back to the tape, sweeping across the $l$ cells.
+            \item $M_2$ repositions its head to the beginning of the next adjacent $l$-bit block (either to the left or right, simulating the movement of $M$).
+        \end{enumerate}
+        Because the mapping between $\Sigma$ and $\Sigma_2^l$ is a bijection, no information is lost, and $M_2$ can perfectly simulate $M$.
+    \end{proof}
+\end{theorem}
+
+\begin{observation}{Reduction to the Simplest Form}{simplest-tm}
+    By combining \cref{thm:k-tape-emulation} and \cref{thm:two-symbol-emulation}, we arrive at a profound conclusion: \textbf{The absolute simplest Turing Machine}—one with only a single tape and a bare-minimum binary alphabet $\{0,1\}$—is mathematically just as powerful as a machine with a million tapes and a billion distinct symbols.
+\end{observation}
+
+\section{Universal Turing Machines}
+Up to this point, our Turing Machines have been rigidly designed to solve one specific problem (like the binary incrementor in \cref{fig:incrementor-graph}). Their algorithms are ``hardcoded'' directly into their transition functions. If we want to solve a different problem, we must physically design a new machine with a different set of states.
+
+Alan Turing's most revolutionary contribution was realizing that the \textit{description} of a Turing Machine is just a finite set of rules. Since rules can be encoded as strings (\cref{obs:form-strings}), a Turing Machine can read the description of \textit{another} Turing Machine from its tape.
+
+\begin{definition}{\glsfmtfull{utm}}{utm}
+    A \textbf{\glsxtrfull{utm}} is a Turing machine $U$ capable of simulating any other Turing machine $M$. 
+    
+    It takes as input a string $\langle M, w \rangle$, where:
+    \begin{itemize}
+        \item $\langle M \rangle$ is the encoded string representation (the ``source code'') of the machine $M$'s states and transition function.
+        \item $w$ is the input data string that $M$ is supposed to process.
+    \end{itemize}
+    The machine $U$ will halt and accept/reject the input exactly if and only if $M$ halts and accepts/rejects $w$.
+\end{definition}
+
+To build a \gls{utm}, we must formalize an encoding scheme. An excellent practical example of this is a specific \gls{utm} implementation documented in utm.pdf. This \gls{utm} is designed to emulate 3-symbol Turing machines that operate using a blank, a 0, and a 1.
+
+The configuration of the emulated machine $M$ is encoded directly onto the \gls{utm}'s tape in a highly structured format:
+\begin{center}
+    \texttt{left-tape [ $\hat{M}$ ] current-cell right-tape}
+\end{center}
+Here, the specific components are defined as follows:
+\begin{itemize}
+    \item The \texttt{left-tape} and \texttt{right-tape} represent the contents of $M$'s tape to the immediate left and right of the current cell being read.
+    \item The $\hat{M}$ inside the brackets encodes the transition rules for $M$, with the current state explicitly marked.
+    \item The content of $M$'s current cell is placed immediately following the closing bracket.
+\end{itemize}
+
+\paragraph{State and Rule Encoding}
+Within the $\hat{M}$ encoding, states are sequentially represented from $q_1$ to $q_m$. To track the computation, state encodings are terminated with a colon (\texttt{:}), except for the currently active state, which is marked with an exclamation point (\texttt{!}). 
+
+Each state's transition rules are broken down into a comma-separated list of three instructions corresponding to reading a blank, a 0, or a 1. Each instruction dictates:
+\begin{enumerate}
+    \item The target symbol to write.
+    \item The direction to shift the head (\texttt{L} or \texttt{R}).
+    \item The relative state change, represented by periods (\texttt{.}) for no change, pluses (\texttt{+}) for moving to a higher-numbered state, or minuses (\texttt{-}) for moving to a lower-numbered state.
+\end{enumerate}
+If a transition rule does not exist for a specific input (indicating a halting configuration), it is simply represented by an empty string. Overall, the spatial complexity (size) of the $\hat{M}$ encoding on the tape is $\mathcal{O}(m^2)$, where $m$ is the total number of states in $M$.
+
+\paragraph{Execution and Performance}
+To execute the emulation, the \gls{utm} utilizes an expanded alphabet of sixteen symbols to manipulate the data. The \gls{utm} operates in a continuous ten-step loop: it reads the current cell's symbol, scans left to find the active state marked by the \texttt{!}, locates the appropriate comma-separated rule, marks the rule for execution, writes the new target symbol, shifts the entire $\hat{M}$ encoding left or right to simulate head movement, and updates the state marker before repeating the cycle. The performance of this \gls{utm} is linear relative to the number of steps executed by $M$, and cubic relative to the number of states $m$.
+
+\begin{concept}{The Birth of Software}{birth-of-software}
+    The \glsxtrfull{utm} is the mathematical abstraction of the modern stored-program computer (the von Neumann architecture). 
+    
+    The \gls{utm} acts as the \textbf{hardware} (the \gls{cpu}), which executes a predefined instruction set. The encoded string $\langle M \rangle$ is the \textbf{software} (the program), and $w$ is the \textbf{memory/data}. By proving the \gls{utm} exists, Turing proved that we do not need to build custom hardware for every mathematical problem; we only need to build one flexible machine and feed it different software.
+\end{concept}
