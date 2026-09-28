@@ -98,3 +98,36 @@ An application is vulnerable to injection attacks in any of the following cases:
     \item \textbf{CWE-94}: Improper Control of Generation of Code (Code Injection)
     \item \textbf{CWE-116}: Improper Encoding or Escaping of Output
 \end{itemize}
+
+\section{A06-2025: Insecure Design}
+The weaknesses in this category are related to ``Missing or Ineffective Control Design.'' Insecure design cannot be fixed by a simple code patch; it requires architectural changes. Secure design encompasses:
+\begin{itemize}
+    \item \textbf{Requirements and Resource Management}: Research core business requirements and negotiate security requirements concerning the \gls{cia} triad and authenticity for all assets.
+    \item \textbf{Secure Design}: Constantly evaluate threats, ensuring code is robustly designed and tested against business logic flaws.
+    \item \textbf{Secure Development Lifecycle}: Integrate security controls throughout the entire development process (via a \gls{ssdlc}).
+\end{itemize}
+
+\paragraph{Prevention} To prevent vulnerabilities caused by insecure design, organizations must adopt a secure design methodology, conduct threat modeling, and properly integrate security controls at the architectural design stage.
+
+\paragraph{Real-World Examples (\glspl{cwe})}
+\begin{itemize}
+    \item \textbf{CWE-73}: External Control of File Name or Path
+    \item \textbf{CWE-256}: Plaintext Storage of a Password
+    \item \textbf{CWE-444}: Inconsistent Interpretation of \gls{http} Requests (\gls{http} Request/Response Smuggling)
+    \item \textbf{CWE-451}: User Interface (\gls{ui}) Misrepresentation of Critical Information
+    \item \textbf{CWE-501}: Trust Boundary Violation
+\end{itemize}
+
+\section{A07-2025: Authentication Failures}
+In these vulnerabilities, an attacker tricks the application into recognizing an invalid or untrusted identity as a legitimate user. This category encompasses flaws in identity confirmation, credential verification, and session management—all of which are critical for protecting against authentication-related attacks.
+
+\paragraph{Prevention} To prevent vulnerabilities in this category, robust identification, authentication, and session handling mechanisms must be enforced. Recommended practices include implementing \glsxtrfull{mfa}, preventing brute-force attacks via rate limiting, and blocking the reuse of stolen credentials. Furthermore, strict password complexity requirements must be enforced. Finally, all authentication checks and session tokens must be generated and validated strictly within a secure server-side backend.
+
+\paragraph{Real-World Examples (\glspl{cwe})}
+\begin{itemize}
+    \item \textbf{CWE-259}: Use of Hard-coded Password
+    \item \textbf{CWE-306}: Missing Authentication for Critical Function
+    \item \textbf{CWE-384}: Session Fixation
+    \item \textbf{CWE-1391}: Use of Weak Credentials
+    \item \textbf{CWE-613}: Insufficient Session Expiration
+\end{itemize}
