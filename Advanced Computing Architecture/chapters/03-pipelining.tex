@@ -234,3 +234,83 @@ Although theoretical branch delay slots can be multiple instructions long, in pr
     If we ignore the clock cycle hardware overhead (assuming \(T_{\text{clk, unpipelined}} = T_{\text{clk, pipelined}}\)) and assume all instructions in the unpipelined baseline architecture take a number of cycles equal to the pipeline depth, the simplified speedup equation becomes:
     \[\text{Speedup} = \frac{\overline{\text{CPI}}_{\text{unpipelined}}}{1 + \overline{N}_{\text{stalls}}} = \frac{\text{Pipeline Depth}}{1 + \overline{N}_{\text{stalls}}}\]
 \end{concept}
+
+\section{Exceptions}
+The term ``exceptions'' is a broad category that covers all exceptional situations whereby the normal execution order of instructions is disrupted. The management of these events varies significantly among different \glspl{cpu}. 
+
+There are numerous sources of exceptions, including:
+\begin{itemize}
+    \item Conditions arising from instruction execution (e.g., arithmetic overflow, floating-point anomalies).
+    \item External interrupts (e.g., I/O requests).
+    \item System calls (traps).
+    \item Memory-related exceptions (e.g., page faults, protection violations).
+    \item Undefined opcodes.
+    \item Hardware malfunctions and power failures.
+\end{itemize}
+
+\noindent Not all \glspl{cpu} are designed to support every exception type natively; some higher-level exceptions, such as breakpoints or instruction tracing, are exclusively implemented for debugging purposes.
+
+\paragraph{Exception Handling in Non-Pipelined \glspl{cpu}} 
+In a non-pipelined architecture, execution management is relatively simple. Because only one instruction executes at a time, an exception is unambiguously associated with that specific instruction. These events are managed by dedicated routines. When an exception arises, the \gls{cpu} looks up a vector table containing the memory address of the corresponding Exception Service Routine (ESR). The hardware saves the current Program Counter (\gls{pc}), runs the ESR to handle the exception, and then returns control to the original program if required.
+
+\paragraph{Exception Handling in Pipelined \glspl{cpu}} 
+In pipelined architectures, the situation is drastically more complicated. The processor must correctly identify exactly which instruction in the pipeline caused the exception and save the precise machine state at that exact moment. Because different types of exceptions occur at different stages of the pipeline, the management unit must utilize distinct handling procedures. The most difficult scenario involves handling exceptions where the faulting instruction must be resumed after the exception is resolved (e.g., a page fault); this requires a completely \textbf{restartable pipeline}.
+
+\paragraph{Pipeline Stages and Specific Exceptions}
+Exceptions are generally tied to the specific pipeline stage in which they are detected:
+\begin{itemize}
+    \item \textbf{\texttt{ID} Stage (Undefined Opcode):} This may be due to a compiler error, a memory fault, or invoking functional units not present in the specific device model. This exception is non-maskable and usually leads to program termination.
+    \item \textbf{\texttt{EX} Stage (Execution Anomalies):} Arithmetic exceptions, such as overflow, are raised here. They are generally user-maskable and require the program to be resumed.
+    \item \textbf{\texttt{MEM} Stage (Memory Faults):} Data cache misses and page faults are detected here. These exceptions are non-maskable and require a restartable pipeline.
+    \item \textbf{\texttt{WB} Stage / Asynchronous (External Interrupts):} I/O interrupts are asynchronous but require resumption. The Interrupt Service Routine (ISR) is usually serviced when the interrupted instruction reaches the \texttt{WB} stage.
+\end{itemize}
+
+\paragraph{Simultaneous and Out-of-Order Exceptions}
+Because multiple instructions are in flight simultaneously, exceptions may occur concurrently or out of program order:
+\begin{itemize}
+    \item \textbf{Simultaneous:} A \texttt{LD} instruction raises a page fault in the \texttt{MEM} stage at the exact same clock cycle that a subsequent \texttt{DADD} instruction raises an arithmetic exception in the \texttt{EX} stage.
+    \item \textbf{Out-of-Order:} A \texttt{LD} instruction is in the \texttt{MEM} stage, and a subsequent \texttt{DADD} instruction is in the \texttt{IF} stage. If \texttt{DADD} raises a page fault (instruction fetch), its exception actually occurs \textit{in time} before the \texttt{LD} raises a data page fault, even though \texttt{LD} precedes \texttt{DADD} in the program order.
+\end{itemize}
+
+\paragraph{The Pipeline Exception Handling Protocol}
+To solve the complexities of out-of-order and simultaneous exceptions, pipelined \glspl{cpu} do not handle exceptions immediately. Instead, they post the exception in an \textbf{Exception Status Vector} that travels alongside the instruction down the pipeline. 
+
+The strict protocol for handling exceptions is as follows:
+\begin{enumerate}
+    \item \textbf{Halt State Modification:} Turn off both register and memory writes for the faulting instruction and \textit{all instructions following it} in the pipeline. All instructions preceding the faulting one are allowed to complete normally and modify the machine state (Registers, Memory). All subsequent instructions are flushed unexecuted.
+    \item \textbf{Check Status at \texttt{WB}:} When an instruction enters the \texttt{WB} stage, the hardware checks its exception status vector. If any exceptions are posted, they are finally handled. This guarantees that exceptions are serviced in strict program order, regardless of when they were physically detected.
+    \item \textbf{Save and Transfer Control:} After the exception-handling routine receives control, it saves the \gls{pc} of the faulting instruction so the processor can accurately return from the exception later on.
+\end{enumerate}
+
+\section{Advanced pipelining}
+Beyond simply shortening the clock cycle, modern \glspl{cpu} improve performance by increasing hardware parallelism. This increases the ideal number of instructions executed per cycle and reduces structural hazards. Modern processors achieve this by combining two complementary approaches:
+
+\begin{itemize}
+    \item \textbf{Superpipelining:} The logical pipeline steps (\texttt{IF, ID, EX, MEM, WB}) are subdivided into even smaller, simpler stages, allowing for a much shorter clock cycle ($T_{CLK}$).
+    \item \textbf{Superscalar Architecture:} The processor features multiple identical or dedicated physical pipelines, allowing it to decode, issue, and execute multiple scalar operations in parallel in a single clock cycle.
+\end{itemize}
+
+\paragraph{The Limits of Superpipelining}
+While superpipelining reduces the clock cycle time, it increases the total number of cycles required to complete a program. Furthermore, the depth of the pipeline (usually capped at 12--15 stages in modern architectures) is strictly limited by four factors:
+\begin{enumerate}
+    \item \textbf{Imbalance Problems:} The clock period can never be shorter than the slowest sub-stage.
+    \item \textbf{Pipeline Overhead:} The physical delays of the hardware (register setup/propagation time and clock skew) create a hard lower bound for the clock cycle.
+    \item \textbf{Growing Data Dependences:} A deeper pipeline means data hazards result in a higher number of inserted bubbles, increasing the performance penalty.
+    \item \textbf{Longer Control Hazards:} Wrong branch predictions are heavily penalized because a much larger number of stages must be flushed.
+\end{enumerate}
+
+\paragraph{Handling Multicycle Operations}
+Certain operations, such as floating-point arithmetic, cannot physically complete in a single cycle. To handle this, the \texttt{EX} stage is repeated as many times as necessary, and the \gls{cpu} employs multiple dedicated functional units (e.g., FP Add, FP Multiply, FP Divide). 
+
+However, allowing multicycle operations means instructions no longer finish in strict program order, altering how hazards behave:
+\begin{itemize}
+    \item \textbf{WAW (Write-After-Write) Hazards:} These are now possible because a faster instruction might reach the \texttt{WB} stage before an older, slower multicycle instruction.
+    \item \textbf{WAR (Write-After-Read) Hazards:} These remain impossible because all operands are still strictly read in order during the \texttt{ID} stage.
+    \item \textbf{RAW (Read-After-Write) Stalls:} These become much more frequent due to the longer latency of the multicycle instructions.
+    \item \textbf{Structural Hazards:} Stalls will occur if multiple instructions attempt to use the same functional unit, or if they arrive at the \texttt{MEM} or \texttt{WB} stages simultaneously.
+\end{itemize}
+
+\paragraph{Complexities of Superscalar Execution}
+To extract true parallelism from a program, superscalar architectures require advanced hardware management. Because multiple pipelines are executing instructions of varying lengths simultaneously, the \gls{cpu} relies heavily on \textbf{dynamic scheduling}, \textbf{branch prediction}, and \textbf{speculative execution}.
+
+This out-of-order execution environment makes maintaining precise exceptions incredibly difficult. Consequently, these architectures may suffer from \textbf{imprecise exceptions}—where the saved state of the processor at the time of an exception does not perfectly match the strict sequential order of the original code.
