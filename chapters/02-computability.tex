@@ -371,3 +371,314 @@ To execute the emulation, the \gls{utm} utilizes an expanded alphabet of sixteen
     
     The \gls{utm} acts as the \textbf{hardware} (the \gls{cpu}), which executes a predefined instruction set. The encoded string $\langle M \rangle$ is the \textbf{software} (the program), and $w$ is the \textbf{memory/data}. By proving the \gls{utm} exists, Turing proved that we do not need to build custom hardware for every mathematical problem; we only need to build one flexible machine and feed it different software.
 \end{concept}
+
+\subsection{The Church-Turing Thesis}
+We should be convinced, by now, that TMs are powerful enough to be a fair computational model, at least on par with any other reasonable definition. We formalize this idea into a sort of ``postulate,'' i.e., an assertion that we will assume to be true for the rest of this course.
+
+\begin{concept}{Church-Turing Thesis}{church-turing-thesis}
+    Turing machines are at least as powerful as every physically realizable model of computation.
+\end{concept}
+
+\noindent This thesis allows us to extend every result about TMs to every physical computational device.
+
+\subsection{Finding a Non-Computable Function}
+At this point, lemma 1 can be given a precise and formal meaning by just replacing the generic word ``algorithm'' with the more precise term ``Turing Machine'': since every TM can be encoded into a string, TMs can only form a countable set, too few to be able to express all decision functions.
+
+Let us now set out to find a function that cannot be computed by any TM (and therefore, by the Church-Turing thesis, by any feasible computational model).
+
+Let us introduce a little more notation. As already defined, the alphabet $\Sigma$ contains a distinguished, ``default'' symbol, which we assume to be $\sqcup$. Before the computation starts, only a finite number of cell tapes have non-blank symbols. Let us define as ``input'' the smallest, contiguous set of tape cells that contains all non-blank symbols at the beginning of the computation.
+
+A Turing machine transforms an input string into an output string (the smallest contiguous set of tape cells that contain all non-blank symbols at the end of the computation), but it might never terminate. In other words, if we see a TM machine as a function from $\Sigma^*$ to $\Sigma^*$ it might not be a total function.
+
+As an alternative, we may introduce a new value, $\infty$, as the ``value'' of a non-terminating computation; given a Turing machine $M$, if its computation on input $s$ does not terminate we will write $M(s) = \infty$.
+
+While TM encodings have a precise syntax, so that not all strings in $\Sigma^*$ are syntactically valid encodings of some TM, we can just accept the convention that any such invalid string encodes the TM that immediately halts (think of $s$ as a program, executed by a UTM that immediately stops if there is a syntax error). This way, all strings can be seen to encode a TM, and most strings just encode the ``identity function'' (a machine that halts immediately leaves its input string unchanged). Let us therefore call $M_s$ the TM whose encoding is string $s$, or the machine that immediately terminates if $s$ is not a valid encoding.
+
+With this convention in mind, we can design a function whose outcome differs from that of any TM. We employ a diagonal technique akin to the proof of Lemma 2: for any string $\alpha \in \Sigma^*$, we define our function to differ from the output of the TM encoded by $\alpha$ on input $\alpha$ itself.
+
+\begin{theorem}{Uncomputable Function $UC$}{uncomputable-uc}
+    Given an alphabet $\Sigma$ and an encoding $\alpha \mapsto M_\alpha$ of TMs in that alphabet, the function
+    $$
+    UC(\alpha) =
+    \begin{cases}
+        0 & \text{if } M_\alpha(\alpha) = 1 \\
+        1 & \text{otherwise}
+    \end{cases}
+    \quad \forall \alpha \in \Sigma^*
+    $$
+    is uncomputable.
+    \begin{proof}
+        Let $M$ be any TM, and let $m \in \Sigma^*$ be its encoding (i.e., $M = M_m$). By definition, $UC(m)$ differs from $M(m)$: the former outputs one if and only if the latter outputs anything else (or does not terminate).
+    \end{proof}
+\end{theorem}
+
+\noindent What is the problem that prevents us from computing $UC$? While the definition is quite straightforward, being able to emulate the machine $M_\alpha$ on input $\alpha$ is not enough to always decide the value of $UC(\alpha)$. We need to take into account also the fact that the emulation might never terminate. This allows us to prove, as a corollary of the preceding theorem, that there is no procedure that always determines whether a machine will terminate on a given input.
+
+\begin{theorem}{Halting Problem}{halting-problem}
+    Given an alphabet $\Sigma$ and an encoding $\alpha \mapsto M_\alpha$ of TMs in that alphabet, the function
+    $$
+    \text{HALT}(s, t) =
+    \begin{cases}
+        0 & \text{if } M_s(t) = \infty \\
+        1 & \text{otherwise}
+    \end{cases}
+    \quad \forall(s, t) \in \Sigma^* \times \Sigma^*
+    $$
+    (i.e., which returns 1 if and only if machine $M_s$ halts on input $t$) is uncomputable.
+    \begin{proof}
+        Let's proceed by contradiction. Suppose that we have a machine $H$ which computes $\text{HALT}(s, t)$ (i.e., when run on a tape containing a string $s$ encoding a TM and a string $t$, always halts returning 1 if machine $M_s$ would halt when run on input $t$, and returning 0 otherwise). Then we could use $H$ to compute function $UC$.
+        
+        For convenience, let us compute $UC$ using a machine with two tapes. The first tape is read-only and contains the input string $\alpha \in \Sigma^*$, while the second will be used as a work (and output) tape. To compute $UC$, the machine will perform the following steps:
+        \begin{itemize}
+            \item Create two copies of the input string $\alpha$ onto the work tape, separated by a blank (we know we can do this because we can actually write the machine);
+            \item Execute the machine $H$ (which exists by hypothesis) on the work tape, therefore calculating whether the computation $M_\alpha(\alpha)$ would terminate or not. Two outcomes are possible:
+            \begin{itemize}
+                \item If the output of $H$ is zero, then we know that the computation of $M_\alpha(\alpha)$ wouldn't terminate, therefore, by definition of function $UC$, we can output 1 and terminate.
+                \item If, on the other hand, the output of $H$ is one, then we know for sure that the computation $M_\alpha(\alpha)$ would terminate, and we can emulate it with a UTM $U$ (which we know to exist) and then ``inverting'' the result \`a la $UC$, by executing the following steps:
+                \begin{itemize}
+                    \item As in the first step, create two copies of the input string $\alpha$ onto the work tape, separated by a blank;
+                    \item Execute the UTM $U$ on the work tape, thereby emulating the computation $M_\alpha(\alpha)$;
+                    \item At the end, if the output of the emulation was 1, then replace it by a 0; if it was anything other than 1, replace it with 1.
+                \end{itemize}
+            \end{itemize}
+        \end{itemize}
+        This machine would be able to compute $UC$ by simply applying its definition, but we know that $UC$ is not computable by a TM; all steps, apart from $H$, are already known and computable. We must conclude that $H$ cannot exist.
+    \end{proof}
+\end{theorem}
+
+\noindent This proof employs a very common technique of CS, called \textbf{reduction}: in order to prove the impossibility of $\text{HALT}$, we ``reduce'' the computation of $UC$ to that of $\text{HALT}$; since we know that the former is impossible, we must conclude that the latter is too.
+
+\subsubsection*{The Halting Problem for Machines Without an Input}
+Consider the special case of machines that do not work on an input string; i.e., the class of TMs that are executed on a completely blank tape. Asking whether a computation without input will eventually halt might seem a simpler question, because we somehow restrict the number of machines that we are considering.
+
+Let us define the following specialized halting function:
+$$
+\text{HALT}_\varepsilon(s) = \text{HALT}(s, \varepsilon) =
+\begin{cases}
+    0 & \text{if } M_s(\varepsilon) = \infty \\
+    1 & \text{otherwise}
+\end{cases}
+\quad \forall s \in \Sigma^*.
+$$
+It turns out that if we were able to compute $\text{HALT}_\varepsilon$ then we could also compute $\text{HALT}$:
+
+\begin{theorem}{Uncomputability of $\text{HALT}_\varepsilon$}{halt-empty}
+    $\text{HALT}_\varepsilon$ is not computable.
+    \begin{proof}
+        By contradiction, suppose that there is a machine $H'$ that computes $\text{HALT}_\varepsilon$. Such machine would be executed on a string $s$ on the tape, and would return 1 if the machine encoded by $s$ would halt when run on an empty tape, 0 otherwise.
+        
+        Now, suppose that we are asked to compute $\text{HALT}(s, t)$ for a non-empty input string $t$. We can transform the computation $M_s(t)$ on a computation $M_{s'}(\varepsilon)$ on an empty tape where $s'$ contains the whole encoding $s$, but preceded by a number of states that write the string $t$ on the tape. In other words, we transform a computation on a generic input into a computation on an empty tape that writes the desired input before proceeding.
+        
+        After modifying the string $s$ into $s'$ on tape, we can run $H'$ on it. The answer of $H'$ is precisely $\text{HALT}(s, t)$, which would therefore be computable.
+        
+        Again, the result was obtained by reducing a known non-computable problem, $\text{HALT}$, to the newly introduced one, $\text{HALT}_\varepsilon$.
+    \end{proof}
+\end{theorem}
+
+\subsection{Recursive Enumerability of Halting Computations}
+Although $\text{HALT}$ is not computable, it is clearly recursively enumerable. In fact, we can just take a UTM and modify it to erase the tape and write ``1'' whenever the emulated machine ends, and we would have a partial function that always accepts (i.e., returns 1) on terminating computations.
+
+It is also possible to output all $(s, t) \in \Sigma^* \times \Sigma^*$ pairs for which $M_s(t)$ halts by employing a diagonal method. Function $\text{HALT}$ is our first example of an R.E. function that is provably not recursive.
+
+Observe that, unlike recursivity, R.E. does not treat the ``yes'' and ``no'' answer in a symmetric way. We can give the following:
+
+\begin{definition}{co-R.E. Decision Function}{co-re-def}
+    A decision function $f : \Sigma^* \rightarrow \{0, 1\}$ is co-R.E. if it admits a TM $M$ such that $M(s)$ halts with output 0 if and only if $f(s) = 0$.
+\end{definition}
+
+\noindent In other words, co-R.E. functions are those for which it is possible to compute a ``no'' answer, while the computation might not terminate if the answer is ``yes''. Clearly, if $f$ is R.E., then $1 - f$ is co-R.E.
+
+\begin{theorem}{Recursivity vs R.E. and co-R.E.}{re-core-recursive}
+    A decision function $f : \Sigma^* \rightarrow \{0, 1\}$ is recursive if and only if it is both R.E. and co-R.E.
+    \begin{proof}
+        Let us prove the ``only if'' part first. If $f$ is recursive, then there is a TM $M_f$ that computes it. But $M_f$ clearly satisfies both the R.E. definition ($M_f(s)$ halts with output 1 if and only if $f(s) = 1$) and the co-R.E. definition ($M_f(s)$ halts with output 0 if and only if $f(s) = 0$).
+        
+        About the ``if'' part, if $f$ is R.E., then there is a TM $M_1$ such that $M_1(s)$ halts with output 1 iff $f(s) = 1$; since $f$ is also co-R.E., then there is also a TM $M_0$ such that $M_1(s)$ halts with output 0 iff $f(s) = 0$. Therefore, a machine that alternates one step of the execution of $M_1$ with one step of $M_0$, halting when one of the two machines halts and returning its output, will eventually terminate (because, whatever the value of $f$, at least one of the two machines is going to eventually halt) and precisely decides $f$.
+    \end{proof}
+\end{theorem}
+
+\noindent Observe that, as already pointed out, any definition given on decision functions with domain $\Sigma^*$ also works on domain $\mathbb{N}$ (and on any other discrete domain), and can be naturally extended on subsets of strings or natural numbers. We can therefore define a set as recursive, recursively enumerable, or co-recursively enumerable.
+
+\subsubsection*{Decision and Acceptance}
+In the following, we will use the following terms when speaking of languages.
+
+\begin{definition}{Accept and Decide}{accept-decide}
+    If language $S$ is recursively enumerable, i.e. there is a TM $M$ such that $M(s) = 1 \iff s \in S$, then we say that $M$ \textbf{accepts} $S$ (or that it ``recognizes'' it).
+    Given a TM $M$, the language recognized by it (i.e., the set of all inputs that are accepted by the machine) is represented by $L(M)$.
+    
+    If language $S$ is recursive, i.e. there is a TM $M$ that accepts it and always halts, then we say that $M$ \textbf{decides} $S$.
+\end{definition}
+
+\noindent In the case of functions transforming strings, we will use the following terms.
+
+\begin{definition}{Compute}{compute}
+    If a function $f : \Sigma^* \rightarrow \Sigma^*$ is computable, i.e. there is a TM $M$ that always halts and such that $M(s) = f(s)$, then we say that $M$ \textbf{computes} $f$.
+\end{definition}
+
+\noindent We generalize the notion to functions outside the realm of strings by considering suitable representations. E.g., a machine $M$ computes an integer function $f : \mathbb{N} \rightarrow \mathbb{N}$ if it transforms a representation of $n \in \mathbb{N}$ (e.g., its decimal, binary or unary notation) into the corresponding representation of $f(n)$.
+
+Since all representations of integer numbers can be converted to each other by a TM, the choice of a specific one is arbitrary and does not impact on the definition. Therefore, we can resort to unary notation and say that:
+
+\begin{theorem}{Computability of Integer Functions}{comp-int-func}
+    A function $f : \mathbb{N} \rightarrow \mathbb{N}$ is computable if and only if there is a TM $M$ on alphabet $\Sigma = \{1, \sqcup\}$ such that
+    $$
+    \forall n \in \mathbb{N}, \quad M(1^n) = 1^{f(n)}.
+    $$
+    I.e., the TM $M$ maps a string of $n$ ones into a string of $f(n)$ ones.
+\end{theorem}
+
+\subsection{Another Uncomputable Function: The Busy Beaver Game}
+Since we might be unable to tell at all whether a specific TM will halt, the question arises of how complex a machine's output can be for a given number of states.
+
+\begin{definition}{The Busy Beaver Game}{busy-beaver}
+    Among all TMs on alphabet $\{0, 1\}$ and with $n = |Q|$ states (not counting the halting one) that halt when run on an empty (i.e., all-zero) tape:
+    \begin{itemize}
+        \item let $\Sigma(n)$ be the largest number of (not necessarily consecutive) ones left by any machine upon halting;
+        \item let $S(n)$ be the largest number of steps performed by any such machine before halting.
+    \end{itemize}
+    Function $\Sigma(n)$ is known as the \textbf{busy beaver function} for $n$ states, and the machine that achieves it is called the Busy Beaver for $n$ states.
+\end{definition}
+
+\begin{theorem}{Uncomputability of $S(n)$}{uncomp-sn}
+    The function $S(n)$ is not computable.
+    \begin{proof}
+        Suppose that $S(n)$ is computable. Then, we could create a TM to compute $\text{HALT}_\varepsilon$ (the variant with empty input) on a machine encoded in string $s$ as follows:
+        \begin{itemize}
+            \item on input $s$, count the number $n$ of states of $M_s$
+            \item compute $\ell \leftarrow S(n)$
+            \item emulate $M_s$ for at most $\ell$ steps
+            \item if the emulation halts before $\ell$ steps, then $M_s$ clearly halts: accept and halt
+            \item else $M_s$ takes longer than the BB: reject and halt
+        \end{itemize}
+        Observe that, by construction, $\Sigma(n) \le S(n)$ (a TM cannot write more than a symbol per step).
+    \end{proof}
+\end{theorem}
+
+\noindent Given two functions $f, g : \mathbb{N} \rightarrow \mathbb{N}$, we say that $f$ ``eventually outgrows'' $g$, written $f >_E g$, if $f(n) \ge g(n)$ for a sufficiently large value of $n$:
+$$
+f >_E g \iff \exists N : \forall n > N, \quad f(n) \ge g(n).
+$$
+
+\begin{theorem}{$\Sigma(n)$ Outgrows Computable Functions}{sigma-outgrows}
+    The function $\Sigma(n)$ eventually outgrows any computable function.
+    \begin{proof}
+        Let $f : \mathbb{N} \rightarrow \mathbb{N}$ be computable. Let us define the following function:
+        $$
+        F(n) = \sum_{i=0}^{n} [f(i) + i^2].
+        $$
+        By definition, $F$ clearly has the following properties:
+        $$
+        \begin{aligned}
+            F(n) &\ge f(n) \quad &\forall n \in \mathbb{N}, \\
+            F(n) &\ge n^2 \quad &\forall n \in \mathbb{N}, \\
+            F(n + 1) &> F(n) \quad &\forall n \in \mathbb{N}
+        \end{aligned}
+        $$
+        the latter because $F(n + 1)$ is equal to $F(n)$ plus a strictly positive term. Moreover, since $f$ is computable, $F$ is computable too. Suppose that $M_F$ is a TM on alphabet $\{0, 1\}$ that, when positioned on the rightmost symbol of an input string of $x$ ones and executed, outputs a string of $F(x)$ ones (i.e., computes the function $x \mapsto F(x)$ in unary representation) and halts below the rightmost one. Let $C$ be the number of states of $M_F$.
+        
+        Given an arbitrary integer $x \in \mathbb{N}$, we can define the following machine $M$ running on an initially empty tape (i.e., a tape filled with zeroes):
+        \begin{itemize}
+            \item Write $x$ ones on the tape and stop at the rightmost one (i.e., the unary representation of $x$);
+            \item Execute $M_F$ on the tape (therefore computing $F(x)$ with $C$ states);
+            \item Execute $M_F$ again on the tape (therefore computing $F(F(x))$ with $C$ more states).
+        \end{itemize}
+        The machine $M$ works on alphabet $\{0, 1\}$, starts with an empty tape, ends with $F(F(x))$ ones written on it and has $x + 2C$ states; therefore it is a busy beaver candidate, and the $(x + 2C)$-state busy beaver must perform at least as well:
+        $$
+        \Sigma(x + 2C) \ge F(F(x)).
+        $$
+        Now,
+        $$
+        F(x) \ge x^2 >_E x + 2C;
+        $$
+        the first inequality comes from our properties, while the second stems from the fact that $x^2$ eventually dominates any linear function of $x$. By applying $F$ to both the left- and right-hand sides, which preserves the inequality sign because $F$ is strictly increasing, we get
+        $$
+        F(F(x)) >_E F(x + 2C).
+        $$
+        By concatenating these inequalities, we get
+        $$
+        \Sigma(x + 2C) \ge F(F(x)) >_E F(x + 2C) \ge f(x + 2C).
+        $$
+        Finally, by replacing $n = x + 2C$, we obtain
+        $$
+        \Sigma(n) >_E f(n).
+        $$
+    \end{proof}
+\end{theorem}
+
+\subsection{Reductions}
+Note that a few results in the past sections (Theorems 6, 7 and 10) made use of similar arguments: ``If $A$ were computable, then we could use it to solve $B$; however, we know that $B$ is uncomputable, therefore $A$ is too.'' Now we want to formalize such a reasoning scheme.
+
+\begin{definition}{Reduction}{reduction}
+    Let $L_1 \subset \Sigma_1^*$ and $L_2 \subset \Sigma_2^*$ be two languages (on possibly different alphabets). A function $f : \Sigma_1^* \rightarrow \Sigma_2^*$ is said to be a \textbf{reduction} from $L_1$ to $L_2$ if
+    $$
+    \forall s \in \Sigma_1^* \quad s \in L_1 \iff f(s) \in L_2.
+    $$
+\end{definition}
+
+\noindent Basically, we can use a reduction to transform the question ``Does $s$ belong to $L_1$?'' into the equivalent question ``Does $f(s)$ belong to $L_2$?'' Clearly, to be useful in computability results, $f$ has to be computable.
+
+\begin{definition}{Turing Reduction}{turing-reduction}
+    We say that $f : \Sigma_1^* \rightarrow \Sigma_2^*$ is a \textbf{Turing reduction} from $L_1 \subset \Sigma_1^*$ to $L_2 \subset \Sigma_2^*$ if it is a reduction from $L_1$ to $L_2$ and it is computable.
+\end{definition}
+
+\noindent If $f$ is a reduction from $L_1$ to $L_2$ we write $L_1 \le_f L_2$. In general, if there is a Turing reduction from $L_1$ to $L_2$ we say that $L_1$ is Turing reducible to $L_2$ and write $L_1 \le_T L_2$.
+
+\begin{theorem}{Reduction Schemes}{reduction-schemes}
+    Let languages $L_1$ and $L_2$ and function $f$ be such that $L_1 \le_f L_2$; then
+    \begin{enumerate}
+        \item if $L_2$ is decidable and $f$ is computable, then $L_1$ is decidable too;
+        \item if $L_1$ is undecidable and $f$ is computable, then $L_2$ is undecidable too;
+        \item if $L_1$ is undecidable and $L_2$ is decidable, then $f$ is uncomputable.
+    \end{enumerate}
+    \begin{proof}
+        The first point is proven by showing that, if we have a machine for $f$ and a machine for $L_2$, we can build a machine for $L_1$. Let $M_{L_2}$ be a TM that decides $L_2$, and let $M_f$ be a TM that computes $f$. Then the machine $M$ that concatenates an execution of $M_f$ and an execution of $M_{L_2}$, i.e. computes $M(s) = M_{L_2}(M_f(s))$, decides $L_1$ by definition of $f$.
+        
+        The other two points follow by contradiction.
+    \end{proof}
+\end{theorem}
+
+\noindent In other words, by writing $L_1 \le_T L_2$ we mean that $L_1$ is ``less uncomputable'' than $L_2$.
+
+\subsubsection*{Consequences of the Halting Problem Incomputability}
+If $\text{HALT}$ were computable, we would be able to settle any mathematical question that can be disproved by a counterexample (on a discrete set), such as the Collatz conjecture or Goldbach's conjecture. We would just need to write a machine that systematically searches for one such counterexample and halts as soon as it finds one: by feeding this machine as an input to $H$, we would know whether a counterexample exists at all or not.
+
+More generally, for every proposition $P$ in Mathematical logic we would know whether it is provable or not: just define a machine that, starting from pre-encoded axioms, systematically generates all their consequences (theorems) and halts whenever it generates $P$. Machine $H$ would tell us whether $P$ is ever going to be generated or not.
+
+\section{Rice's Theorem}
+Among all questions that we may ask about a Turing machine $M$, some of them have a syntactic nature, i.e., they refer to its actual implementation: ``does $M$ halt within 50 steps?'', ``Does $M$ ever reach state $q$?'', ``Does $M$ ever print symbol $\sigma$ on the tape?''.
+
+Other questions are of a semantic type, i.e., they refer to the language accepted by $M$, with no regards about $M$'s behavior: ``does $M$ only accept even-length strings?'', ``Does $M$ accept any string?'', ``Does $M$ accept at least 100 different strings?''.
+
+\begin{definition}{Property of a Turing Machine}{tm-property}
+    A \textbf{property} of a TM is a mapping $P$ from TMs to $\{0, 1\}$, and we say that $M$ has property $P$ when $P(M) = 1$.
+\end{definition}
+
+\begin{definition}{Semantic Property}{semantic-property}
+    A property is \textbf{semantic} if its value is shared by all TMs recognizing the same language: if $L(M) = L(M')$, then $P(M) = P(M')$.
+\end{definition}
+
+\noindent By extension, we can say that a language $S$ has a property $P$ if the machine that recognizes $S$ has it. Finally, we define a property as \textbf{trivial} if all TMs have it, or if no TM has it. A property is \textbf{non-trivial} if there is at least one machine having it, and one not having it.
+
+The two trivial properties are easy to decide, respectively by the machine that always accepts and by the one that always rejects. On the other hand:
+
+\begin{theorem}{Rice's Theorem}{rices-theorem}
+    All non-trivial semantic properties of TMs are undecidable.
+    \begin{proof}
+        As usual, let's work by contradiction via reduction from the Halting Problem.
+        
+        Suppose that a non-trivial semantic property $P$ is decidable; this means that there is a TM $M_P$ that can be run on the encoding of any TM $M$ and returns 1 if $M$ has property $P$, 0 otherwise.
+        
+        Let us also assume that the empty language $\emptyset$ does not have the property $P$ (otherwise we can work on the complementary property), and that the Turing machine $N$ has the property $P$ (we can always find $N$ because $P$ is not trivial).
+        
+        Given the strings $s, t \in \Sigma^*$, we can then check whether $M_s(t)$ halts by building the following auxiliary TM $N'$ that, on input $u$, works as follows:
+        \begin{itemize}
+            \item move the input $u$ onto an auxiliary tape for later use, and replace it with $t$;
+            \item execute $M_s$ on input $t$;
+            \item when the simulation halts (which, as we know, might not happen), restore the original input $u$ on the tape by copying it back from the auxiliary tape;
+            \item run $N$ on the original input $u$.
+        \end{itemize}
+        The machine $N'$ we just defined accepts the same language as $N$ if $M_s(t)$ halts, otherwise it runs forever, therefore accepting the empty language. Therefore, running our hypothetical decision procedure $M_P$ on machine $N'$ we obtain ``yes'' if $M_s(t)$ halts (since in this case $L(N) = L(N')$), and ``no'' if $M_s(t)$ doesn't halt (and thus the empty language, which doesn't have the property $P$, is recognized).
+        
+        Observe that we simply use $N$, which has the property, as a sort of Trojan horse for computation $M_s(t)$.
+    \end{proof}
+\end{theorem}
