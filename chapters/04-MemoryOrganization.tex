@@ -1,0 +1,273 @@
+\chapter{Memory Organization}
+
+Applications require, year after year, larger memory capacities and higher overall performance. However, constructing a single memory unit that is simultaneously large, fast, and inexpensive is physically and economically impossible: larger memories are inherently slower, and faster memories are significantly more expensive. 
+
+Furthermore, historical trends show a widening performance gap. On average, \gls{dram} latency has decreased by only about 7\% per year, whereas \gls{cpu} performance has grown by up to 135\% per year. This disparity means the performance gap between processors and main memory has grown significantly over time, creating a severe bottleneck.
+
+\paragraph{Solution: Memory Hierarchy}
+To overcome this limitation, modern computing systems organize memory into a \textbf{hierarchy}. This hierarchy is composed of multiple levels characterized by different manufacturing technologies, costs, physical dimensions, and access mechanisms. 
+
+\begin{itemize}
+    \item \textbf{Higher levels} (closer to the \gls{cpu}) are smaller, faster, and more expensive per byte.
+    \item \textbf{Lower levels} (further from the \gls{cpu}) are much larger and cheaper, but significantly slower.
+\end{itemize}
+
+This architectural abstraction provides the best of both worlds: the programmer perceives a single, vast memory space, while the \gls{cpu} interacts with a fast memory system built at an acceptable overall cost. To function correctly, this hierarchy must implement efficient, run-time data transfer mechanisms between its levels. These mechanisms rely heavily on a fundamental behavioral trait of computer programs known as the \textit{Principle of Locality}.
+
+\begin{concept}{The Principle of Locality}{locality}
+    Programs do not access memory addresses randomly. Instead, they exhibit specific patterns of access, which memory hierarchies exploit to ensure data is moved to the fastest levels just before the \gls{cpu} needs it. Locality is strictly divided into two typologies:
+    \begin{itemize}
+        \item \textbf{Temporal Locality:} If a memory location is referenced recently, there is a high probability it will be referenced again in the near future (e.g., loop variables).
+        \item \textbf{Spatial Locality:} If a memory location is referenced, there is a high probability that neighboring memory locations will be referenced shortly after (e.g., array iteration).
+    \end{itemize}
+\end{concept}
+
+\noindent Taking these principles into account, memory hierarchies are explicitly designed to exploit both temporal and spatial locality to ensure the quickest possible memory access.
+
+\paragraph{Locality Variations in Code}
+The manifestation of locality can vary depending on whether the processor is fetching instructions or reading/writing data:
+
+\subparagraph{Instruction Locality} 
+This is generally highly predictable and application-independent. Because code normally executes sequentially and relies heavily on loops, it exhibits excellent spatial and temporal locality. A common metric is the \textbf{90/10 Rule}, which states that a program typically spends 90\% of its execution time running only 10\% of its actual code.
+
+\subparagraph{Data Locality} 
+This is highly application-dependent. While some applications might exhibit strong data locality, others might show poor data locality overall, or heavily favor one typology over the other (e.g., streaming large media files exhibits high spatial locality but zero temporal locality).
+
+\paragraph{Types of Memory Hierarchies} 
+Different computing needs dictate entirely different memory hierarchy priorities and features.
+
+\subparagraph{Desktop Systems} 
+These systems typically run one or more applications on top of the \gls{os} for a single user. The primary concern here is minimizing the \textbf{average latency} of the memory hierarchy to ensure a responsive user experience. They still require traditional mass storage at the lowest tier for permanent data retention.
+
+\subparagraph{Server Systems} 
+Servers usually handle hundreds of concurrent users and run many heavy applications simultaneously. Consequently, the focus shifts toward minimizing the cost of context switching rather than strictly minimizing average latency. Servers also heavily prioritize overall memory bandwidth, data protection (e.g., ECC memory), and fault tolerance.
+
+\subparagraph{Embedded Systems} 
+These solutions require a completely different approach based on their specific physical constraints and use cases:
+\begin{itemize}
+    \item \textbf{Real-Time Applications:} Must prioritize guaranteed \textbf{worst-case latency} over average latency to ensure critical deadlines are always met.
+    \item \textbf{Mobile/IoT Devices:} Are strictly constrained by power consumption and battery life.
+\end{itemize}
+Embedded architectures usually run a single application alongside a very small, lightweight \gls{os} (or no \gls{os} at all). For these reasons, their main memory is much smaller, and traditional spinning disk storage is largely unnecessary.
+
+\vspace{1em}
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{r | l l l l}
+        \textbf{Characteristics} & \textbf{Registers} & \textbf{Cache} & \textbf{Main Memory} & \textbf{Disk Storage} \\
+        \hline
+        \textbf{Size} & $< 1$ KB & $< 16$ MB & $< 512$ GB & $> 1$ TB \\
+        \textbf{Technology} & Custom multi-port memory & On/Off-chip CMOS SRAM & CMOS DRAM & Magnetic Disk / SSD \\
+        \textbf{First Access Time (ns)} & 0.25 -- 0.5 & 0.5 -- 25 & 50 -- 250 & $\sim 5,000,000$ \\
+        \textbf{Bandwidth (MB/s)} & 50,000 -- 500,000 & 5,000 -- 20,000 & 2,500 -- 10,000 & 50 -- 500 \\
+        \textbf{Managed By} & Compiler & Hardware & \gls{os} & \gls{os} / Operator \\
+        \textbf{Backed By} & Cache & Main Memory & Disk & CD / Tape (Archive) \\
+    \end{tabular}%
+    }
+    \caption{Performance and implementation characteristics across the memory hierarchy.}
+\end{table}
+
+\paragraph{The Register File} 
+Registers are typically exposed directly to the programmer or managed strictly through the compiler. Their contents are stored in a centralized register file that features multiple read and write ports to facilitate simultaneous parallel data access. 
+
+A standard three-operand instruction requires a register file with two read ports and one write port. However, as the number of parallel functional units within a processor increases, the number of memory ports—and consequently the total number of registers—must scale accordingly. For example, if a \gls{cpu} features $N$ \glsxtrfullpl{alu}, its register file must theoretically support $2N$ read ports and $N$ write ports. 
+
+Unfortunately, the physical silicon area of a register file grows quadratically with the square of the number of ports. This means an excessive number of ports will severely slow down the processor.
+
+\subparagraph{Multi-Port Advantages and Limitations} 
+This quadratic increase in chip area is primarily driven by the massive amount of additional input and output wiring required. Furthermore, the combination of complex signal routing and increased internal bit-cell loading results in higher power consumption and a linear increase in access delay proportional to the number of ports. 
+
+Due to these severe hardware limitations, a register file is typically capped at a maximum of 15 to 20 ports. When an architecture employs more than 4 functional units, architectural trade-offs dictate that 12 ports offers the absolute optimal balance between parallel throughput, physical space, and access latency.
+
+\section{On-Chip Cache and RAM Memories}
+The first level of memory, typically located directly on-chip, is the fastest type of memory available (excluding the \gls{cpu} registers). This memory is constructed using high-speed \gls{sram} and serves as the primary storage for immediately required data and instructions. Due to its limited physical size, architects typically implement one of two primary memory solutions at this level: standard \gls{sram} or a hardware Cache.
+
+\paragraph{Standard \gls{sram}} 
+This type of memory is explicitly exposed to the programmer and the compiler. Data transfers must be performed manually by the software. Its use is generally restricted to low-end and specialized embedded processors, where strict worst-case latency guarantees and low power consumption are the primary concerns (often utilizing standard Von Neumann or Harvard architectures).
+
+\paragraph{Scratch Pad Memories}
+As a low-power alternative to complex caches, a scratch pad is a simple \gls{sram} memory buffer where the most frequently used program functions, instructions, and data are explicitly allocated. Unlike a cache, it lacks hardware controller support. Instead, it requires preliminary software profiling to determine exactly which instructions should reside in the pad. This allocation is performed statically at compile time. Scratch pads are widely used in embedded systems because these devices typically run a fixed program, making static allocation highly predictable and offering an excellent trade-off between performance and power consumption.
+
+\paragraph{Hardware Cache} 
+In contrast to standard \gls{sram} and scratch pads, a cache is completely transparent to software developers and compilers. Data transfers between the cache and lower memory levels are managed entirely by hardware (the internal control logic of the architecture itself). This solution is heavily favored in general-purpose computing, where optimizing the \textit{average} performance is the primary objective.
+
+\subsection{Cache Basics}
+A cache is a specialized memory array built from \gls{sram} cells that stores the instructions and data with the highest mathematical probability of being used in the near future (leveraging the Principle of Locality). 
+
+When the \gls{cpu} requests a specific memory location, it checks the cache first. The cache control logic determines if the data is present. If it is not, the hardware controller automatically halts the \gls{cpu} to fetch the missing block from a lower memory level. These lower levels might be subsequent, progressively larger caches organized in a sub-hierarchy (e.g., L1, L2, \dots, LN) or the main \gls{dram}.
+
+To evaluate the efficiency of a cache hierarchy, computer architects rely on the following standard metrics:
+
+\begin{definition}{Cache Hit}{cache-hit}
+    A memory access where the data or instruction requested by the \gls{cpu} is successfully found in the cache.
+\end{definition}
+
+\begin{definition}{Cache Miss}{cache-miss}
+    A memory access where the requested item is not present in the cache, requiring a fetch from a lower memory level.
+\end{definition}
+
+\begin{definition}{Hit Rate}{hit-rate}
+    The fraction of total memory accesses that successfully result in a cache hit.
+\end{definition}
+
+\begin{definition}{Miss Rate}{miss-rate}
+    The fraction of memory accesses that result in a cache miss, mathematically defined as $1 - \text{Hit Rate}$.
+\end{definition}
+
+\begin{definition}{Hit Time}{hit-time}
+    The time (or number of clock cycles) required to access the cache on a successful hit. This intrinsically includes the processing time needed to compare memory addresses and determine whether the access is a hit or a miss.
+\end{definition}
+
+\begin{definition}{Miss Penalty}{miss-penalty}
+    The extra time (in clock cycles) required to fetch a missing block of data from lower-level storage and allocate it into the cache.
+\end{definition}
+
+\begin{definition}{Miss Time}{miss-time}
+    The total overall time required to obtain the requested data in the event of a miss, calculated as $\text{Hit Time} + \text{Miss Penalty}$.
+\end{definition}
+
+\subsection{Cache Structure and Design Problems}
+At a hardware level, a cache is structured as an array of \textbf{blocks} (sometimes called lines), where each block contains a fixed number of words from memory. To simplify addressing and hardware decoding, the size of a block is always a power of 2 (e.g., 32 words). 
+
+When the \gls{cpu} requests a specific word, its entire enclosing block is loaded from lower-level memory and placed into the cache. Note that blocks sitting next to each other in main memory are not necessarily stored next to each other in the cache, and vice versa.
+
+To determine whether a requested word is currently present, the cache cannot just check the address; it must store each block alongside its actual memory address tag. The hardware compares the requested address against the tags of the stored blocks simultaneously. If a matching tag is found and the data is valid, it is a \textbf{cache hit}; otherwise, it is a \textbf{cache miss}.
+
+\paragraph{The Four Core Cache Design Problems}
+Designing a hardware cache requires solving four fundamental engineering problems:
+\begin{enumerate}
+    \item \textbf{Placement Problem:} Where can a block be placed when it is transferred from a lower-level memory to a higher-level cache?
+    \item \textbf{Search (Identification) Problem:} How does the hardware quickly determine whether a requested item is present in the cache?
+    \item \textbf{Substitution (Replacement) Problem:} When a cache miss occurs and the cache is full, which existing block must be evicted to make room for the new block?
+    \item \textbf{Write Strategy Problem:} How should the system handle write-to-memory instructions? \emph{(Note: This problem is orthogonal to the first three and will be treated separately once basic read architectures are established).}
+\end{enumerate}
+
+You are completely right. Cramming Direct-Mapped Caches into a single bullet point stripped away the precise mathematical definitions and clear prose that made it so readable. Direct-mapped caches are the foundation of understanding all other organizations, so they deserve their own dedicated subsection with full breathing room.
+
+Here is the ideal balance: we restore your favorite, detailed breakdown of Direct-Mapped Caches in full, and then give N-Way Set-Associative and Fully Associative caches their own distinct, uncompacted subsections so the entire section maintains equal depth and clarity.
+Snippet di codice
+
+\subsection{Direct-Mapped Caches}
+The simplest approach to the placement problem is the \textbf{direct-mapped cache}. 
+
+Let $NB$ be the total number of blocks in the cache. Let $BAR$ (Block Address in RAM) be the main memory address stripped of its lower bits (i.e., removing the bits identifying the specific byte within the word and the word within the block). 
+
+In a direct-mapped cache, each block from RAM can be placed in \textit{one and only one} specific location in the cache, calculated via modulo arithmetic:
+\[ BAC = BAR \pmod{NB} \]
+where $BAC$ is the Block Address in the Cache, commonly referred to as the \textbf{cache index}. If $NB$ is a power of 2 (i.e., $NB = 2^{NAC}$), then the cache index corresponds precisely to the $NAC = \log_2(NB)$ least significant bits of the $BAR$.
+
+\paragraph{Solving Search and Placement in Direct-Mapped Caches}
+Because of the strict modulo mapping, the placement problem is trivial: blocks have a fixed, predetermined destination. However, the search problem is more challenging because multiple different memory blocks from different parts of RAM map to the exact same cache slot (creating potential ``cache collisions'').
+
+To solve this, each cache line must be equipped with two hardware fields:
+\begin{itemize}
+    \item \textbf{Tag Field:} Stores the remaining upper bits of the $BAR$ (specifically, the total address bits minus the index bits $NAC$). 
+    \item \textbf{Validity Bit:} A single bit indicating whether the cache line currently contains meaningful, initialized data or is empty/invalid upon startup.
+\end{itemize}
+To verify if data is present, the hardware extracts the index bits of the requested address, looks up that specific cache line, checks if the validity bit is set, and compares the line's stored \textbf{Tag} with the upper bits of the requested address. If they match, it is a hit.
+
+\paragraph{The Replacement Problem and Limitations}
+The replacement problem is trivial in a direct-mapped cache: when a new block arrives, it has only one possible slot it can occupy, so it automatically evicts whatever block is currently residing there, with no hardware decision-making required. 
+
+However, this introduces a major architectural disadvantage: \textbf{it completely ignores temporal locality!} If two frequently accessed variables happen to map to the same $BAC$ index, they will repeatedly evict each other on every access, causing a spike in conflict misses even if the rest of the cache is completely empty.
+
+\subsection{N-Way Set-Associative Caches}
+To bridge the gap between the strict hardware simplicity of direct-mapped caches and the heavy complexity of fully associative designs, modern systems heavily rely on \textbf{N-way set-associative caches}. 
+
+The cache is organized into $N_{set}$ sets (where $N_{set}$ is a power of 2), with each set containing exactly $N$ blocks. Notice that the total number of blocks is $NB = N_{set} \times N$.
+\begin{itemize}
+    \item \textbf{Placement Problem:} The target set index ($I_{set}$) corresponding to a given memory block address $BAR$ is determined using modulo arithmetic:
+    \[ I_{set} = BAR \pmod{N_{set}} \]
+    Once the set is identified via its index, the block can be placed into \emph{any} of the $N$ cache blocks within that specific set using fully associative rules.
+    \item \textbf{Search Problem:} The set itself is located just like a direct-mapped cache (using the index bits). Within that set, the hardware executes parallel tag comparisons across the $N$ blocks to find a match.
+\end{itemize}
+
+\paragraph{Architectural Trade-offs and Scaling}
+\begin{itemize}
+    \item A standard direct-mapped cache is simply a 1-way set-associative cache ($N = 1$).
+    \item \textbf{Compared to Fully Associative Caches:} Set-associativity requires significantly fewer and smaller comparators, resulting in cheaper, faster, and more power-efficient hardware.
+    \item \textbf{Compared to Direct-Mapped Caches:} It drastically reduces conflict misses by allowing multiple blocks to share the same set index, better exploiting temporal locality at a reasonable cost.
+\end{itemize}
+
+\noindent \textbf{Scaling Associativity (Constant Cache Size):}
+If you double the degree of associativity ($N$) while keeping total cache size constant:
+\begin{itemize}
+    \item The number of blocks within a single set doubles $\implies$ the tag length grows by 1 bit, and the number of comparators per set doubles.
+    \item The total number of sets ($N_{set}$) is halved $\implies$ the index length shrinks by 1 bit.
+    \item \emph{Empirical Note:} While higher associativity reduces conflict misses, the performance gains diminish rapidly for large caches, making 4-way to 16-way designs the sweet spot for modern processors.
+\end{itemize}
+
+\subsection{Fully Associative Caches}
+At the opposite extreme of the design spectrum is the \textbf{fully associative cache}, where every block of RAM can be mapped onto \emph{any} block line in the cache with zero placement constraints.
+\begin{itemize}
+    \item \textbf{Placement Problem:} Non-existent. The cache index size is $0$ bits, and the tag comprises the complete address minus the block and byte displacements.
+    \item \textbf{Search Problem:} Because a block can reside anywhere, the hardware cannot use an index lookup. Instead, it must run a \textbf{parallel comparison} of the requested address against all tags in the cache simultaneously. This requires a massive array of comparators, making it extremely expensive in silicon area and power consumption.
+    \item \textbf{Replacement Problem:} Because placement is completely flexible, the cache requires explicit replacement policies when a miss occurs and the cache is full:
+    \begin{itemize}
+        \item \textbf{Random:} The block to be substituted is chosen randomly. It is simple and requires minimal hardware (a pseudo-random number generator), but its miss-rate efficiency is poor because it ignores temporal locality.
+        \item \textbf{Least Recently Used (LRU):} Evicts the block left unused for the longest time. It fully exploits temporal locality for maximum efficiency, but requires heavy hardware counter tracking whose complexity scales poorly with the number of blocks.
+        \item \textbf{First-In, First-Out (FIFO) / Round-Robin:} Evicts the oldest block by entry order. It provides the best practical trade-off between performance and hardware complexity and is widely used in modern systems, though it only approximates locality.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Causes of Cache Misses}
+To understand how cache organizations improve performance, misses are classified into three fundamental categories:
+\begin{itemize}
+    \item \textbf{Compulsory Misses:} The very first access to a block (cold-start misses). These are unavoidable because the data is not yet in the cache.
+    \item \textbf{Capacity Misses:} Occur because the cache is physically too small to hold all the blocks needed during execution. Blocks are evicted and later re-fetched.
+    \item \textbf{Conflict Misses (Collision Misses):} Occur in direct-mapped or set-associative caches when multiple blocks compete for the exact same cache line or set, causing premature eviction despite available space elsewhere.
+\end{itemize}
+
+\subsection{The Write Problem and Write Strategies}
+As noted earlier, handling write instructions is orthogonal to read placement strategies. When the \gls{cpu} executes a write instruction, two primary questions arise: what happens to the cache, and what happens to lower-level memory?
+
+\paragraph{Core Write Strategies}
+\begin{itemize}
+    \item \textbf{Write-Through:} Data is written to both the cache block and to the lower-level memory (main memory) simultaneously. 
+    \begin{itemize}
+        \item \emph{Pros:} Keeps memory consistent; easy to implement; data is safe if a crash occurs.
+        \item \emph{Cons:} Generates heavy bus traffic and stalls the \gls{cpu} unless paired with a write buffer.
+    \end{itemize}
+    \item \textbf{Write-Back (Copy-Back):} Data is written \emph{only} to the cache block. The modified cache block is marked as ``dirty''. Main memory is only updated when that dirty block is eventually evicted from the cache to make room for a new block.
+    \begin{itemize}
+        \item \emph{Pros:} Significantly reduces memory bandwidth and bus traffic; fast write operations.
+        \item \emph{Cons:} Complex hardware design; main memory holds stale data until eviction occurs, posing risks in multi-core or I/O direct memory access scenarios.
+    \end{itemize}
+\end{itemize}
+
+\paragraph{Managing Write Misses}
+When a write instruction results in a cache miss, the system must choose a policy:
+\begin{itemize}
+    \item \textbf{Write-Allocate:} The missing block is fetched from lower-level memory into the cache, and then the write is performed on the cache line. (Typically paired with Write-Back).
+    \item \textbf{No-Write-Allocate (Write Around):} The block is modified directly in lower-level memory, bypassing the cache entirely without loading it into the cache. (Typically paired with Write-Through).
+\end{itemize}
+
+\subsection{Cache Performance and AMAT}
+Cache performance is fundamentally measured in terms of \textbf{Average Memory Access Time (AMAT)}. Since memory accesses result in either a hit or a miss, the AMAT calculates the statistical average time it takes for the \gls{cpu} to retrieve data.
+
+\begin{concept}{Average Memory Access Time (AMAT)}{amat}
+    The formula for AMAT can be mathematically simplified as follows:
+    \begin{align*}
+        \text{AMAT} &= (\text{Hit Rate} \times \text{Hit Time}) + (\text{Miss Rate} \times \text{Miss Time}) \\
+        &= (\text{Hit Rate} \times \text{Hit Time}) + \text{Miss Rate} \times (\text{Hit Time} + \text{Miss Penalty}) \\
+        &= \text{Hit Time} + (\text{Miss Rate} \times \text{Miss Penalty})
+    \end{align*}
+\end{concept}
+
+\noindent In modern architectures, the \textbf{Miss Penalty} is largely determined by physical hardware and technology constraints (e.g., the physical distance to main memory and bus speeds). Conversely, the \textbf{Miss Rate} can be heavily reduced through smart architectural decisions (e.g., cache size, associativity, and block size). Therefore, the primary goal in cache design is to maximize the hit rate so that the overall AMAT converges closely toward the base hit time.
+
+\paragraph{Impact on Overall \glsfmtshort{cpu} Time}
+Because the \gls{cpu} must stall and wait during a cache miss, cache performance directly impacts the total execution time of a program. The total \gls{cpu} time can be calculated by factoring in memory stall cycles:
+
+\begin{align*}
+    \text{CPU}_{\text{time}} &= (\text{CPU}_{\text{execution\_cycles}} + \text{MEM}_{\text{stall\_cycles}}) \times T_{\text{CLK}} \\
+    &= \left( (IC \times \text{CPI}_{\text{exec}}) + (\text{MEM}_{\text{accesses}} \times \text{Miss Rate} \times \text{Miss Penalty}) \right) \times T_{\text{CLK}} 
+\end{align*}
+
+\noindent To make this formula easier to apply on a per-instruction basis, we can factor out the Instruction Count ($IC$). This gives us the \textbf{Memory Accesses per Instruction} ($\frac{\text{MEM}_{\text{accesses}}}{IC}$):
+
+\begin{align*}
+    \text{CPU}_{\text{time}} &= IC \times \left( \text{CPI}_{\text{exec}} + \frac{\text{MEM}_{\text{accesses}}}{IC} \times \text{Miss Rate} \times \text{Miss Penalty} \right) \times T_{\text{CLK}}
+\end{align*}
