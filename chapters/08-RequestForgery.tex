@@ -1,0 +1,166 @@
+\chapter{Request Forgery}
+
+\section{HTTP State Management and Sessions}
+
+Web applications rely on a client-server architecture where the browser and server communicate via \gls{http} or \gls{https} protocols. Server-side components implement the application logic, process data, and generate the user interface, while client-side components capture user inputs and render the \gls{html} pages.
+
+\begin{observation}{HTTP Statelessness and Cookies}{http-stateless}
+    The \gls{http} protocol is fundamentally stateless, meaning it does not inherently preserve state between requests. To maintain state, servers typically transmit cookies to the client browser. Cookies identify and authenticate logged-in users, track user navigation, and maintain interaction data such as items in a shopping basket.
+\end{observation}
+
+A session represents a contiguous frame of \gls{http} communication where user data is securely stored on the server rather than on the client. A unique session identifier links the client to their server-side information. In \gls{php}, sessions are initialized using the \texttt{session\_start()} function and managed via the \texttt{\$\_SESSION} array. In Java Servlets, they are managed via the \texttt{HttpSession} object, which is instantiated using \texttt{request.getSession()}.
+
+\paragraph{Session Hijacking}
+Session hijacking occurs when an attacker successfully steals an authenticated user's session identifier. The attacker then uses this forged token to authenticate themselves on the target website, effectively impersonating the victim without detection.
+
+Attackers employ several methodologies to acquire session identifiers:
+\begin{itemize}
+    \item \textbf{Traffic sniffing:} Attackers can intercept \gls{http} communications to get the session token. This is feasible in Man-in-the-Middle attacks if cookies are sent over plain \gls{http} without a secure flag.
+    \item \textbf{Session fixation:} Attackers forge a valid but unused session \gls{id} and use schemes like fake emails to trick the victim into authenticating with it, granting the attacker immediate access to the session.
+    \item \textbf{Cross-Site Scripting (\glsfmtshort{xss}):} Attackers exploit \gls{xss} vulnerabilities to leak cookie information by injecting Javascript code that reads the cookie value.
+    \item \textbf{Malware/Trojan injection:} Attackers use deployed malware to actively monitor user activities and steal data, including session \glspl{id}.
+    \item \textbf{Brute force:} Attackers predict the session \gls{id} if the application utilizes weak algorithms or weak random number generators for authentication data.
+\end{itemize}
+
+Real-world applications have suffered from session hijacking due to misconfigurations. In 2013, Twitter utilized authentication cookies that failed to expire after logout, allowing indefinite session hijacking if a token was compromised. In 2022, Slack employee session tokens were stolen from a private GitHub repository, leading to a severe breach. Similarly, a 2023 flaw in Citrix Gateway exposed users to session hijacking.
+
+To prevent session hijacking, developers must enforce encrypted communication channels, avoid insecure redirections, and never pass the session \gls{id} as a \gls{url} parameter. Furthermore, cookies should be generated with adequate length and entropy, feature a strictly defined expiration time, and utilize the \texttt{HttpOnly} and \texttt{Secure} flags to restrict client-side access and unencrypted transmission.
+
+\section{\texorpdfstring{\glsfmtfull{csrf}}{Cross-Site Request Forgery (CSRF)}}
+
+\begin{definition}{Cross-Site Request Forgery}{csrf-def}
+    \glsfmtshort{csrf} (also known as Sea-surf, \gls{xsrf}, Session Riding, or One-Click) is an attack that forces a currently authenticated end-user to execute unwanted actions on a trusted web application.
+\end{definition}
+
+\gls{csrf} attacks are typically conducted using malicious social engineering, such as sending an email or link that tricks the victim into sending a forged request to a server. As the victim is already authenticated by their application at the time of the attack, it is impossible for the server to distinguish a legitimate request from a forged one. The main cause of \gls{csrf} is the missing continuous check of client identity during sensitive operations.
+
+\paragraph{Flow and Steps}
+Consider a scenario where an authenticated user, Alice, is connected to her bank. An attacker, Eve, wants to force Alice to transfer money to her account. Eve prepares a malicious site that contains a crafted request. If Alice is tricked into visiting this malicious site while still authenticated to the bank, her browser automatically completes the forged request by attaching her active session cookies. 
+
+An example of a crafted \gls{http} \gls{get} request embedded in a malicious \gls{html} page:
+\begin{lstlisting}[language=HTML]
+<!DOCTYPE html>
+<html>
+<body>
+    <img src="https://mybank.com/transferFunds?amount=100&accountID=123" />
+</body>
+</html>
+\end{lstlisting}
+Because the \texttt{img} tag automatically fetches the source \gls{url}, the browser sends the transfer request alongside Alice's session cookie, resulting in an authorized but fraudulent transaction.
+
+\paragraph{Examples in the Wild}
+\begin{itemize}
+    \item \textbf{uTorrent (\gls{cve}-2008-6586):} The web console of the uTorrent client allowed critical actions, such as file downloads and administrator password changes, to be executed using \gls{get} requests. Attackers embedded automatic-action \gls{html} images in forums; if a user browsed the forum while uTorrent was running, the attack deployed malware by forcing the client to download malicious files.
+    \item \textbf{TikTok (\gls{cve}-2020-2414):} A vulnerability allowed attackers to send messages containing malware to TikTok users. The backend software did not adequately check user-supplied \glspl{url}, enabling attackers to perform \gls{csrf} attacks that caused victim accounts to submit unauthorized requests on their behalf.
+\end{itemize}
+
+\section{\glsfmtshort{csrf} Mitigation}
+
+To defend against \gls{csrf}, developers must implement continuous identification of the user when sensitive operations are conducted. 
+
+\begin{enumerate}
+    \item \textbf{Anti-\gls{csrf} Tokens:} This approach makes sensitive action requests unique by attaching an unpredictable request identifier. A unique and secure code is generated by the server and inserted into forms as a hidden field. When the user submits the form, the server verifies that the expected token is included; if it is missing or incorrect, the request is rejected. Because the token is unique and unpredictable, an attacker cannot forge it.
+    
+\textbf{\gls{php} Example (Token Generation):}
+\begin{lstlisting}[language=PHP]
+<?php
+session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
+?>
+<form>
+    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?>"/>
+</form>
+\end{lstlisting}
+
+    \item \textbf{Time-Limited Tokens:} Using short-lived tokens limits their validity window, directly reducing the opportunity for attackers to exploit stolen tokens.
+    
+    \item \textbf{SameSite Cookies:} Configuring cookies with the \texttt{SameSite} attribute set to \texttt{Strict} or \texttt{Lax} restricts cross-origin requests. This prevents the browser from sending session cookies if the request originates from a domain outside of the vulnerable site's origin.
+    
+    \item \textbf{reCAPTCHA and Prompt Authentication:} Requiring the user to solve a \gls{captcha} or re-enter their password prior to completing a sensitive action ensures that automated, forged requests cannot succeed without direct user interaction.
+\end{enumerate}
+
+\section{\glsfmtfull{ssrf}}
+
+\begin{definition}{Server-Side Request Forgery}{ssrf-def}
+    \glsfmtshort{ssrf} occurs when a web application fetches a remote resource without validating the user-supplied \gls{url}. This allows an attacker to send a forged request from the backend server to another server or to a local service.
+\end{definition}
+
+\gls{ssrf} attacks exploit how a server processes internal information and abuse the trust relationship between servers or services. The receiving service believes the request came from the trusted backend application and treats it as legitimate. If an attacker can successfully modify the target \gls{url}, they can potentially exfiltrate sensitive information from the application or inject untrusted input into it.
+
+\paragraph{\glsfmtshort{ssrf} Attack Vectors and Flow}
+A classic \gls{ssrf} vulnerability arises when a server application reads information from or writes information to a specific \gls{url}, which can lead to an internal or a trusted external service via a REST \gls{api}.
+
+\textbf{Example 1: Local Resource Access}
+Consider a \gls{php} application designed to fetch and display an image from a user-provided \gls{url}:
+\begin{lstlisting}[language=PHP]
+<?php
+if (isset($_GET['url_img'])){
+    $url_img = $_GET['url_img'];
+    $image = fopen($url_img, 'rb');
+    header("Content-Type: image/png");
+    fpassthru($image);
+}
+?>
+\end{lstlisting}
+Because the \texttt{fopen} function opens files or \glspl{url} without validation, an attacker controls the \texttt{url\_img} parameter. By supplying a payload such as \texttt{http://localhost/server-status}, the attacker can force the server to reveal detailed internal Apache configuration metrics. Attackers could also use local file schemes, such as \texttt{file:///C:/test/apple.png}, to read local system files directly from the server's filesystem.
+
+\textbf{Example 2: Back-end Component Exploitation}
+A weather application might query an internal \gls{api} to retrieve current weather forecasts to display by passing a \gls{url} from the browser to the server using a \gls{post} request:
+\begin{lstlisting}[language=HTTP]
+POST /forecasts HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 250
+
+weatherApi=http://weatherapp.com/forecasts/check%3FcurrentDateTime%3D6%26cityId%3D1
+\end{lstlisting}
+An attacker can modify this request to specify a \gls{url} local to the server itself or a back-end component. By changing the payload to \texttt{weatherApi=http://localhost/admin} or an internal \gls{ip} like \texttt{http://192.168.10.10/admin}, the attacker forces the server to connect to an internal administration folder. Since back-end components often have weak security because they are considered to be protected inside the network perimeter, the server's trusted relationship allows the attacker to bypass ordinary access controls and expose unauthorized information.
+
+\paragraph{Examples in the Wild}
+\begin{itemize}
+    \item \textbf{Microsoft Exchange (2021):} The \gls{cve}-2021-26855 vulnerability allowed an attacker to first authenticate as an Exchange server and then escalate the attacks using \gls{ssrf}.
+    \item \textbf{Amazon \gls{aws} (2019):} An attacker was able to acquire \gls{aws} access keys by exploiting \gls{ssrf} to access the \gls{aws} EC2 metadata service. Thanks to these keys, the attacker was able to list and sync the S3 storages to a local disk, thus gaining access to the data contained in them.
+\end{itemize}
+
+\paragraph{Vulnerability Identification}
+Identifying \gls{ssrf} involves understanding how data flows from the target to reach the endpoints which try to make a connection somewhere. Most common methods are based on proxies to:
+\begin{itemize}
+    \item Spider the web application.
+    \item Search for parameters indicating remote fetches, such as \texttt{url} or \texttt{=http} in the requests.
+    \item Try an \gls{ssrf} payload and check responses to see if the server reveals any relevant information.
+\end{itemize}
+
+\paragraph{\glsfmtshort{ssrf} Mitigation}
+Mitigating \gls{ssrf} requires defense-in-depth across the server architecture:
+\begin{itemize}
+    \item \textbf{Validation:} Validate request and response also from internal services.
+    \item \textbf{Internal Authentication:} Add authentication also for internal and in third-party services that do not have it by default (e.g., MongoDB).
+    \item \textbf{Allow-Listing:} Use a whitelist of \gls{ip} addresses or \gls{dns} names allowed to conduct internal requests.
+    \item \textbf{Method Differentiation:} Differentiate among \gls{get}, \gls{post}, and other \gls{http} methods according to the service needs, thus making it harder for an attacker to make the correct request.
+\end{itemize}
+
+\section{Cross-Site vs. Server-Side Request Forgery}
+
+While both \gls{csrf} and \gls{ssrf} take advantage of how web servers handle \glspl{url} and both ultimately target the server, the way in which the attack is conducted and the underlying purposes are fundamentally different.
+
+\begin{concept}{Trust Relationships and Mechanisms}{csrf-vs-ssrf}
+    \begin{itemize}
+        \item \textbf{Attack Vector and Execution:}
+        \begin{itemize}
+            \item \textbf{\glsfmtshort{csrf}:} \gls{csrf} attacks are mainly against the user to force the execution of malicious requests to the server on behalf of the attacker.
+            \item \textbf{\glsfmtshort{ssrf}:} \gls{ssrf} attacks are mainly against the backend server to read or update internal resources from an external network.
+        \end{itemize}
+        \item \textbf{Exploited Trust:}
+        \begin{itemize}
+            \item \textbf{\glsfmtshort{csrf}:} The attacker abuses a trust relationship where the \textit{server trusts the client} after successful authentication.
+            \item \textbf{\glsfmtshort{ssrf}:} The attacker abuses a trust relationship where the \textit{server trusts its backend components} and local network environment.
+        \end{itemize}
+        \item \textbf{Primary Purpose:}
+        \begin{itemize}
+            \item \textbf{\glsfmtshort{csrf}:} The purpose is to perform legitimate but unauthorized actions on the user's account with the web-based service.
+            \item \textbf{\glsfmtshort{ssrf}:} The purpose is the theft of sensitive information on the server, or to bypass input validation countermeasures to exploit other vulnerabilities.
+        \end{itemize}
+    \end{itemize}
+\end{concept}
