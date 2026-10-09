@@ -130,6 +130,29 @@
     showstringspaces=false
 }
 
+% Definizione del linguaggio HTTP personalizzato
+\lstdefinelanguage{http}{
+  morekeywords={GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS, HTTP, HTTPS},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+  ndkeywords={Host, User-Agent, Accept, Content-Type, Content-Length, Authorization, Connection},
+  ndkeywordstyle=\color{purple}\bfseries,
+}
+
+% Configurazione dello stile generale di listings
+\lstset{
+  backgroundcolor=\color{gray!5},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  stringstyle=\color{teal},
+  commentstyle=\color{gray},
+  breaklines=true,
+  captionpos=b
+}
+
+
 % ==========================================
 % LINKS, REFERENCING & GLOSSARIES
 % ==========================================
@@ -217,8 +240,20 @@
 \newacronym{ux}{UX}{User Experience}
 \newacronym{mfa}{MFA}{Multi-Factor Authentication}
 \newacronym{http}{HTTP}{Hypertext Transfer Protocol}
+\newacronym[parent=http]{https}{HTTPS}{\gls{http} Secure}
 \newacronym{ui}{UI}{User Interface}
 \newacronym{vwad}{VWAD}{Vulnerable Web Applications Directory}
+\newacronym{php}{PHP}{Hypertext PreProcessor}
+\newacronym{url}{URL}{Uniform Resource Locator}
+\newacronym{html}{HTML}{Hyper Text Markup Language}
+\newacronym{id}{ID}{IDentifier}
+\newacronym[parent=http]{get}{GET}{GET verb}
+\newacronym[parent=http]{post}{POST}{POST verb}
+\newacronym{captcha}{CAPTCHA}{Completely Automated Public Turing test to tell Computers and Humans Apart}
+\newacronym{xsrf}{XSRF}{Cross-Site Request Forgery}
+\newacronym{ip}{IP}{Internet Protocol}
+\newacronym{aws}{AWS}{Amazon Web Services}
+\newacronym{dns}{DNS}{Domanin Name Server}
 
 % ==========================================
 % TCOLORBOX THEOREMS & DEFINITIONS
@@ -368,6 +403,7 @@
 \part{Vulnerabilities}
 \include{chapters/06-SQL}
 \include{chapters/07-XSS}
+\include{chapters/08-RequestForgery}
 \backmatter
 \chapter{Appendix}
 
