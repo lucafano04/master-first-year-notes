@@ -39,7 +39,7 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tikz}
-\usetikzlibrary{automata, positioning, arrows}
+\usetikzlibrary{automata, positioning, arrows, patterns}
 
 % Box per Teoremi, Definizioni, Algoritmi
 \usepackage{tcolorbox}
@@ -171,6 +171,12 @@
 \newacronym{ram}{RAM}{Random-Access Memory}
 \newacronym[parent=ram]{dram}{DRAM}{Dynamic \gls{ram}}
 \newacronym[parent=ram]{sram}{SRAM}{Static \gls{ram}}
+\newacronym{lru}{LRU}{Least Recentlly Used}
+\newacronym{tlb}{TLB}{Translation Lookaside Buffer}
+\newacronym[parent=dram]{sdram}{SDRAM}{Synchronus \gls{dram}}
+\newacronym{ddr}{DDR}{Double Data Rate}
+\newacronym{rom}{ROM}{Read Only Memory}
+\newacronym[parent=rom]{eeprom}{EEPROM}{Electrically Erasable Programmable \gls{rom}}
 
 % Stile del Codice
 \lstset{
