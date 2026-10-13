@@ -254,6 +254,10 @@
 \newacronym{ip}{IP}{Internet Protocol}
 \newacronym{aws}{AWS}{Amazon Web Services}
 \newacronym{dns}{DNS}{Domanin Name Server}
+\newacronym{dos}{DoS}{Denial of Service}
+\newacronym{json}{JSON}{JavaScript Object Notation}
+\newacronym{ssh}{SSH}{Secure Shell}
+\newacronym{mfc}{MFC}{Microsoft Foundation Classes}
 
 % ==========================================
 % TCOLORBOX THEOREMS & DEFINITIONS
@@ -266,13 +270,6 @@
   colback=unitnred!5,colframe=unitnred!80!black,fonttitle=\bfseries, breakable%
 }{def}
 
-\newtcbtheorem[number within=chapter,
-  crefname={theorem}{theorems},
-  Crefname={Theorem}{Theorems},
-  list inside=thmlist
-]{theorem}{Theorem}{%
-  colback=blue!5,colframe=blue!80!black,fonttitle=\bfseries, breakable%
-}{thm}
 
 \newtcbtheorem[number within=chapter,
   crefname={lemma}{lemmas},
@@ -404,13 +401,14 @@
 \include{chapters/06-SQL}
 \include{chapters/07-XSS}
 \include{chapters/08-RequestForgery}
+\include{chapters/09-CommandInjection}
+\include{chapters/10-improperErrorHandling}
 \backmatter
 \chapter{Appendix}
 
-% Generate automated lists of definitions, concepts, and theorems
+% Generate automated lists of definitions, concepts
 \tcblistof[\section]{deflist}{List of Definitions}
 \tcblistof[\section]{cptlist}{List of Concepts}
-\tcblistof[\section]{thmlist}{List of Theorems}
 
 \clearpage
 % Set a nice gap between the two columns

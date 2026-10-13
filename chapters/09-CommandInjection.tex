@@ -1,0 +1,88 @@
+\chapter{Command Injection}
+\label{ch:command_injection}
+
+\begin{concept}{Command Injection}{command-injection-def}
+    Command injection is an attack in which the goal is the arbitrary execution of commands on the host \gls{os} via a vulnerable application. It occurs when an application uses unsafe external (user) data to compose \gls{os} commands.
+\end{concept}
+
+Unlike code injection, command injection does not inject raw code. Rather, the injected data is used to compose an \gls{os} command that is subsequently executed by the application. For instance, an application might use a system command to check if a file exists, where the filename is dynamically constructed from user input. Another scenario involves an application storing user data in a folder, where the folder name is defined starting from a user input, such as a username inserted into a form. 
+
+\section{Underlying Conditions}
+
+\begin{observation}{Vulnerability Prerequisites}{cmd-inj-prereqs}
+    For a command injection attack to work, the application should meet three main conditions:
+    \begin{itemize}
+        \item The app should have privileges/permissions to execute system commands.
+        \item The app should use user-provided data as a part of system command.
+        \item The user-provided data should not be escaped/sanitized before use.
+    \end{itemize}
+    If the application meets these three conditions, then most probably the application is vulnerable to command injection.
+\end{observation}
+
+Command injection vulnerabilities affect any programming language used to implement an interpreter for user-provided data that might include unintended commands. Examples include functions like \texttt{system}, \texttt{popen}, \texttt{execlp}, and \texttt{execvp} in C/C++. It also affects Perl (\texttt{system}, \texttt{exec}, \texttt{eval}), Python (\texttt{exec}, \texttt{eval}, \texttt{os.system}), and Java (\texttt{Runtime.exec}).
+
+\section{Attack Examples}
+
+When untrusted external data is passed to an interpreter, it might be formatted to include commands the interpreter understands, forcing the interpreter to operate beyond its intended functions. This problem is formally categorized under \gls{capec}-88 (\gls{os} Command Injection) and \gls{cwe}-78 (Improper Neutralization of Special Elements used in an \gls{os} Command).
+
+\subsection{\glsfmtshort{php} Command Injection}
+Consider a \gls{php} application that attempts to list the properties of a file provided via a \gls{url} parameter:
+\begin{lstlisting}[language=PHP]
+$command = "ls " . $_GET['par'];
+$output = exec($command);
+\end{lstlisting}
+The intended behavior is to pass a parameter like \texttt{-l} to execute \texttt{ls -l}. However, if an attacker provides the parameter \texttt{-l\%3Brm+\%2A+-Rf}, the decoded \gls{url} parameter becomes \texttt{-l;rm * -Rf}. The \gls{os} will execute \texttt{ls -l} and then maliciously delete every file in the directory and its subdirectories.
+
+\subsection{C Command Injection}
+A C program might use \texttt{snprintf} to format a string and pass it to \texttt{system()} to display a printer queue:
+\begin{lstlisting}[language=C]
+snprintf(buf, sizeof(buf)-1, "lpq -P %s", argv[1]);
+system(buf);
+\end{lstlisting}
+If the input is \texttt{PRO}, the intended command \texttt{lpq -P PRO} executes. However, if the input is \texttt{PRO; xterm\&}, the malicious command \texttt{xterm\&} is concatenated after the intended command using a semicolon as a separator.
+
+\subsection{Java Command Injection}
+In Java, an application might attempt to read a username and display the contents of a directory matching that name:
+\begin{lstlisting}[language=Java]
+String user = sc.nextLine();
+String user_path = ".\\Data\\" + user;
+String comm = "cmd.exe /c dir " + user_path;
+Process pr = Runtime.getRuntime().exec(comm);
+\end{lstlisting}
+The application executes the command to display the contents of the folder. If an attacker inputs \texttt{Name1 \& ping -n 2 8.8.8.8}, the \texttt{cmd.exe} interpreter processes the \texttt{\&} character and executes the \texttt{ping} command immediately after reading the directory.
+
+\section{Mitigation Strategies}
+
+To properly mitigate command injection, developers should adhere to the following practices:
+\begin{itemize}
+    \item Do not use direct shell/\gls{os} execution functions.
+    \item Avoid using unsafe data in combination with direct shell/\gls{os} execution functions.
+    \item \textbf{Input Sanitization:}
+    \begin{itemize}
+        \item Whitelisting: define a list of acceptable characters or patterns for input. Reject any input that doesn't conform (e.g., "\& | ;").
+        \item Blacklisting: identify and block known malicious characters or patterns (e.g., "\& | ;").
+    \end{itemize}
+    \item \textbf{Input Neutralization:}
+    \begin{itemize}
+        \item Encoding: encode special characters (e.g., "\& | ; <") that have meaning to the \gls{os}. For instance, '<' is '\&lt;'.
+        \item Escaping: add the escape character (e.g., backslash '\textbackslash') to specific characters so that they can be interpreted as char not as part of a command.
+        \item Quoting: user data are transformed (e.g., embedded within quotes), so as to avoid them being interpreted as commands.
+    \end{itemize}
+    \item \textbf{Parameterized Commands:} use parameterized queries and prepared statements to separate commands and data, and use user input as data (not as code).
+    \item \textbf{Principle of Least Privilege:} run the app with the minimal permissions to reduce the potential impact of any successful attack.
+\end{itemize}
+
+\subsection{Fixing the Examples}
+In \gls{php}, the \texttt{escapeshellarg()} function can be used to add single quotes around the user input string while escaping other existing single quotes, making it safe for use as a shell function argument. 
+
+In C, replacing \texttt{system()} with \texttt{execvp()} effectively implements parameterized commands. \texttt{execvp()} runs the command without invoking any shell in the environment (i.e., no shell interpreter is run). If an attacker passes \texttt{PRO | less}, the entire string is treated strictly as an argument for the \texttt{lpq} command rather than an executable pipe.
+
+In Java, replacing \texttt{Runtime.getRuntime().exec()} with \texttt{ProcessBuilder} separates the command and its arguments. Each element passed to \texttt{ProcessBuilder} is interpreted strictly as a parameter, causing malicious command compositions to fail.
+
+\section{Real-World Impact (\glsfmtshortpl{cve})}
+Command injection is highly prevalent in the wild. Notable \glspl{cve} include:
+\begin{itemize}
+    \item \textbf{CVE-2024-8686:} A command injection vulnerability in Palo Alto Networks PAN-OS software enables an authenticated administrator to bypass system restrictions and run arbitrary commands as root on the firewall.
+    \item \textbf{CVE-2022-26085:} An \gls{os} command injection vulnerability exists in the httpd wlscan\_ASP functionality of InHand Networks InRouter302 V3.5.4. A specially-crafted \gls{http} request can lead to arbitrary command execution.
+    \item \textbf{CVE-2024-8190:} An \gls{os} command injection vulnerability in Ivanti Cloud Services Appliance versions 4.6 Patch 518 and before allows a remote authenticated attacker to obtain remote code execution. 
+\end{itemize}

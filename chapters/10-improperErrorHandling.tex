@@ -1,0 +1,65 @@
+\chapter{Improper Error Handling}
+\label{ch:error_handling}
+
+\begin{concept}{Error Handling}{error-handling-def}
+    Error handling is a mechanism used to "resolve" (handle) errors that arise during the execution of a program. It deals with error events to avoid program crashes. Crucially, error handling is a part of the overall security of an application.
+\end{concept}
+
+Improper error handling occurs when the software does not handle some error conditions, leaving the program in an unsecure state. This unsecure state might eventually produce a crash, resulting in a potential \gls{dos}. Furthermore, unhandled errors might be accompanied by the disclosure of sensitive information about the code itself when inappropriate error messages propagate to the end user.
+
+\section{Information Disclosure and Reconnaissance}
+An attack always begins with a Reconnaissance phase in which the attacker will try to gather as much technical information about the target. Improper error handling and unhandled errors can help attackers in collecting useful information.
+
+For example, verbose exception reports might disclose the technology stack in use (such as Opensymphony, Struts2, and Tomcat versions) via stack traces rendered to the user. Similarly, the disclosure of a \gls{sql} query error can expose the site installation path, which can be used to identify an injection point. 
+
+\section{Mishandling Exceptional Conditions in Code}
+
+Failing to properly capture and manage errors leads to fail-open behaviors and unpredicted application states. Below are common programming pitfalls.
+
+\subsection{Unchecked Return Values (C)}
+When opening a file using \texttt{fopen}, the function will return a \texttt{NULL} pointer if the operation fails. 
+\begin{lstlisting}[language=C]
+FILE* f = fopen(szFilename, "r");
+// read data from f
+fclose(f);
+\end{lstlisting}
+If \texttt{szFilename} is invalid (e.g., manipulated by an attacker), \texttt{f} will be \texttt{NULL}. If the program proceeds to use this null pointer for file operations, the function will crash. To fix this, the pointer must be validated (\texttt{if (f == NULL)}), and the error should be reported to the caller, where it is supposed to be handled properly.
+
+\subsection{Misunderstanding \gls{api} Error Mechanisms (C++)}
+Developers frequently mishandle exceptions by misunderstanding the underlying library's documentation. 
+
+\textbf{Masked Exceptions:}
+\begin{lstlisting}[language=C++]
+BigThing* p = new (std::nothrow) BigThing[14999];
+\end{lstlisting}
+The \texttt{std::nothrow} flag indicates that \texttt{new} shall not throw an exception on failure, but will return a null pointer instead. Consequently, if allocation fails, any surrounding \texttt{catch(std::bad\_alloc\& e)} branch won't be executed. The subsequent use of the null pointer \texttt{p} will cause a crash.
+
+\textbf{Catching the Wrong Exception:}
+When allocating a \texttt{CString} object in \gls{mfc} programs, an insufficient memory error throws a \texttt{CMemoryException}. If the developer writes a catch block anticipating \texttt{std::bad\_alloc\&}, the exception will bypass the handler entirely.
+
+\subsection{Useless Error Checks (C)}
+Developers sometimes check the wrong variable for failure indicators.
+\begin{lstlisting}[language=C]
+char* p = strncpy(dest, szBuf, 19);
+if (p) { ... }
+\end{lstlisting}
+The developer wrongly believes that the return value of \texttt{strncpy} is \texttt{NULL} in case of an error. However, \texttt{strncpy} returns a pointer to the start of the destination string regardless of the outcome. Therefore, the check \texttt{if (p)} is useless for error handling.
+
+\section{Mitigation Strategies}
+To ensure robust security posture during error events, developers must:
+\begin{itemize}
+    \item Handle errors and exceptions in the code in appropriate ways.
+    \item Never mask exceptions that may corrupt the program's state.
+    \item Use assertions in the code to document assumptions and/or unexpected conditions or for situations that should never occur.
+    \item Check function return values for errors.
+    \item Filter error messages provided to users.
+\end{itemize}
+
+\section{Real-World Impact (\glspl{cve})}
+Improper error handling leads to significant real-world vulnerabilities:
+\begin{itemize}
+    \item \textbf{CVE-2018-1000083:} Ajenti version 2 contains an Improper Error Handling vulnerability in the Login \gls{json} request. By sending a malformed \gls{json}, the tool responds with a traceback error that leaks a path of the server.
+    \item \textbf{CVE-2018-14907:} The Web server in 3CX version 15.5.8801.3 is vulnerable to Information Leakage because of improper error handling in stack traces, demonstrating the discovery of a full pathname.
+    \item \textbf{CVE-2024-36481:} In the Linux kernel, a function might return \texttt{NULL} or an error via a macro, but its caller only checked for the \texttt{NULL} condition, missing the explicit error return.
+    \item \textbf{CVE-2018-1999036:} An exposure of sensitive information vulnerability exists in Jenkins \gls{ssh} Agent Plugin. It exposes the \gls{ssh} private key password to users with permission to read the build log.
+\end{itemize}
