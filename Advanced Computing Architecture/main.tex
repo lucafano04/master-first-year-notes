@@ -39,7 +39,7 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tikz}
-\usetikzlibrary{automata, positioning, arrows, patterns}
+\usetikzlibrary{automata, positioning, arrows, arrows.meta, shapes.geometric, patterns}
 
 % Box per Teoremi, Definizioni, Algoritmi
 \usepackage{tcolorbox}
@@ -177,6 +177,10 @@
 \newacronym{ddr}{DDR}{Double Data Rate}
 \newacronym{rom}{ROM}{Read Only Memory}
 \newacronym[parent=rom]{eeprom}{EEPROM}{Electrically Erasable Programmable \gls{rom}}
+\newacronym{ilp}{ILP}{Instruction Level Parallelism}
+\newacronym{bht}{BHT}{Branch History Table}
+\newacronym{fsm}{FSM}{Finate State Machine}
+\newacronym{btb}{BTB}{Branch Target Buffer}
 
 % Stile del Codice
 \lstset{
@@ -344,6 +348,7 @@
 \include{chapters/02-ISA-principles}
 \include{chapters/03-pipelining}
 \include{chapters/04-MemoryOrganization}
+\include{chapters/05-BranchPrediction}
 
 
 \backmatter
