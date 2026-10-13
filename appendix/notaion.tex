@@ -1,0 +1,84 @@
+\chapter{Mathematical Notation and Conventions}
+\label{app:notation}
+
+This appendix provides a comprehensive reference for the mathematical notation, standard formalisms, and symbols used throughout this course on Computability and Computational Complexity (CCC). 
+
+\section{General Computability Notation}
+The following symbols and conventions are standard in the formalization of sets, strings, and Turing Machines.
+
+\subsection*{Alphabets, Strings, and Languages}
+\begin{itemize}
+    \item \(\Sigma\): A finite, non-empty set of symbols called an \textbf{alphabet} (e.g., \(\{0, 1\}\)).
+    \item \(\Sigma^*\): The \textbf{Kleene star} (or Kleene closure) of \(\Sigma\), representing the countably infinite set of all possible finite strings generated from \(\Sigma\).
+    \item \(\varepsilon\): The \textbf{empty string}, representing a sequence of zero symbols. Note that \(\varepsilon \in \Sigma^*\).
+    \item \(\Sigma^n\): The set of all strings over \(\Sigma\) of length exactly \(n\).
+    \item \(|w|\): The \textbf{length} of a string \(w \in \Sigma^*\).
+    \item \(L\): A \textbf{language}, formally defined as a subset of all possible strings: \(L \subseteq \Sigma^*\).
+\end{itemize}
+
+\subsection*{Turing Machines and Functions}
+\begin{itemize}
+    \item \(\langle M \rangle\): The \textbf{string encoding} (or G\"odel numbering) of a Turing Machine \(M\). It represents the finite "source code" of the machine.
+    \item \(\langle M, w \rangle\): The encoded tuple of a Turing Machine \(M\) and an input string \(w\), typically fed into a \gls{utm}.
+    \item \(M(w)\): The evaluation or execution of a Turing Machine \(M\) on an input string \(w\). 
+    \item \(\infty\): Used to denote a computation that \textbf{diverges} or never halts (e.g., \(M(w) = \infty\)).
+    \item \(f: A \rightarrow B\): A \textbf{total function} mapping every element in set \(A\) to exactly one element in set \(B\).
+    \item \(f: A \rightharpoonup B\): A \textbf{partial function} from \(A\) to \(B\), meaning it may be undefined for some inputs in \(A\).
+    \item \(\sqcup\): The \textbf{blank symbol} on a Turing Machine tape, representing an empty cell.
+\end{itemize}
+
+\section{Hyperoperations and Large Numbers}
+
+When discussing bounds in uncomputability theory—most notably the Busy Beaver game—standard exponential notation becomes insufficient. The Busy Beaver function \(\Sigma(n)\) outgrows all computable functions, leading to numbers so massive they cannot be expressed with normal powers. To represent these values, we use \textbf{Knuth's Up-Arrow Notation}.
+
+\begin{concept}{Knuth's Up-Arrow Notation}{knuth-arrow}
+    Introduced by Donald Knuth in 1976, this notation defines a sequence of hyperoperations that extend standard arithmetic. Just as multiplication is repeated addition, and exponentiation is repeated multiplication, Knuth's arrows represent repeated exponentiation (tetration), repeated tetration (pentation), and so on.
+\end{concept}
+
+\subsection*{1. Single Arrow: Exponentiation}
+A single arrow represents standard exponentiation (repeated multiplication).
+\[
+    a \uparrow b = \underbrace{a \times a \times \dots \times a}_{b \text{ copies of } a} = a^b
+\]
+\textbf{Example:} \(2 \uparrow 5 = 2^5 = 32\)
+
+\subsection*{2. Double Arrow: Tetration (Power Towers)}
+A double arrow represents \textbf{tetration}, which is repeated exponentiation. It creates a "power tower" of height \(b\). Operations are always evaluated from the top right downward.
+\[
+    a \uparrow\uparrow b = \underbrace{a \uparrow (a \uparrow (\dots \uparrow a))}_{b \text{ copies of } a} = \underbrace{a^{a^{\cdot^{\cdot^{a}}}}}_{b \text{ copies}}
+\]
+\textbf{Example:} 
+\[
+    2 \uparrow\uparrow 4 = 2 \uparrow (2 \uparrow (2 \uparrow 2)) = 2^{2^{2^2}} = 2^{2^4} = 2^{16} = 65,536
+\]
+Even for small inputs, tetration grows explosively. For instance, \(2 \uparrow\uparrow 5 = 2^{65,536}\), a number with nearly \(20,000\) decimal digits.
+
+\subsection*{3. Triple Arrow: Pentation}
+A triple arrow represents \textbf{pentation}, which is repeated tetration. 
+\[
+    a \uparrow\uparrow\uparrow b = \underbrace{a \uparrow\uparrow (a \uparrow\uparrow (\dots \uparrow\uparrow a))}_{b \text{ copies of } a}
+\]
+\textbf{Example:} Let us break down \(2 \uparrow\uparrow\uparrow 5\), which frequently appears as a lower bound in \(6\)-state Busy Beaver candidates.
+\begin{align*}
+    2 \uparrow\uparrow\uparrow 5 &= 2 \uparrow\uparrow (2 \uparrow\uparrow (2 \uparrow\uparrow (2 \uparrow\uparrow 2))) \\
+    &= 2 \uparrow\uparrow (2 \uparrow\uparrow (2 \uparrow\uparrow 4)) \\
+    &= 2 \uparrow\uparrow (2 \uparrow\uparrow 65,536)
+\end{align*}
+To understand the sheer magnitude of \(2 \uparrow\uparrow 65,536\), imagine a power tower of 2s (\(2^{2^{2^{\dots}}}\)) that is exactly \(65,536\) layers tall. 
+
+Evaluating the final step—\(2 \uparrow\uparrow (2 \uparrow\uparrow 65,536)\)—creates a power tower of 2s whose \textit{height} is the astronomically massive number from the previous step. 
+
+\begin{observation}{The 6-State Busy Beaver}{busy-beaver-six}
+    As established in \cref{thm:uncomp-sn}, the Busy Beaver function grows faster than any computable function. The current champion Turing Machine for 6 states writes at least \(2 \uparrow\uparrow\uparrow 5\) ones on its tape before halting. This demonstrates how a finite set of just 6 instructions can theoretically generate a number vastly exceeding the number of atoms in the observable universe before coming to a complete, deterministic halt.
+\end{observation}
+
+\subsection*{Generalization}
+The notation generalizes recursively for any \(n \ge 1\) arrows, denoted as \(\uparrow^n\):
+\[
+    a \uparrow^n b = 
+    \begin{cases} 
+        a^b & \text{if } n = 1 \\
+        1 & \text{if } b = 0 \\
+        a \uparrow^{n-1} (a \uparrow^n (b-1)) & \text{otherwise}
+    \end{cases}
+\]

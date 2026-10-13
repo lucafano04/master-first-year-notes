@@ -853,3 +853,22 @@ The two trivial properties are easy to decide, respectively by the machine that 
         Observe that we simply use \(N\), which has the property, as a sort of Trojan horse for computation \(M_s(t)\).
     \end{proof}
 \end{theorem}
+
+\section{A Small Exercise: The 1-State Busy Beaver}
+
+Let us assume we have an initially empty tape (filled with blanks, \(\sqcup\)) and a minimal alphabet \(\Sigma=\{\sqcup, 1\}\). We want to design a Turing machine that writes as many \(1\)s as possible on the tape and then halts. 
+
+If we restrict our machine to having exactly one active state (let us call it \(A\)) plus the mandatory \textsc{halt} state, what is the maximum number of \(1\)s it can achieve?
+
+With only one state, the machine begins in state \(A\) reading a \(\sqcup\). To write a symbol and successfully halt, the transition function for the input pair \((A, \sqcup)\) must write a \(1\), move the head (e.g., \(\rightarrow\)), and transition immediately into the \textsc{halt} state:
+\[
+    F(A, \sqcup) = (1, \textsc{halt}, \rightarrow)
+\]
+If the machine were to transition back into state \(A\) instead of \textsc{halt}, it would move to the next blank cell, read another \(\sqcup\), and trigger the exact same rule again. This would create a non-halting machine that writes \(1\)s infinitely. 
+
+Because it must transition to \textsc{halt} on its very first step to avoid an infinite loop, the machine will only ever write exactly one \(1\) and then stop. Furthermore, the transition rule for the input pair \((A, 1)\) is entirely irrelevant, as the machine will never encounter a \(1\) before halting. 
+
+Thus, we have effectively proven the first value of the Busy Beaver function: 
+\[
+    \Sigma(1) = 1
+\]

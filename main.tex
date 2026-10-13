@@ -308,21 +308,35 @@
 \include{chapters/01-History}
 \include{chapters/02-computability}
 
-\backmatter
-\chapter{Appendix}
+% ==========================================
+% APPENDICES
+% ==========================================
+\appendix
+% This creates a clean "Appendices" separator page and TOC entry
+\addpart{Appendices} 
 
-% Generate automated lists of definitions, concepts, theorems, and axioms
-\tcblistof[\section]{deflist}{List of Definitions}
-\tcblistof[\section]{cptlist}{List of Concepts}
-\tcblistof[\section]{thmlist}{List of Theorems}
-\tcblistof[\section]{axlist}{List of Axioms}
+\include{appendix/notaion} 
+
+% ==========================================
+% BACKMATTER (Unnumbered sections, Lists, Indexes)
+% ==========================================
+\backmatter
+\chapter{Lists and Indexes}
+
+% By using \addsec instead of \section, we prevent the ugly "0.1" numbering
+% while still keeping these lists in the Table of Contents.
+\tcblistof[\addsec]{deflist}{List of Definitions}
+\tcblistof[\addsec]{cptlist}{List of Concepts}
+\tcblistof[\addsec]{thmlist}{List of Theorems}
+\tcblistof[\addsec]{axlist}{List of Axioms}
+\tcblistof[\addsec]{corlist}{List of Corollaries} % Added the missing Corollaries list
 
 \clearpage
 % Set a nice gap between the two columns
 \setlength{\columnsep}{1cm}
 
 % Span the section title across both columns
-\begin{multicols}{2}[\section{List of Acronyms}]
+\begin{multicols}{2}[\addsec{List of Acronyms}] % Changed \section to \addsec here too
     \raggedright
     % Disable the default glossary title so it doesn't print twice
     \renewcommand{\glossarysection}[2][]{}
