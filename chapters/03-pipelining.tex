@@ -163,6 +163,7 @@ However, physical pipelining requires the insertion of intermediate pipeline reg
 \noindent This calculation beautifully illustrates the core trade-off of \gls{risc} pipelining: we accept hardware overhead (a \(1.2\,\text{ns}\) clock instead of \(1.0\,\text{ns}\)) and force faster instructions to pass through idle stages so that the datapath remains perfectly synchronized. In return, we achieve a massive overall throughput speedup of \(3.67\times\).
 
 \section{Hazards and Stalls}
+\label{sec:hazards}
 The presence of several instructions simultaneously active within the pipeline may lead to various types of dependencies which turn into \textbf{hazards}. These reduce overall performance by forcing the pipeline to \textbf{stall} (insert idle cycles, often called ``bubbles'') until the source of the hazard is resolved. Hazards are fundamentally divided into three categories:
 \begin{description}
     \item[Structural:] Arise from hardware resource conflicts when multiple instructions require the same functional unit simultaneously.

@@ -1,0 +1,608 @@
+\chapter{Branch Prediction}
+
+Before discussing branch prediction and exploring methods to reduce pipeline stalls, it is essential to formally define \glsxtrfull{ilp}.
+
+\begin{definition}{\glsfmtfull{ilp}}{ilp}
+    \glsxtrfull{ilp} refers to the capability of a \gls{cpu} to execute multiple operations or instructions simultaneously within a single clock cycle.
+\end{definition}
+
+How much parallelism can we actually exploit on a given architecture? From a theoretical standpoint, the upper bound of \gls{ilp} depends on two primary factors: the number of functional units available to operate in parallel, and the specific features of the pipeline. 
+
+On the practical side, however, the actual amount of exploitable parallelism depends heavily on the object code running on the processor and is strictly limited by pipeline hazards (\cref{sec:hazards}). 
+
+While superpipelining successfully reduces the clock cycle time (\(T_{\text{CLK}}\)), decreasing the \gls{cpi} requires more advanced architectural techniques. In particular:
+\begin{itemize}
+    \item \textbf{Larger Hardware Parallelism (Superscalarity):} Reduces the \(\text{CPI}_{\text{ideal}}\) and mitigates structural hazards.
+    \item \textbf{Dynamic Branch Prediction:} Reduces control stalls by guessing the outcome of branches before they are formally resolved.
+    \item \textbf{Dynamic Scheduling:} Reduces data hazard stalls by allowing instructions to execute out of order when their operands become available.
+    \item \textbf{Hardware Speculation:} Mitigates both data and control stalls by executing instructions before the processor is certain they are strictly needed.
+\end{itemize}
+
+\section{Reducing Control Stalls}
+
+In superscalar or superpipelined architectures, control dependencies are the most important limiting factor in exploiting \gls{ilp}. On average, the length of a \textit{basic block} is between 4 and 7 instructions; therefore, if control dependencies are not optimized, we can run at most 4 to 7 instructions in parallel. Theoretically, in a superscalar architecture, branch instructions occur \(N\) times faster. Furthermore, the impact of control stalls in \glspl{cpu} with a lower potential \gls{cpi} is significantly larger, as dictated by \cref{thm:amdahl-law}. Control stall penalties also grow considerably in longer pipelines. All of this means that effective branch prediction and branch elimination are strictly required to enable better exploitation of \gls{ilp}.
+
+\subsection{Loop Unrolling}
+
+A common software technique to eliminate branches and improve scheduling is loop unrolling. To understand its impact, let us first examine the base execution and scheduling of a simple loop:
+
+\begin{lstlisting}[language=C]
+for (i = 1000; i > 0; i = i - 1)
+    x[i] = x[i] + s;
+\end{lstlisting}
+
+\subsubsection*{Register Mapping and Pipeline Latencies}
+To translate this into assembly, we assume the following register mapping:
+\begin{itemize}
+    \item \texttt{R1}: Stores the pointer to the current array element.
+    \item \texttt{F0}: Stores the loaded array element, \texttt{x[i]}.
+    \item \texttt{F2}: Stores the constant scalar value, \texttt{s}.
+    \item \texttt{R2}: Stores the pointer to the beginning of the array (acting as the loop termination condition).
+\end{itemize}
+
+The execution timeline strictly depends on the pipeline's internal latency rules. For this architecture, we assume the following latencies (in clock cycles) between instruction types:
+
+\begin{table}[htpb]
+    \centering
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{l l c}
+        \textbf{Instruction producing result} & \textbf{Instruction using result} & \textbf{Latency in clock cycles} \\
+        \hline
+        FP ALU op & Another FP ALU op & 3 \\
+        FP ALU op & Store double & 2 \\
+        Load double & FP ALU op & 1 \\
+        Load double & Store double & 0 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection*{Unoptimized Loop Execution}
+A direct, unoptimized translation of the loop into assembly results in several hardware stalls due to data hazards. The execution of a single iteration takes 9 clock cycles:
+
+\begin{lstlisting}[language={[x86masm]Assembler}]
+Loop: L.D     F0, 0(R1)     ; Issued at CC 1. F0 = array element
+      stall                 ; CC 2 (Load to FP ALU latency is 1)
+      ADD.D   F4, F0, F2    ; Issued at CC 3. Add scalar in F2
+      stall                 ; CC 4 (FP ALU to Store latency is 2)
+      stall                 ; CC 5
+      S.D     F4, 0(R1)     ; Issued at CC 6. Store result
+      DADDUI  R1, R1, #-8   ; Issued at CC 7. Decrement pointer (8 bytes/DW)
+      stall                 ; CC 8 (Branch condition depends on R1)
+      BNE     R1, R2, Loop  ; Issued at CC 9. Branch if R1 != R2
+\end{lstlisting}
+
+\subsubsection*{Scheduled Loop Execution}
+By rearranging the instructions, the compiler can hide some of the latency stalls. We can move the pointer decrement (\texttt{DADDUI}) earlier in the loop, right after the load. Because \texttt{R1} is decremented \textit{before} the store instruction executes, the memory offset for the store must be adjusted from \texttt{0(R1)} to \texttt{8(R1)} to point to the correct address:
+
+\begin{lstlisting}[language={[x86masm]Assembler}]
+Loop: L.D     F0, 0(R1)     ; Issued at CC 1
+      DADDUI  R1, R1, #-8   ; Issued at CC 2. Decrement early
+      ADD.D   F4, F0, F2    ; Issued at CC 3. F0 is ready
+      stall                 ; CC 4 
+      stall                 ; CC 5 
+      S.D     F4, 8(R1)     ; Issued at CC 6. Note the offset is now 8!
+      BNE     R1, R2, Loop  ; Issued at CC 7. Branch logic is ready
+\end{lstlisting}
+
+Rearranging the instructions reduces the execution time per iteration to just 7 clock cycles, yielding a performance gain of \(2/9 = 22.2\%\). However, it is important to note that even in this optimized schedule, 4 clock cycles out of the 7 are consumed purely by loop overhead and unavoidable stalls.
+
+To overcome the limitation of having a high ratio of overhead instructions per iteration, we need more operations relative to the number of overhead instructions. 
+
+This is achieved through \textbf{loop unrolling}. Loop unrolling relies on the following core principles:
+\begin{itemize}
+    \item Replicate the loop body multiple times, adjusting the termination code accordingly.
+    \item This directly reduces the relative impact of the loop overhead.
+    \item It can significantly improve the scheduling of operations, since the compiler now has a larger pool of independent instructions to reorder.
+    \item When replicating the body, the compiler must not use the same registers across unrolled iterations, as doing so would create false dependencies that could prevent scheduling the loop appropriately.
+\end{itemize}
+
+\subsubsection*{Unrolling Without Scheduling}
+Let us unroll our previous loop 4 times. To do this, we merge the pointer update instructions (\texttt{DADDUI}) into a single decrement of 32 bytes at the end (since 4 elements \(\times\) 8 bytes = 32 bytes) and drop the unnecessary intermediate \texttt{BNE} operations. 
+
+We must also use different \gls{cpu} registers for each unrolled load (\texttt{F0, F6, F10, F14}) and calculate the correct negative offsets relative to the original pointer:
+
+\begin{lstlisting}[language={[x86masm]Assembler}]
+Loop: L.D     F0, 0(R1)
+      ADD.D   F4, F0, F2
+      S.D     F4, 0(R1)       ; drop DADDUI & BNE
+      L.D     F6, -8(R1)
+      ADD.D   F8, F6, F2
+      S.D     F8, -8(R1)      ; drop DADDUI & BNE
+      L.D     F10, -16(R1)
+      ADD.D   F12, F10, F2
+      S.D     F12, -16(R1)    ; drop DADDUI & BNE
+      L.D     F14, -24(R1)
+      ADD.D   F16, F14, F2
+      S.D     F16, -24(R1)
+      DADDUI  R1, R1, #-32    ; merged pointer update
+      BNE     R1, R2, Loop
+\end{lstlisting}
+
+Even with the pipeline stalling repeatedly between each \texttt{L.D}, \texttt{ADD.D}, and \texttt{S.D} instruction, this unrolled (but unscheduled) execution runs in 27 clock cycles for the 4 original iterations. This reduces the execution time to 6.75 clock cycles per iteration without any scheduling.
+
+\subsubsection*{Unrolling With Scheduling}
+To fully exploit the available parallelism, we can reschedule the instructions to avoid stalls entirely. Because the unrolled loop uses different registers, all the \texttt{L.D} instructions are independent, as are all the \texttt{ADD.D} instructions. We can group them together to hide the hardware latencies.
+
+Additionally, we can move the \texttt{DADDUI} instruction up, right before the final two stores. Because the pointer \texttt{R1} is decremented by 32 early, the final two \texttt{S.D} instructions must compensate by adding 32 to their original negative offsets (e.g., \(-16 + 32 = 16\) and \(-24 + 32 = 8\)):
+
+\begin{lstlisting}[language={[x86masm]Assembler}]
+Loop: L.D     F0, 0(R1)
+      L.D     F6, -8(R1)
+      L.D     F10, -16(R1)
+      L.D     F14, -24(R1)
+      ADD.D   F4, F0, F2
+      ADD.D   F8, F6, F2
+      ADD.D   F12, F10, F2
+      ADD.D   F16, F14, F2
+      S.D     F4, 0(R1)
+      S.D     F8, -8(R1)
+      DADDUI  R1, R1, #-32    ; Pointer updated early
+      S.D     F12, 16(R1)     ; Offset adjusted due to early DADDUI
+      S.D     F16, 8(R1)      ; Offset adjusted due to early DADDUI
+      BNE     R1, R2, Loop
+\end{lstlisting}
+
+With this optimized schedule, the execution runs in exactly 14 clock cycles for the 4 original iterations. This represents a performance gain of \((27-14)/27 = 48\%\) by having more parallelism available. Ultimately, the cost is drastically reduced to just 3.5 clock cycles per iteration with scheduling.
+
+\subsubsection{Limitations}
+
+While loop unrolling effectively reduces the relative overhead of loop control instructions, it comes with several inherent limitations:
+\begin{itemize}
+    \item \textbf{Diminishing Returns:} The more a loop is unrolled, the smaller the relative loop overhead becomes. Consequently, the marginal speedup gained from further unrolling rapidly decreases, behaving in accordance with Amdahl's Law (\cref{thm:amdahl-law}).
+    \item \textbf{Code Size Expansion:} Unrolling inherently increases the overall code size and leads to code duplication. This larger binary footprint can negatively impact the instruction cache.
+    \item \textbf{Register Pressure:} To successfully schedule unrolled loops without introducing false dependencies, a distinct set of registers must be used for each replicated iteration. If the number of required registers exceeds the \gls{cpu}'s available hardware registers, the compiler is forced to spill variables to the stack (memory). The latency introduced by these extra memory loads and stores can easily negate the performance benefits of unrolling.
+\end{itemize}
+
+\subsection{Static Branch Prediction}
+
+As established, the ability to successfully predict branch outcomes significantly affects pipeline performance. The most basic architectural approaches use fixed, static predictions:
+\begin{itemize}
+    \item \textbf{Predict Taken:} The hardware assumes every branch will be taken. Under this strategy, the misprediction rate is exactly equal to the frequency of untaken branches. Across standard SPEC benchmarks, this averages about 34\%, though it varies widely depending on the specific program (ranging from 9\% to 59\%).
+    \item \textbf{Predict Not Taken:} The hardware assumes no branch will be taken, continuing to fetch the sequential instruction stream until proven otherwise.
+\end{itemize}
+
+\subsubsection*{Profiling-Based Static Prediction}
+A more refined static approach relies on software profiling from earlier execution runs. Because individual branches tend to exhibit highly biased behavior (i.e., a specific branch is usually almost always taken or almost always untaken), the compiler can analyze these tendencies. If a branch evaluates as mostly taken during profiling runs, it is statically encoded to be predicted as taken during actual execution, and vice versa.
+
+\subsection{Dynamic Branch Prediction}
+
+Unlike static methods, \textbf{dynamic branch prediction} utilizes information available exclusively at runtime. Because a program's behavior can shift between different phases of execution, a dynamic predictor adapts by using the previous outcome (or sequence of outcomes) of a specific branch to predict its next execution. The prediction is no longer hardcoded; it fluidly changes alongside the program's dynamics.
+
+\subsubsection{The 1-Bit Predictor Finite State Machine}
+The basic 1-bit predictor operates using a simple 2-state Finite State Machine (\gls{fsm}). The predictor changes its guess immediately upon observing a misprediction.
+
+\begin{figure}[htpb]
+    \centering
+    \begin{tikzpicture}[->, >=Stealth, auto, node distance=5cm, semithick]
+        \node[state, fill=gray!10] (0) [align=center] {\textbf{0} \\ Predict \\ Not Taken};
+        \node[state, fill=gray!10] (1) [right=of 0, align=center] {\textbf{1} \\ Predict \\ Taken};
+        
+        \path (0) edge [loop left] node {NT} (0)
+              (0) edge [bend left] node {T} (1)
+              (1) edge [bend left] node {NT} (0)
+              (1) edge [loop right] node {T} (1);
+    \end{tikzpicture}
+    \caption{1-Bit Predictor FSM}
+    \label{fig:1bit-fsm}
+\end{figure}
+
+The primary \textbf{advantage} of this approach is that it is an extremely cheap hardware solution. However, its main \textbf{disadvantage} is aliasing (or collisions): because the \gls{bht} is indexed using only the lower-order bits of the branch instruction's address, the prediction could be incorrectly based on the result of a completely different branch that happens to map to the same index.
+
+\subsubsection{Dynamic Predictor: Adding a Tag}
+To resolve the aliasing issue, we can add a tag to the Branch History Table. In this configuration, the \gls{bht} (sometimes called a prediction buffer) acts as a small, direct-mapped cache. 
+
+When a branch instruction is fetched, its address is split. The lower \(k\) bits index the \gls{bht}, while the upper \(B-k\) bits are used as a tag. The predictor checks if the stored tag matches the current branch's tag and if the entry is valid. Only then is the history bit used to make a prediction.
+
+\begin{figure}[htpb]
+    \centering
+    \begin{tikzpicture}[
+        >=Stealth,
+        font=\sffamily,
+        thick,
+        box/.style={draw, minimum height=0.8cm, align=center},
+    ]
+        
+        % 1. PC Register (Top)
+        \node[box, fill=blue!10, minimum width=3.4cm, outer sep=0, anchor=south east] (pctag) at (0, 3) {Tag ($B - k$ bits)};
+        \node[box, fill=blue!10, minimum width=3.4cm, outer sep=0, anchor=south west] (pcidx) at (0, 3) {Index ($k$ bits)};
+        
+        % 2. BHT Background and Borders
+        \filldraw[fill=gray!10, draw=black] (-1.1, -0.9) rectangle (4.5, 1.5);
+        \draw (-1.1, 1.0) -- (4.5, 1.0); % Below Title
+        \draw (-1.1, 0.6) -- (4.5, 0.6); % Below Headers
+        \draw (-1.1, 0.1) -- (4.5, 0.1); % Row 1 divider
+        \draw (-1.1, -0.4) -- (4.5, -0.4); % Row 2 divider
+        
+        % 3. BHT Content (Text)
+        \node[anchor=center] at (1.7, 1.25) {Branch History Table};
+        \node[anchor=center] at (-0.1, 0.8) {Tag};
+        \node[anchor=center] at (1.7, 0.8) {Val};
+        \node[anchor=center] at (3.5, 0.8) {Hist};
+        
+        % 4. Logic Components
+        \node[draw, circle, fill=orange!20, minimum size=0.9cm, inner sep=0pt] (comp) at (-2.8, -0.15) {\textbf{= ?}};
+        \node[box, fill=yellow!20, minimum width=1.2cm] (and) at (1.7, -1.8) {AND};
+        \node[box, fill=green!10, minimum width=1.8cm, minimum height=1cm] (pred) at (-2.8, -1.8) {Prediction \\ (T / NT)};
+        
+        % 5. Connections / Routing
+        
+        % PC Tag to Comparator
+        \draw[->] (-1.7, 3.0) -- (-1.7, 2.0) -| (comp.north);
+        
+        % PC Index to BHT
+        \draw[->] (1.7, 3.0) -- (1.7, 1.5) node[midway, right] {Index};
+        
+        % BHT Tag to Comparator (exiting from the left side of the BHT)
+        \draw[->] (-1.1, -0.15) -- (comp.east);
+        
+        % BHT Val to AND (exiting from the bottom of the BHT)
+        \draw[->] (1.7, -0.9) -- (and.north);
+        
+        % BHT Hist to AND (exiting from the bottom, routing left into AND)
+        \draw[->] (3.5, -0.9) |- (and.east);
+        
+        % Comparator to Prediction
+        \draw[->] (comp.south) -- (pred.north);
+        
+        % AND to Prediction
+        \draw[->] (and.west) -- (pred.east);
+        
+    \end{tikzpicture}
+    \caption{Memory organization of a Tagged Branch History Table}
+    \label{fig:tagged-bht}
+\end{figure}
+
+\subsubsection{1-Bit Predictor Performance (The Loop Problem)}
+The main behavioral drawback of a 1-bit predictor is exposed during loops. For any standard loop, the predictor mispredicts \textbf{twice}: once at the very beginning and once at the end. 
+
+Consider a loop executing 10 times:
+\begin{itemize}
+    \item \textbf{\(1^{\text{st}}\) execution of the loop:} 
+    \begin{itemize}
+        \item \(1^{\text{st}}\) iteration: Predicts NT (wrong). Updates to T.
+        \item \(2^{\text{nd}}\) to \(9^{\text{th}}\) iterations: Predicts T (right).
+        \item \(10^{\text{th}}\) iteration: Predicts T (wrong, since the loop exits). Updates to NT.
+    \end{itemize}
+    \item \textbf{\(2^{\text{nd}}\) execution of the loop:} 
+    \begin{itemize}
+        \item Because the state was reset to NT at the end of the last run, the \(1^{\text{st}}\) iteration again predicts NT (wrong).
+        \item The \(10^{\text{th}}\) iteration again predicts T (wrong). 
+    \end{itemize}
+\end{itemize}
+
+\subsection{The 2-Bit (Bimodal) Predictor}
+To improve prediction accuracy and fix the double-misprediction loop problem, we can expand the history field of the \gls{bht} to 2 bits. 
+
+This introduces \textbf{hysteresis} into the decision-making process: the prediction is only flipped if the hardware observes \textit{two consecutive mispredictions}. The \gls{fsm} for a 2-bit predictor consists of 4 states:
+
+\begin{figure}[htpb]
+    \centering
+    \begin{tikzpicture}[
+        >=Stealth,
+        node distance=2.5cm and 3.5cm,
+        thick,
+        % Custom styles for the nodes and text to match the slide perfectly
+        statenode/.style={ellipse, draw=black, minimum width=2.8cm, minimum height=1.2cm, font=\Large\sffamily},
+        labeltext/.style={text=blue!80!black, font=\large\sffamily\bfseries, align=center},
+        edgetext/.style={text=blue!80!black, font=\large\sffamily\bfseries}
+    ]
+        
+        % 1. Define the Nodes
+        \node[statenode, fill=yellow] (11) {11};
+        \node[statenode, fill=yellow, right=of 11] (10) {10};
+        \node[statenode, fill=blue!80, text=white, below=of 11] (01) {01};
+        \node[statenode, fill=blue!80, text=white, right=of 01] (00) {00};
+
+        % 2. External Labels (Predict Taken / Predict Not Taken)
+        \node[labeltext, left=0.3cm of 11] {Predict Taken};
+        \node[labeltext, right=0.3cm of 10] {Predict Taken};
+        
+        \node[labeltext, left=0.3cm of 01] {Predict Not \\ Taken};
+        \node[labeltext, right=0.3cm of 00] {Predict Not \\ Taken};
+
+        % 3. Draw the Edges (Parallel lines achieved via yshift/xshift)
+        \path[->, thick]
+            % Top row parallel arrows
+            ([yshift=1.5mm]11.east) edge node[edgetext, above] {NT} ([yshift=1.5mm]10.west)
+            ([yshift=-1.5mm]10.west) edge node[edgetext, below] {T} ([yshift=-1.5mm]11.east)
+            
+            % Bottom row parallel arrows
+            ([yshift=1.5mm]01.east) edge node[edgetext, above] {NT} ([yshift=1.5mm]00.west)
+            ([yshift=-1.5mm]00.west) edge node[edgetext, below] {T} ([yshift=-1.5mm]01.east)
+            
+            % Vertical transitions skipping the intermediate states
+            (10.south) edge node[edgetext, right] {NT} (00.north)
+            (01.north) edge node[edgetext, left] {T} (11.south)
+            
+            % Loops
+            (11) edge [loop above, min distance=12mm, in=60, out=120] node[edgetext, above] {T} (11)
+            (00) edge [loop below, min distance=12mm, in=240, out=300] node[edgetext, below] {NT} (00);
+            
+    \end{tikzpicture}
+    \caption{2-Bit Bimodal Predictor FSM (Hysteresis Topology)}
+    \label{fig:2bit-fsm}
+\end{figure}
+
+Revisiting the previous 10-iteration loop using a 2-bit predictor:
+\begin{itemize}
+    \item \textbf{\(1^{\text{st}}\) execution:} The \(1^{\text{st}}\) iteration predicts T (right). The \(10^{\text{th}}\) iteration predicts T (wrong), causing the state to degrade from \textbf{11} (Strong T) to \textbf{10} (Weak T).
+    \item \textbf{\(2^{\text{nd}}\) execution:} The \(1^{\text{st}}\) iteration begins in state \textbf{10} (Weak T). It predicts T (right) and promotes the state back to \textbf{11}. Only the final \(10^{\text{th}}\) iteration predicts T (wrong).
+\end{itemize}
+By adding hysteresis, the 2-bit predictor successfully drops the misprediction rate on standard loops from two mispredictions per execution down to just one.
+
+\subsection{Prediction Accuracy and \texorpdfstring{\(n\)}{n}-Bit Predictors}
+
+Ultimately, prediction accuracy is heavily reliant on the software application's characteristics. For instance, integer benchmarks tend to have complex, data-driven branches that are far less predictable compared to floating-point (FP) benchmarks, which often feature highly regular geometric or scientific loops.
+
+Interestingly, prediction accuracy is not significantly improved by simply increasing the size of the prediction buffers. When standard dimensional scaling yields diminishing returns, completely changing the underlying prediction mechanism (e.g., using correlating or tournament predictors) is required to achieve substantial results.
+
+\subsubsection*{The \(n\)-Bit Generalization}
+The bimodal mechanism can be generalized into an \(n\)-bit predictor, where the history field of each \gls{bht} entry consists of an \(n\)-bit saturating counter. 
+\begin{itemize}
+    \item The counter is incremented by 1 (up to a maximum of \(2^n - 1\)) on a taken branch.
+    \item The counter is decremented by 1 (down to a minimum of 0) on an untaken branch.
+    \item If the counter value is greater than or equal to \(2^{n-1}\), the branch is predicted as taken; otherwise, it is predicted as untaken.
+\end{itemize}
+Extensive studies on \(n\)-bit predictors have demonstrated that standard 2-bit predictors deliver nearly comparable performance to larger \(n\)-bit counters. Because they offer the best balance of hardware efficiency and predictive accuracy, 2-bit branch predictors are widely preferred in most modern systems over larger, more generalized \(n\)-bit variations.
+
+\subsection{Correlating (2-Level) Predictors}
+
+While local predictors (like the bimodal 2-bit counter) track the history of a specific branch in isolation, they often fail when the outcome of one branch depends heavily on the execution path that led to it. 
+
+\subsubsection{The Problem with 1-Bit Predictors on Correlated Branches}
+Consider the following small piece of code where a variable \texttt{d} can take only the values 0, 1, or 2:
+\begin{lstlisting}[language=C]
+if (d == 0) // Branch b1
+    d = 1;
+if (d == 1) // Branch b2
+\end{lstlisting}
+
+The execution of branch \texttt{b2} is strictly correlated with the outcome of branch \texttt{b1}. The possible execution sequences are as follows:
+
+\begin{table}[htpb]
+    \centering
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{c c c c c c}
+        \textbf{Initial value of \(d\)} & \textbf{\(d==0\)?} & \textbf{b1 action} & \textbf{Value of \(d\) before b2} & \textbf{\(d==1\)?} & \textbf{b2 action} \\
+        \hline
+        0 & yes & not taken & 1 & yes & not taken \\
+        1 & no  & taken     & 1 & yes & not taken \\
+        2 & no  & taken     & 2 & no  & taken \\
+        \hline
+    \end{tabular}
+    \caption{Possible execution sequences for the correlated branches.}
+    \label{tab:correlated-execution}
+\end{table}
+
+If we assume \texttt{d} toggles strictly between 2 and 0, and we use a simple 1-bit predictor initialized to NT (Not Taken), the predictor will always mispredict both branches:
+
+\begin{table}[htpb]
+    \centering
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{c c c c | c c c}
+        \textbf{\(d=\)?} & \textbf{b1 pred.} & \textbf{b1 action} & \textbf{New b1 pred.} & \textbf{b2 pred.} & \textbf{b2 action} & \textbf{New b2 pred.} \\
+        \hline
+        2 & NT & T  & T  & NT & T  & T \\
+        0 & T  & NT & NT & T  & NT & NT \\
+        2 & NT & T  & T  & NT & T  & T \\
+        0 & T  & NT & NT & T  & NT & NT \\
+        \hline
+    \end{tabular}
+    \caption{1-bit predictor failure on an alternating sequence.}
+    \label{tab:1bit-failure}
+\end{table}
+
+Because the predictor is always exactly one step out of phase with the alternating sequence, it mispredicts 100\% of the time!
+
+\subsubsection{The (1, 1) Predictor}
+To solve this, we can assume that for every entry of the Branch History Table (\gls{bht}) we have \textbf{two} plain 1-bit predictors:
+\begin{itemize}
+    \item One used when the last executed branch globally was \textbf{not taken}.
+    \item The other used when the last executed branch globally was \textbf{taken}.
+\end{itemize}
+
+\begin{figure}[htpb]
+    \centering
+    \begin{tikzpicture}[
+        >=Stealth,
+        font=\sffamily,
+        thick,
+        box/.style={draw, minimum height=0.7cm, align=center},
+    ]
+        
+        % 1. PC Register (Left)
+        \node[box, fill=teal!20, minimum width=3.5cm, outer sep=0, anchor=south east] (pctag) at (-1, 2) {PC pointing to a branch};
+        \node[box, fill=teal!10, minimum width=1.5cm, outer sep=0, anchor=south west] (pcidx) at (-1, 2) {};
+        
+        \draw[->] (-1.5, 2) -- (-1.5, -0.5) node[near start, left] {B-k bits (tag)} -| (-0.4, -0.5);
+        \draw[->] (0, 2) |- (0, 0.7) node[near end, below] {k bits (index)} -- (1.5, 0.7);
+
+        % 2. BHT Background and Highlighted Rows
+        \filldraw[fill=teal!20, draw=black] (1.5, -0.5) rectangle (5.5, 1.5);
+        
+        % Aligned highlighted rows (Grid steps are -0.5, -0.1, 0.3, 0.7, 1.1, 1.5)
+        \filldraw[fill=teal!40, draw=black] (1.5, 0.7) rectangle (5.5, 1.1);
+        \filldraw[fill=teal!40, draw=black] (1.5, -0.1) rectangle (5.5, 0.3);
+        
+        % Draw horizontal row dividers only (no vertical lines to ruin text)
+        \foreach \y in {-0.1, 0.3, 0.7, 1.1} {
+            \draw (1.5, \y) -- (5.5, \y);
+        }
+
+        % 3. Predictor Bits Array
+        % Predictor 1 (Not Taken Global History)
+        \filldraw[fill=blue!10, draw=black] (5.8, -0.5) rectangle (6.3, 1.5);
+        \foreach \y in {-0.1, 0.3, 0.7, 1.1} {
+            \draw (5.8, \y) -- (6.3, \y);
+        }
+        
+        % Predictor 2 (Taken Global History)
+        \filldraw[fill=blue!10, draw=black] (6.5, -0.5) rectangle (7.0, 1.5);
+        \foreach \y in {-0.1, 0.3, 0.7, 1.1} {
+            \draw (6.5, \y) -- (7.0, \y);
+        }
+
+        % 4. Text and Data (Drawn last so it sits perfectly on top)
+        \node[anchor=center] at (3.5, 1.3) {Tag + validity bit};
+        \node[anchor=center, font=\sffamily\scriptsize] at (3.5, 0.9) {(B-k) MSB of the branch instr address};
+        \node[anchor=center, font=\sffamily\scriptsize] at (3.5, 0.1) {0x00011};
+
+        \node[anchor=center] at (6.05, 0.9) {0};
+        \node[anchor=center] at (6.05, 0.1) {1};
+
+        \node[anchor=center] at (6.75, 0.9) {1};
+        \node[anchor=center] at (6.75, 0.1) {0};
+
+        % 5. Logic Components
+        \node[draw, circle, fill=white, minimum size=0.7cm, inner sep=0pt] (comp) at (3.5, -1.2) {\textbf{= ?}};
+        \draw[->] (3.5, -0.5) -- (comp.north);
+        \draw[->] (-0.4, -0.5) |- (comp.west);
+        \draw[->] (comp.east) -- (4.5, -1.2);
+        
+        % 6. Annotations
+        \node[text=red, align=center, font=\sffamily\scriptsize, text width=3cm] at (7.0, 2.3) {Use this predictor \\ when last branch globally \\ was \textbf{taken}};
+        \draw[->, red, thick] (6.75, 1.8) -- (6.75, 1.6);
+
+        \node[text=red, align=center, font=\sffamily\scriptsize, text width=3cm] at (6.2, -1.5) {Use this predictor \\ when last branch globally \\ was \textbf{not taken}};
+        \draw[->, red, thick] (6.05, -0.9) -- (6.05, -0.6);
+
+        % Dashed bounding box
+        \draw[dashed, yellow!90!orange, thick] (5.6, -1.9) rectangle (7.5, 2.8);
+        
+    \end{tikzpicture}
+    \caption{Memory organization of a (1, 1) Correlating Predictor}
+    \label{fig:1-1-predictor}
+\end{figure}
+With two bits per entry, there are 4 possible prediction values:
+
+\begin{table}[htpb]
+    \centering
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{c c c}
+        \textbf{Prediction bits} & \textbf{Prediction if last branch not taken} & \textbf{Prediction if last branch taken} \\
+        \hline
+        NT/NT & not taken & not taken \\
+        NT/T  & not taken & taken \\
+        T/NT  & taken     & not taken \\
+        T/T   & taken     & taken \\
+        \hline
+    \end{tabular}
+    \caption{State encodings for the (1, 1) predictor.}
+    \label{tab:1-1-states}
+\end{table}
+
+If we apply this predictor to the same alternating sequence (\texttt{d = 2, 0, 2...}), we see that the predictor successfully learns the pattern. In the table below, the currently selected predictor (based on global history) is highlighted in \textbf{bold}:
+
+\begin{table}[htpb]
+    \centering
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{c c c c | c c c}
+        \textbf{\(d=\)?} & \textbf{b1 pred.} & \textbf{b1 action} & \textbf{New b1 pred.} & \textbf{b2 pred.} & \textbf{b2 action} & \textbf{New b2 pred.} \\
+        \hline
+        2 & \textbf{NT}/NT & T  & \textbf{T}/NT  & \textbf{NT}/NT & T  & \textbf{T}/NT \\
+        0 & T/\textbf{NT}  & NT & T/\textbf{NT}  & T/\textbf{NT}  & NT & T/\textbf{NT} \\
+        2 & \textbf{T}/NT  & T  & \textbf{T}/NT  & \textbf{T}/NT  & T  & \textbf{T}/NT \\
+        0 & T/\textbf{NT}  & NT & T/\textbf{NT}  & T/\textbf{NT}  & NT & T/\textbf{NT} \\
+        \hline
+    \end{tabular}
+    \caption{(1, 1) Predictor successfully tracking correlated branches. Only the first predictions (first row) are wrong!}
+    \label{tab:1-1-success}
+\end{table}
+
+\subsection{Tournament (Multilevel) Predictors}
+
+Depending on the specific nature of a branch, a local predictor may perform better than a correlating predictor, or vice versa. A \textbf{tournament (or multilevel) predictor} aims to get the best of both worlds by running multiple predictors for each branch and dynamically selecting the one that currently provides the highest accuracy.
+
+Tournament predictors are highly effective at medium buffer sizes (8 KB to 32 KB) and make excellent use of a very large number of prediction bits. They typically pair a local \(n\)-bit predictor with a global \((m, n)\) correlating predictor, using an algorithm (often a state machine) to arbitrate between them.
+
+\subsubsection*{The Selection Mechanism}
+The hardware runs both predictors simultaneously and monitors their outcomes. The selection logic generally follows these rules:
+\begin{itemize}
+    \item If the predictor currently in use predicts correctly, keep using it.
+    \item If both predict incorrectly (or both predict correctly), keep using the current one.
+    \item If the predictor in use predicts incorrectly, and the alternative predicts correctly, switch the preferred predictor.
+\end{itemize}
+
+To prevent the selector from thrashing wildly due to a single anomaly, hardware implementations add hysteresis using a 2-bit Finite State Machine (\gls{fsm}). 
+
+\begin{figure}[htpb]
+    \centering
+    \begin{tikzpicture}[
+        >=Stealth,
+        node distance=2cm and 4.5cm,
+        thick,
+        statenode/.style={circle, draw=black, minimum size=2.4cm, align=center, font=\sffamily\small}
+    ]
+        % Nodes arranged in a 'C' shaped hysteresis square
+        \node[statenode, fill=cyan!20] (SP1) {\textbf{Strong} \\ \textbf{Pred 1}};
+        \node[statenode, fill=cyan!5, right=of SP1] (WP1) {\textbf{Weak} \\ \textbf{Pred 1}};
+        \node[statenode, fill=magenta!5, below=of WP1] (WP2) {\textbf{Weak} \\ \textbf{Pred 2}};
+        \node[statenode, fill=magenta!20, left=of WP2] (SP2) {\textbf{Strong} \\ \textbf{Pred 2}};
+
+        % Edges
+        \path[->]
+            % SP1 <-> WP1
+            ([yshift=1.5mm]SP1.east) edge node[above, font=\sffamily\scriptsize] {\texttt{0/1}} ([yshift=1.5mm]WP1.west)
+            ([yshift=-1.5mm]WP1.west) edge node[below, font=\sffamily\scriptsize] {\texttt{1/0}} ([yshift=-1.5mm]SP1.east)
+            
+            % WP1 <-> WP2
+            ([xshift=1.5mm]WP1.south) edge node[right, font=\sffamily\scriptsize] {\texttt{0/1}} ([xshift=1.5mm]WP2.north)
+            ([xshift=-1.5mm]WP2.north) edge node[left, font=\sffamily\scriptsize] {\texttt{1/0}} ([xshift=-1.5mm]WP1.south)
+            
+            % WP2 <-> SP2
+            ([yshift=1.5mm]WP2.west) edge node[above, font=\sffamily\scriptsize] {\texttt{0/1}} ([yshift=1.5mm]SP2.east)
+            ([yshift=-1.5mm]SP2.east) edge node[below, font=\sffamily\scriptsize] {\texttt{1/0}} ([yshift=-1.5mm]WP2.west)
+            
+            % Self-Loops for Strong States
+            (SP1) edge [loop left, min distance=12mm, in=150, out=210] node[left, font=\sffamily\scriptsize] {\texttt{1/0}} (SP1)
+            (SP2) edge [loop left, min distance=12mm, in=150, out=210] node[left, font=\sffamily\scriptsize] {\texttt{0/1}} (SP2);
+    \end{tikzpicture}
+    \caption{2-Bit Tournament Selector FSM. Transitions are dictated by the correctness of each predictor, denoted as \texttt{Pred\_1 / Pred\_2} (where \texttt{1} = correct prediction, \texttt{0} = wrong prediction). If both predictors are correct (\texttt{1/1}) or both are wrong (\texttt{0/0}), the state remains unchanged.}
+    \label{fig:tournament-fsm}
+\end{figure}
+
+\subsection{Comparing Prediction Accuracy}
+
+When analyzing the performance of these architectural structures across varying workloads, a clear hierarchy emerges:
+\begin{enumerate}
+    \item \textbf{Correlating predictors} consistently outperform local 2-bit bimodal predictors, as they can capture complex control-flow dependencies that local predictors ignore.
+    \item \textbf{Tournament predictors} provide slightly better results than correlating predictors alone, as they can dynamically fall back to local history when global history introduces unnecessary noise.
+    \item \textbf{Asymptotic Plateaus:} For all modern predictor types, performance tends to asymptote to a constant value as the prediction table size grows. Beyond a certain threshold (typically a few tens of kilobytes), capacity misses are virtually eliminated, and any remaining mispredictions are due to fundamental algorithmic limits rather than a lack of hardware storage.
+\end{enumerate}
+
+\subsection{The Impact of Accuracy on Parallelism}
+
+The better the prediction accuracy, the larger the potential number of instructions that can be executed in parallel in a superscalar architecture. The inherent predictability of an application heavily dictates this success. 
+
+The branch behavior of floating-point programs is generally much simpler than that of other programs, as they contain fewer branches and are far more predictable. In contrast, integer programs feature highly erratic control flow; for all integer programs, the performance difference between having perfect branch prediction versus using even an advanced selective (tournament) predictor is dramatic.
+
+\section{Reducing the Branch Penalty: The Branch Target Buffer}
+
+In a high-performance pipeline (especially in superscalar \glspl{cpu}), predicting branches accurately is not enough: we also need to explicitly reduce the branch penalty. 
+
+For our standard 5-stage pipeline, to completely avoid stalls, we should know from what address to fetch by the end of the Instruction Fetch (IF) stage. This means the hardware must know whether the as-yet-undecoded instruction is a branch and, if so, what the next \gls{pc} is before decoding even begins.
+
+\begin{concept}{\glsfmtfull{btb}}{btb-def}
+    The \glsxtrfull{btb} solves the fetch delay problem by storing not only the prediction (like a standard \gls{bht}) but also the predicted address for the next instruction to be executed.
+\end{concept}
+
+\subsection{Instruction Handling with a \glsfmtshort{btb}}
+
+The \gls{btb} is accessed during the IF stage using the address of the currently fetched instruction to index the buffer. 
+
+\begin{itemize}
+    \item \textbf{BTB Hit (Predicted Taken):} If the \gls{pc} of an instruction is found in the \gls{btb}, then the instruction must be a predicted taken branch; thus, fetching immediately begins from the predicted \gls{pc}. 
+    \item \textbf{Correct Prediction:} If the instruction is a branch, is found, and is correctly predicted, then execution proceeds with no delays.
+    \item \textbf{False Hit (Misprediction):} If the entry is found, but the instruction turns out not to be a taken branch, it is removed from the buffer.
+    \item \textbf{BTB Miss (Resolved as Taken):} If the entry is not found and it subsequently turns out to be a taken branch, it is entered in the \gls{btb} along with the Branch Target Address (BTA), which becomes known at the end of the Instruction Decode (ID) stage.
+\end{itemize}
+
+As an architectural optimization, we only need to store the predicted-taken branches in the \gls{btb}, since an untaken branch follows the same strategy (fetch the next sequential instruction) as a standard non-branch instruction. However, complications arise when we are using a two-bit predictor, since this requires that we store information for both taken and untaken branches to track the state machine.
+
+When a branch prediction entry is found in the \gls{btb} and is correct, the delay penalty is strictly zero. Otherwise, a misprediction or a missing entry results in a penalty of at least two clock cycles. In practice, this penalty could be even larger, since the branch-target buffer hardware must be updated.
+
+\section{Summary}
+
+As modern architectures strive to exploit \gls{ilp}, the more parallelism we have, the more instructions we need to keep the hardware busy. To expose a potentially large number of instructions, processors must effectively "look through" branches. 
+
+Achieving this requires highly accurate branch prediction paired with mechanisms (like the \gls{btb}) to limit the misprediction penalty. Today, multi-level (tournament) predictors are standardly used to achieve the best performance. Ultimately, robust dynamic branch prediction is the essential foundation for speculative execution, an advanced technique explored later in this course.
