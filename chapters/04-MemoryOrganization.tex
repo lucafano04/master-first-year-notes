@@ -51,7 +51,7 @@ These solutions require a completely different approach based on their specific 
 Embedded architectures usually run a single application alongside a very small, lightweight \gls{os} (or no \gls{os} at all). For these reasons, their main memory is much smaller, and traditional spinning disk storage is largely unnecessary.
 
 \vspace{1em}
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \renewcommand{\arraystretch}{1.4}
     \resizebox{\textwidth}{!}{%
@@ -357,7 +357,7 @@ When reading from the cell, this charge is shared with the bit-line. Because the
 
 A read operation in a \gls{dram} cell is naturally destructive. Reading the data requires a full cycle consisting of a bit-line pre-charge, the actual read (charge sharing), and a mandatory write-back to restore the destroyed content. Because of this complex, multi-step access cycle and the need for periodic refreshes, \gls{dram} is significantly slower than \gls{sram}.
 
-\begin{figure}[h]
+\begin{figure}[htbp]
     \centering
     \begin{tikzpicture}[>=stealth, thick]
         % Word Line (WL)
