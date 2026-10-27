@@ -25,7 +25,7 @@ fclose(f);
 \end{lstlisting}
 If \texttt{szFilename} is invalid (e.g., manipulated by an attacker), \texttt{f} will be \texttt{NULL}. If the program proceeds to use this null pointer for file operations, the function will crash. To fix this, the pointer must be validated (\texttt{if (f == NULL)}), and the error should be reported to the caller, where it is supposed to be handled properly.
 
-\subsection{Misunderstanding \gls{api} Error Mechanisms (C++)}
+\subsection{Misunderstanding \glsfmtshort{api} Error Mechanisms (C++)}
 Developers frequently mishandle exceptions by misunderstanding the underlying library's documentation. 
 
 \textbf{Masked Exceptions:}
@@ -55,7 +55,7 @@ To ensure robust security posture during error events, developers must:
     \item Filter error messages provided to users.
 \end{itemize}
 
-\section{Real-World Impact (\glspl{cve})}
+\section{Real-World Impact (\glsfmtshortpl{cve})}
 Improper error handling leads to significant real-world vulnerabilities:
 \begin{itemize}
     \item \textbf{CVE-2018-1000083:} Ajenti version 2 contains an Improper Error Handling vulnerability in the Login \gls{json} request. By sending a malformed \gls{json}, the tool responds with a traceback error that leaks a path of the server.

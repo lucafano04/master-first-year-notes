@@ -1,0 +1,64 @@
+\chapter{Overflow Vulnerabilities}
+\label{ch:overflows}
+
+Overflow vulnerabilities remain a highly relevant class of security issues, particularly in systems utilizing \textsf{C} and \textsf{C++} for memory management. These vulnerabilities occur when a program writes or reads data beyond the allocated limits of a buffer, leading to memory corruption and potential control-flow hijacking. 
+
+\section{Program Memory Management}
+To understand overflows, it is essential to review how applications map memory. Process memory is broadly divided into the following segments:
+\begin{itemize}
+    \item \textbf{Text (.text):} Contains the compiled assembly instructions of the program.
+    \item \textbf{Static Data (.data):} Stores constant, global, and static variables.
+    \item \textbf{Heap (Free Store):} A globally accessible area for dynamic memory allocation (managed via \texttt{malloc}, \texttt{new}, \texttt{free}).
+    \item \textbf{Stack:} Manages active functions, local variables, function parameters, and control flow (return addresses).
+\end{itemize}
+
+The call stack grows toward lower memory addresses. Each function call creates a new stack frame tracked by the \texttt{esp} (stack pointer) and \texttt{ebp} (base pointer). Crucially, the stack also stores the return address (\texttt{eip}), which tells the processor where to resume execution once the current function completes.
+
+\section{Buffer Overflow}
+A buffer overflow occurs when an application attempts to write more data into a fixed-length memory block than it was allocated to hold. This often stems from unsafe functions like \texttt{strcpy()}, which copies a source string into a destination buffer until it encounters a null terminator (\texttt{'\textbackslash 0'}) without ever checking the destination's actual capacity.
+
+\subsection{Exploitation Mechanics}
+Because local variables and control-flow data share the exact same stack space, overrunning a local buffer allows an attacker to overwrite adjacent memory. A classic attack follows these steps:
+\begin{enumerate}
+    \item \textbf{Inject Shellcode:} The attacker inputs executable machine code (shellcode in hexadecimal format) as part of the malicious payload.
+    \item \textbf{Overwrite the Return Address:} The overflow extends past the local buffer and overwrites the saved return address on the stack.
+    \item \textbf{Hijack Control Flow:} When the function returns, the \gls{cpu} jumps to the attacker's injected address rather than the original caller, directly executing the shellcode.
+\end{enumerate}
+
+\subsection{Mitigation}
+To prevent buffer overflows, developers should replace unsafe functions with counted versions like \texttt{strncpy()}. However, care must still be taken with \texttt{strncpy()}, as it will fail to append a null terminator if the source string exceeds the specified length limit. Modern \textsf{C++} applications should avoid raw \textsf{C} arrays entirely in favor of safer data structures, such as standard \gls{stl} containers.
+
+\section{Format String Vulnerabilities}
+Format string vulnerabilities arise when unvalidated user input is passed directly to the format parameter of a function in the \texttt{printf} family.
+
+\begin{lstlisting}[language=C]
+// Vulnerable implementation
+printf(buf); 
+\end{lstlisting}
+
+If \texttt{buf} contains format specifiers like \texttt{\%p} or \texttt{\%x}, the \texttt{printf} function assumes corresponding arguments exist and begins blindly popping values off the call stack. This allows an attacker to leak sensitive memory addresses and internal states. More dangerously, the \texttt{\%n} specifier can be used to write data \textit{into} memory, potentially overwriting control structures. 
+
+\textbf{Mitigation:} Always use constant format strings and pass user input as subsequent arguments (e.g., \texttt{printf("\%s", buf);}) to neutralize embedded specifiers.
+
+\section{Integer Overflows}
+In systems utilizing two's complement representation, integer data types possess strict hardware limits. For example, a 16-bit \texttt{short} can represent values from -32,768 to 32,767. An integer overflow occurs when arithmetic operations exceed these boundaries, causing the value to wrap around (e.g., adding to the maximum positive value yields a negative number).
+
+A common vulnerability pattern involves implicit downcasting. If a 32-bit \texttt{int} is assigned to a 16-bit \texttt{short}, the value is truncated. If the truncated bits flip the Most Significant Bit (\gls{msb}), the resulting value becomes negative. If this unexpected negative length is subsequently passed to a memory function (like \texttt{strncpy}), it can bypass maximum-length checks and trigger a massive buffer overflow.
+
+\textbf{Mitigation:} Developers should check boundaries explicitly against macros like \texttt{INT\_MAX} before performing arithmetic, and use large enough, explicitly unsigned integer types when negative values are invalid.
+
+\section{Heap Overflows}
+Like stack overflows, heap overflows involve writing past the boundaries of dynamically allocated memory. A classic vector involves encoding expansion: if a program allocates a heap buffer sized exactly to a user's input string length, but later expands special characters (e.g., replacing \texttt{\&} with \texttt{\&amp;}), the newly expanded string will overrun the allocated heap space. 
+
+Exploitation on the heap often relies on filling the memory with a \gls{nop} sled (a sequence of no-operation instructions that "slide" the execution flow into the shellcode), or by overwriting function pointers stored in adjacent heap blocks.
+
+\section{Architectural Barriers to Exploitation}
+Modern operating systems implement several hardware and software defenses to frustrate overflow exploitation:
+\begin{itemize}
+    \item \textbf{Address Space Layout Randomization (\gls{aslr}):} Randomizes the memory locations of the stack, heap, and shared libraries upon execution, making it exceedingly difficult for attackers to predict the correct memory addresses for jumping.
+    \item \textbf{Stack Canaries:} Places a known random or terminator value between a local buffer and the return address. If a buffer overflow occurs, the canary is corrupted first; the system detects this corruption before the function returns and safely halts execution.
+    \item \textbf{Executable Space Protection (\gls{esp}):} Utilizes hardware features like the \gls{nx} (No-Execute) bit to mark the stack and heap memory regions as strictly non-executable. If an attacker successfully hijacks the return address to point to injected shellcode on the stack, the processor will throw an exception instead of executing it.
+    \item \textbf{Fuzzing and Testing:} Generating massive amounts of varied inputs to a program to check its parameters and identify unexpected segmentation faults during the development lifecycle.
+\end{itemize}
+
+\textit{Note: For testing and educational vulnerability analysis, these barriers can be manually disabled (e.g., compiling with \texttt{-fno-stack-protector} and setting the \gls{aslr} randomization flag to 0)}.

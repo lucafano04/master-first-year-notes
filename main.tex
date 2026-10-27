@@ -1,4 +1,5 @@
 \documentclass[11pt, a4paper, twoside, titlepage]{scrbook}
+\setcounter{part}{-1}
 
 % ==========================================
 % KOMA-SCRIPT FONT SETTINGS
@@ -258,6 +259,26 @@
 \newacronym{json}{JSON}{JavaScript Object Notation}
 \newacronym{ssh}{SSH}{Secure Shell}
 \newacronym{mfc}{MFC}{Microsoft Foundation Classes}
+\newacronym{cpu}{CPU}{Central Processing Unit}
+\newacronym{nop}{NOP}{NO Operation}
+\newacronym{stl}{STL}{Standard Template Library}
+\newacronym{aslr}{ASLR}{Address Space Layout Randomization}
+\newacronym{esp}{ESP}{Executable Space Protection}
+\newacronym{nx}{NX}{No Execute}
+\newacronym{msb}{MSB}{Most Significant Bit}
+\newacronym{tp}{TP}{True Positive}
+\newacronym{fp}{FP}{False Positive}
+\newacronym{tn}{TN}{True Negative}
+\newacronym{fn}{FN}{False Negative}
+\newacronym{loc}{LOC}{Line Of Code}
+\newacronym{misra}{MISRA}{Motor Industry Software Reliability Association}
+\newacronym{ltl}{LTL}{Linear Temporal Logic}
+\newacronym{cfg}{CFG}{Control-Flow Graph}
+\newacronym{cdg}{CDG}{Control Dependence Graph}
+\newacronym{gcd}{GCD}{Greatest Common Divider}
+\newacronym{du}{DU}{Definition-Use}
+\newacronym{mop}{MOP}{Meet Over all Paths}
+\newacronym{mvp}{MVP}{Meet over Valid Paths}
 
 % ==========================================
 % TCOLORBOX THEOREMS & DEFINITIONS
@@ -390,8 +411,10 @@
 % ==========================================
 % LECTURES BEGIN
 % ==========================================
-
+\begingroup
+\renewcommand\thepart{O}
 \part{Introduction on the couse}
+\endgroup
 \include{chapters/01-Introduction}
 \include{chapters/02-FirstConcepts}
 \include{chapters/03-SDLC}
@@ -403,6 +426,9 @@
 \include{chapters/08-RequestForgery}
 \include{chapters/09-CommandInjection}
 \include{chapters/10-improperErrorHandling}
+\include{chapters/11-overflowVulnerabilities}
+\part{Testing Activity}
+\include{chapters/12-StaticFlowAnalysis}
 \backmatter
 \chapter{Appendix}
 
