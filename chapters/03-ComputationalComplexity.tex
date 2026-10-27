@@ -1,0 +1,103 @@
+\chapter{Computational Complexity}
+\label{ch:computational_complexity}
+
+Having established the boundaries of computability—distinguishing what can be solved algorithmically from what is strictly undecidable—we shift our focus to \textbf{computational complexity}. Henceforth, we restrict our study to computable functions and halting Turing Machines (deciders). Our primary concern becomes quantifying the physical resources (namely \textbf{execution time} and \textbf{memory space}) required to solve decidable problems.
+
+\section{Measuring Algorithmic Performance}
+To analyze complexity rigorously, performance must be expressed as a function of input size. We utilize the Turing Machine (\gls{tm}) model because both input size and computational steps can be defined unambiguously without architectural abstraction overhead.
+
+\subsection{Input Representation and Reasonable Encoding}
+Let $\Sigma = \{0, 1\}$ be the binary alphabet for a decider $\mathcal{M}$. The \textbf{input size} of a string $x \in \Sigma^*$, denoted $|x|$, is the number of tape cells occupied by $x$. 
+
+Crucially, complexity analysis assumes inputs are encoded in a \textbf{reasonable} manner. For instance, an integer $n \in \mathbb{N}$ encoded in positional binary notation $r_2(n)$ requires a logarithmic length:
+\[
+|r_2(n)| = \mathcal{O}(\log_2 n)
+\]
+Conversely, a unary encoding (representing $n$ via $n$ consecutive ones, $1^n$) yields $|r_1(n)| = n$, which is exponentially larger than its binary counterpart ($n = 2^{\log_2 n}$). Unary representation is considered unreasonable because it artificially inflates input length to disguise exponential time algorithms as linear. Under asymptotic analysis, the choice of any positional base $b \ge 2$ changes the input length only by a constant multiplicative factor $\log_b 2$, which is absorbed by Big-$\mathcal{O}$ notation.
+
+\section{Execution Time and Worst-Case Complexity}
+
+\begin{definition}{Execution Time Function}{exec-time-func}
+Let $\mathcal{M}$ be a total Turing Machine that halts on all inputs $x \in \Sigma^*$. The \textbf{execution time function} $t_{\mathcal{M}} : \Sigma^* \to \mathbb{N}$ maps each input string $x$ to the exact number of transitions $\mathcal{M}$ performs before reaching a halting state:
+\[
+t_{\mathcal{M}} : x \mapsto \text{number of steps in computation of } \mathcal{M}(x)
+\]
+\end{definition}
+
+Since individual input strings of the same length may require varying execution steps, we evaluate algorithms based on their worst-case performance across all inputs of length $n$.
+
+\begin{definition}{Worst-Case Time Complexity}{worst-case-complexity}
+For a total Turing Machine $\mathcal{M}$, the \textbf{worst-case time complexity} function $T_{\mathcal{M}} : \mathbb{N} \to \mathbb{N}$ maps an input length $n$ to the maximum execution steps required across all inputs of size $n$:
+\[
+T_{\mathcal{M}}(n) = \max \{ t_{\mathcal{M}}(x) \mid x \in \Sigma^*, \, |x| = n \}
+\]
+\end{definition}
+
+In complexity theory, exact step counting is simplified by asymptotic analysis (Big-$\mathcal{O}$ notation). Low-order terms and multiplicative constants are suppressed, isolating the dominant growth rate of $T_{\mathcal{M}}(n)$ as $n \to \infty$.
+
+\section{Deterministic Time Classes and the Class P}
+
+We group decision problems (languages $L \subseteq \Sigma^*$) into complexity classes based on the worst-case time required to decide them.
+
+\begin{definition}{Deterministic Time Class ($\text{DTIME}$)}{dtime-class}
+Let $f : \mathbb{N} \to \mathbb{N}$ be a computable function. The deterministic time complexity class $\text{DTIME}(f(n))$ is the set of all languages decidable by a deterministic Turing Machine within worst-case time bounded by $f(n)$:
+\[
+\text{DTIME}(f(n)) = \{ L \subseteq \Sigma^* \mid \exists \mathcal{M} \text{ s.t. } L(\mathcal{M}) = L \text{ and } T_{\mathcal{M}}(n) = \mathcal{O}(f(n)) \}
+\]
+\end{definition}
+
+In other words, $L \in \text{DTIME}(f(n))$ implies the existence of a decider $\mathcal{M}$, a constant factor $c > 0$, and an input threshold $n_0 \in \mathbb{N}$ such that for all $x \in \Sigma^*$ with $|x| \ge n_0$, $\mathcal{M}$ decides $x \in L$ in at most $c \cdot f(|x|)$ steps.
+
+\subsection{The Class P (Polynomial Time)}
+Languages decidable in polynomial time represent the theoretical boundary of computationally tractable problems (the Cobham-Edmonds thesis).
+
+\begin{definition}{The Class P}{class-p}
+The complexity class $\text{P}$ is the union of all deterministic polynomial-time complexity classes:
+\[
+\text{P} = \bigcup_{k=0}^{\infty} \text{DTIME}(n^k)
+\]
+\end{definition}
+
+Equivalently, a language $L \in \text{P}$ if and only if there exists a deterministic decider $\mathcal{M}$ and a polynomial $p(n)$ such that for every string $x \in \Sigma^*$:
+\[
+x \in L \iff \mathcal{M}(x) = 1 \quad \text{and} \quad t_{\mathcal{M}}(x) \le p(|x|)
+\]
+
+\section{Concrete Examples and Complexity Frontiers}
+
+To illustrate deterministic time bounds, consider the following classic decision problems:
+
+\subsection{Linear Time: The EVEN Language}
+Consider the language of binary strings of even length:
+\[
+\text{EVEN} = \{ s \in \Sigma^* \mid |s| \pmod 2 = 0 \}
+\]
+A single-tape decider $\mathcal{M}_{\text{EVEN}}$ can determine membership by scanning the input tape from left to right in a single pass while toggling an internal state between even and odd parity, finally halting at the blank symbol. The total number of steps performed is $|s| + 1$. Thus:
+\[
+T_{\mathcal{M}_{\text{EVEN}}}(n) = n + 1 = \mathcal{O}(n) \implies \text{EVEN} \in \text{DTIME}(n^1) \subseteq \text{P}
+\]
+
+\subsection{Quadratic Time: The PALINDROME Language}
+Consider the language of palindromic strings:
+\[
+\text{PALINDROME} = \{ s \in \Sigma^* \mid s = s^R \}
+\]
+where $s^R$ denotes the reversal of string $s$. On a single-tape Turing machine $\mathcal{M}_{\text{PAL}}$, deciding membership requires matching outer symbols:
+\begin{enumerate}
+    \item Read and erase the leftmost symbol, remembering it in the finite control.
+    \item Traverse the tape to the rightmost symbol and compare. If they match, erase it.
+    \item Return to the new leftmost symbol and repeat until the tape is empty.
+\end{enumerate}
+For a string of length $n$, the machine traverses approximately $n + (n-2) + (n-4) + \dots + 2$ cells. Summing this progression yields:
+\[
+T_{\mathcal{M}_{\text{PAL}}}(n) = \sum_{i=1}^{n} i = \frac{n(n-1)}{2} = \mathcal{O}(n^2) \implies \text{PALINDROME} \in \text{DTIME}(n^2) \subseteq \text{P}
+\]
+
+\subsection{Beyond Known Polynomial Bounds: Satisfiability (\glsfmtshort{sat})}
+In contrast to $\text{EVEN}$ and $\text{PALINDROME}$, many practical decision problems lack known polynomial-time deciders on deterministic Turing machines.
+
+\begin{definition}{Boolean Satisfiability Problem (\glsfmtshort{sat})}{sat-def}
+Given a Boolean formula $\phi(x_1, \dots, x_n)$ expressed in \glsxtrfull{cnf}, \textbf{\gls{sat}} is the decision problem of determining whether there exists a truth assignment $\tau : \{x_1, \dots, x_n\} \to \{0, 1\}$ that satisfies $\phi$ (evaluates $\phi$ to \textit{True}).
+\end{definition}
+
+A deterministic exhaustive search over all $2^n$ possible truth assignments yields a worst-case time bound of $\mathcal{O}(2^n \cdot |\phi|)$. To date, no deterministic polynomial-time algorithm for \gls{sat} has been discovered ($\text{SAT} \stackrel{?}{\in} \text{P}$), forming the foundation for the study of non-deterministic complexity classes ($\text{NP}$) and computational hardness.
