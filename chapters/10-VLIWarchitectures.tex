@@ -1,0 +1,265 @@
+\chapter{\glsfmtshort{vliw} Architectures}
+\label{ch:vliw_architectures}
+
+Similarly to superscalar architectures, \glsxtrfull{vliw} architectures are based on multiple \glspl{fu} that can be addressed in parallel by issuing multiple elementary operations within the same clock cycle. Superscalar architectures rely on complex Control Units (\glsfmtshort{cu}) to perform dynamic scheduling of instructions via out-of-order execution, register renaming, and hardware speculation. However, dynamic scheduling engines are expensive in terms of power, silicon area, and clock cycle latency. 
+
+The primary goal of \gls{vliw} design is to maximize \gls{ilp} while maintaining low hardware complexity. This is achieved by shifting the instruction scheduling burden entirely from the hardware to the compiler, eliminating dynamic control logic, enabling faster clock rates, reducing energy consumption, and leaving more silicon area available for raw execution units.
+
+\section{VLIW vs. Superscalar Pipeline Complexity}
+\label{sec:vliw_vs_superscalar_complexity}
+
+The fundamental distinction between superscalar processors and \gls{vliw} architectures lies in the timing and mechanism of instruction scheduling:
+\begin{itemize}
+    \item \textbf{Superscalar Architectures:} Instructions are dynamically scheduled by hardware at runtime (as detailed in \cref{ch:hardware_speculation}). Dynamic scheduling engines evaluate data hazards, perform branch prediction, and reorder instructions using Reservation Stations and Reorder Buffers (\glsfmtshort{rob}).
+    \item \textbf{VLIW Architectures:} Elementary operations are statically scheduled by the compiler into wide, multi-operation instruction words (bundles) prior to execution.
+\end{itemize}
+
+\subsection{Control Logic Complexity Scaling}
+
+In a dynamic superscalar core with issue width $W$, the control logic complexity required to detect data dependencies scales quadratically or super-quadratically. Each candidate instruction issuing in a given cycle must check its source operands against all in-flight instructions currently executing or pending across the pipeline window:
+
+\begin{definition}{Superscalar Hazard Detection Complexity}{superscalar-logic-scaling}
+    Let $W$ be the peak instruction issue width and $L$ be the lifetime (in clock cycles) of an instruction within the pipeline window. The total hardware complexity $C_{\text{logic}}$ required for dynamic hazard detection and dependency checking scales as:
+    \begin{equation}
+        C_{\text{logic}} \propto W \cdot (W \cdot L) = W^2 \cdot L
+    \end{equation}
+    \begin{itemize}
+        \item In \textbf{in-order pipelines}, the instruction lifetime $L$ is bounded strictly by the execution latency of functional unit pipelines.
+        \item In \textbf{out-of-order pipelines}, the effective lifetime $L$ includes the time instructions spend buffered in the Instruction Window (\glsfmtshort{iw}) or Reorder Buffer (\glsfmtshort{rob}).
+    \end{itemize}
+\end{definition}
+
+As issue width $W$ expands, larger instruction windows are required to extract sufficient \gls{ilp} to keep functional units saturated. Consequently, $L$ grows non-linearly with $W$, causing dynamic control logic complexity to grow faster than $W^2$ (approaching $\sim W^3$).
+
+\subsection{Static Scheduling and Lockstep Execution}
+
+In a \gls{vliw} architecture, multiple operations are statically packed into a single wide instruction template. Each slot within the bundle corresponds to a specific functional unit category (e.g., Integer ALU, Floating-Point ALU, Memory Load/Store, Branch).
+
+\begin{concept}{Static Hazard Prevention}{vliw-static-hazard-prevention}
+    VLIW architectures rely on static compile-time guarantees:
+    \begin{enumerate}
+        \item \textbf{NOP Insertion:} If the compiler cannot find an independent operation for a specific slot within an issue cycle, it explicitly inserts a No-Operation (\texttt{NOP}) instruction into that slot.
+        \item \textbf{Fixed Operation Latencies:} Operation execution latencies are fixed and strictly defined by the \gls{isa}.
+        \item \textbf{Zero Hardware Interlocking:} The compiler guarantees that no cross-operation Read-After-Write (\glsfmtshort{raw}), Write-After-Read (\glsfmtshort{war}), or Write-After-Write (\glsfmtshort{waw}) hazards exist within an instruction word or across execution latencies. Consequently, the hardware omits dynamic interlock checks and hardware hazard detection logic entirely.
+    \end{enumerate}
+\end{concept}
+
+\section{\glsfmtshort{vliw}-Specific Hardware Features}
+\label{sec:vliw_hardware_features}
+
+\subsection{Register File Organization and Multiporting}
+
+\gls{vliw} architectures favor a unified, general-purpose register file organization without rigid type distinctions to simplify static compiler scheduling. Key register design characteristics include:
+
+\begin{itemize}
+    \item \textbf{Individual Addressing and Register Chaining:} All registers are individually addressable. While operations do not write to multi-register spans explicitly, adjacent registers can be chained together dynamically to allocate wider data types (e.g., pairing two 32-bit registers for a 64-bit floating-point operation).
+    \item \textbf{Scaling to Hundreds of Registers:} Because the compiler must exploit high \gls{ilp} across multiple concurrent \glspl{fu}, a massive register count (on the order of hundreds of registers) is required to hold intermediate variables and eliminate name dependencies without stalling.
+    \item \textbf{Port and Bypass Network Complexity:} Supporting $N$ parallel \glspl{fu} requires an extensive number of read/write ports and bypass circuits, causing wire delays, area footprint, and power consumption to scale steeply with register file size.
+\end{itemize}
+
+\subsection{Clustered \glsfmtshort{vliw} Architectures}
+
+To prevent centralized register file multiporting bottlenecks and wire-dominated delays from degrading maximum clock frequency, modern \gls{vliw} processors partition execution units and registers into distinct \textbf{clusters}.
+
+\begin{definition}{Clustered VLIW Architecture}{clustered-vliw-def}
+    A \textbf{Clustered VLIW Architecture} divides the processor into independent, communicating hardware slices (clusters). Each cluster contains a subset of functional units (\glspl{fu}) connected to a smaller, localized register file.
+\end{definition}
+
+\subsubsection{Performance Trade-Offs of Clustering}
+By reducing local register file port counts and shortening internal wire routing, clustering enables significantly higher operating clock frequencies ($f_{\text{max}}$). However, inter-cluster data transfers introduce communication latencies, reducing sustained \gls{ipc}:
+\begin{itemize}
+    \item \textbf{2-Cluster Configurations:} Suffer an average \gls{ipc} reduction of $\approx 15\%$ relative to an unclustered baseline.
+    \item \textbf{4-Cluster Configurations:} Suffer an average \gls{ipc} reduction of $\approx 25\%$ due to increased crossbar transfer overheads.
+\end{itemize}
+
+\subsubsection{Data Exchange Policies}
+Clustered architectures manage inter-cluster operand routing through two primary architectural models:
+
+\begin{concept}{Inter-Cluster Communication Models}{cluster-data-exchange}
+    \begin{enumerate}
+        \item \textbf{Invisible Clustering:} The \gls{isa} presents a single, unified architectural register file to the programmer/compiler. The underlying hardware automatically detects cross-cluster operand dependencies and inserts routing stalls or dynamic bypass paths transparently.
+        \item \textbf{Visible Clustering:} The \gls{isa} explicitly exposes cluster boundaries and distinct register files. Inter-cluster data movement requires dedicated instruction operations:
+        \begin{itemize}
+            \item \textit{Explicit Copying:} The compiler explicitly schedules specialized copy instructions (e.g., \texttt{MOVE C1.R1 -> C2.R3}) to transfer values across clusters.
+            \item \textit{Implicit Copying:} Operations in one cluster can directly reference a remote cluster's register as a source operand, with the hardware implicitly embedding cross-cluster transport logic into the issue pipeline.
+        \end{itemize}
+    \end{enumerate}
+\end{concept}
+
+\subsection{Instruction Encoding, NOP Elimination, and Compression}
+
+Standard \gls{vliw} instruction words are exceptionally wide. When operations cannot be found for every execution slot in a given cycle, the compiler must insert \texttt{NOP} operations, causing severe program memory bloat and instruction cache ($I$-cache) thrashing.
+
+To resolve memory occupancy issues, programs are stored in a compressed format in memory (compressed at compile-time) and expanded by hardware logic during the fetch and decode stages at run-time.
+
+\begin{figure}[htpb]
+\centering
+\begin{tikzpicture}[scale=0.9, >=stealth, font=\small]
+    % Compressed Stream in Memory
+    \node [font=\bfseries\small] at (-3.2, 2.2) {Compressed Memory Stream};
+    \draw [fill=gray!15, thick] (-5.5, 1.0) rectangle (-0.9, 1.7);
+    \node [font=\scriptsize] at (-3.2, 1.35) {\texttt{[Mask | Op A | Op B | Stop]}};
+
+    % Hardware Expansion / Pre-decoder
+    \draw [->, ultra thick, unitnred] (-0.8, 1.35) -- (0.5, 1.35) node[midway, above, font=\tiny\bfseries] {Run-Time Expansion};
+
+    % Uncompressed VLIW Issue Bundle
+    \node [font=\bfseries\small] at (4.0, 2.2) {Expanded Parallel Issue Bundle};
+    \draw [fill=blue!10, thick] (0.6, 1.0) rectangle (7.4, 1.7);
+    \node [font=\scriptsize] at (1.45, 1.35) {\texttt{ALU 0: Op A}};
+    \draw [thick] (2.3, 1.0) -- (2.3, 1.7);
+    \node [font=\scriptsize] at (3.15, 1.35) {\texttt{ALU 1: NOP}};
+    \draw [thick] (4.0, 1.0) -- (4.0, 1.7);
+    \node [font=\scriptsize] at (4.85, 1.35) {\texttt{MEM: Op B}};
+    \draw [thick] (5.7, 1.0) -- (5.7, 1.7);
+    \node [font=\scriptsize] at (6.55, 1.35) {\texttt{BRANCH: NOP}};
+
+\end{tikzpicture}
+\caption{Run-time hardware expansion of compile-time compressed VLIW instruction bundles.}
+\label{fig:vliw_compression_expansion}
+\end{figure}
+
+\subsubsection{Horizontal NOP Elimination and Header Masks}
+Horizontal \texttt{NOP} slots are stripped from memory encodings by appending a small Mask Field to the start of each instruction bundle:
+\begin{itemize}
+    \item The mask bits explicitly indicate which functional unit slots contain valid elementary operations within the compressed word.
+    \item The decode hardware uses the mask to dynamically route compressed operation bytes to their designated functional units while padding inactive slots with internal \texttt{NOP} control signals.
+\end{itemize}
+
+\subsubsection{Stop Bits and Parallel Execution Bits ($p$-bits)}
+To allow variable-length instruction templates and flexible bundling, instructions incorporate boundary delimiters:
+\begin{itemize}
+    \item \textbf{Parallel Bits ($p$-bits):} Tag individual operations that are guaranteed to be independent and executable in parallel within the current clock cycle.
+    \item \textbf{Stop Bits:} Explicitly mark the end of an execution cycle:
+    \begin{equation}
+        \text{stop-bit} = \neg (\text{p-bit})
+    \end{equation}
+    A set stop bit ($\text{stop-bit} = 1$) informs the hardware issue engine that subsequent operations belong to the next clock cycle, enforcing an in-order execution boundary without requiring explicit padding.
+\end{itemize}
+
+While mask headers, stop bits, and variable-length encodings drastically reduce program memory occupancy, they increase front-end decode logic complexity and alignment overhead.
+
+\section{\glsfmtshort{vliw}-Specific Compiler Features}
+\label{sec:vliw_compiler_features}
+
+Because \gls{vliw} hardware relies entirely on static operation scheduling without dynamic interlocks or out-of-order execution engines, the compiler bears sole responsibility for extracting \gls{ilp}. The primary objective of a \gls{vliw} compiler is code compaction: transforming a sequential, "vertical" instruction stream into a wide, "horizontal" instruction sequence where maximum execution slots across all functional units are filled with independent operations.
+
+Code compaction proceeds by analyzing program basic blocks, breaking control flow boundaries, and scheduling independent operations across multi-issue execution templates. The principal compiler techniques utilized to reduce control dependencies and expose horizontal parallelism include Loop Unrolling, Software Pipelining, Predicated Execution (If-Conversion, and Trace Scheduling.
+
+\subsection{Loop Unrolling in \glsfmtshort{vliw} vs. Superscalar}
+\label{sec:vliw_loop_unrolling}
+
+Loops represent the richest source of coarse-grained and fine-grained \gls{ilp} in numerical and floating-point computations. In basic sequential execution, inter-instruction data dependencies (such as load-to-use latencies) and branch control overhead severely degrade instruction throughput.
+
+\subsubsection{Baseline Un-Unrolled Loop Performance}
+Consider a baseline vector addition loop updating an array of floating-point values ($B[i] = A[i] + C$):
+
+\begin{lstlisting}[language=C, caption={Baseline Vector Addition Loop}]
+for (int i = 0; i < N; i++) {
+    B[i] = A[i] + C;
+}
+\end{lstlisting}
+
+When compiled into elementary assembly operations without loop unrolling or dynamic scheduling:
+\begin{lstlisting}[language=C, caption={Assembly Representation of Baseline Loop}]
+Loop: LD    F1, 0(R1)      ; Load A[i] (Memory Slot)
+      DADDU R1, R1, #8     ; Increment source array pointer
+      ADD.D F2, F0, F1     ; Add scalar C (F0) to A[i] (FP Slot)
+      S.D   F2, 0(R2)      ; Store result into B[i] (Memory Slot)
+      DADDU R2, R2, #8     ; Increment destination array pointer
+      BNE   R1, R3, Loop   ; Loop branch control
+\end{lstlisting}
+
+In an in-order execution model with standard functional unit latencies (e.g., Load latency of 2 cycles, Floating-Point Add latency of 3 cycles), raw data dependencies (\gls{raw}) and branch stalls force significant idle cycles:
+\begin{equation}
+\text{Throughput}_{\text{baseline}} = \frac{1 \text{ FP Add}}{8 \text{ Clock Cycles}} = 0.125 \text{ FP ops/cycle}
+\end{equation}
+
+\subsubsection{}{Loop Unrolling Transformation and Arbitrary Loop Bounds}
+To expose independent operations across loop iterations, the compiler replicates the loop body $K$ times (where $K$ is the unrolling factor) and adjusts the loop counter step ($i \leftarrow i + K$).
+
+\begin{concept}{Handling Non-Multiple Loop Iteration Counts}{non-multiple-loop-bounds}
+    When the total loop iteration count $N$ is not an exact multiple of the unrolling factor $K$ ($N \pmod K \neq 0$), the static compiler inserts two distinct code segments:
+    \begin{enumerate}
+        \item \textbf{Primary Unrolled Kernel:} Executes $\lfloor N / K \rfloor$ iterations of the wide $K$-unrolled loop body.
+        \item \textbf{Cleanup (Epilogue) Loop:} A sequential scalar loop that executes the remaining $N \pmod K$ individual iterations to guarantee program correctness.
+    \end{enumerate}
+\end{concept}
+
+\subsubsection{Comparative Schedule Analysis: Superscalar vs. \glsfmtshort{vliw}}
+
+The effectiveness of loop unrolling depends heavily on the underlying execution architecture and available execution slots. Table~\ref{tab:unrolled_schedule_comparison} evaluates the performance of a $5\times$ unrolled loop on a Dual-Issue Superscalar core versus a $7\times$ unrolled loop on a 5-Issue \gls{vliw} core (containing 2 Memory units, 2 Floating-Point units, and 1 Integer/Branch unit).
+
+\begin{table}[htbp]
+\centering
+\caption{Schedule Breakdown: $5\times$ Unrolled Superscalar vs. $7\times$ Unrolled VLIW}
+\label{tab:unrolled_schedule_comparison}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{|c|>{\hsize=1.0\hsize\raggedright\arraybackslash}X|>{\hsize=1.0\hsize\raggedright\arraybackslash}X|}
+\hline
+\textbf{Clock Cycle} & \textbf{Dual-Issue Superscalar Schedule ($5\times$ Unrolled)} & \textbf{5-Issue \glsfmtshort{vliw} Bundle Schedule ($7\times$ Unrolled)} \\ \hline
+\textbf{CC 1} & \texttt{LD F0, 0(R1)} & \texttt{LD F0, 0(R1) | LD F8, -8(R1)} \\ \hline
+\textbf{CC 2} & \texttt{LD F8, -8(R1)} & \texttt{LD F10, -16(R1) | LD F14, -24(R1)} \\ \hline
+\textbf{CC 3} & \texttt{LD F10, -16(R1) | ADD.D F4, F0, F2} & \texttt{LD F18, -32(R1) | LD F22, -40(R1) | ADD.D F4, F0, F2 | ADD.D F8, F8, F2} \\ \hline
+\textbf{CC 4} & \texttt{LD F14, -24(R1) | ADD.D F8, F8, F2} & \texttt{LD F26, -48(R1) | ADD.D F12, F10, F2 | ADD.D F16, F14, F2} \\ \hline
+\textbf{CC 5} & \texttt{LD F18, -32(R1) | ADD.D F12, F10, F2} & \texttt{ADD.D F20, F18, F2 | ADD.D F24, F22, F2} \\ \hline
+\textbf{CC 6} & \texttt{S.D F4, 0(R1) | ADD.D F16, F14, F2} & \texttt{ADD.D F28, F26, F2} \\ \hline
+\textbf{CC 7} & \texttt{S.D F8, -8(R1) | ADD.D F20, F18, F2} & \texttt{S.D 0(R1), F4 | S.D -8(R1), F8} \\ \hline
+\textbf{CC 8} & \texttt{S.D F12, -16(R1)} & \texttt{S.D -16(R1), F12 | S.D -24(R1), F16 | SUBI R1, R1, \#48} \\ \hline
+\textbf{CC 9} & \texttt{S.D F16, -24(R1)} & \texttt{S.D -32(R1), F20 | S.D -40(R1), F24 | BNEZ R1, Loop} \\ \hline
+\textbf{CC 10} & \texttt{SUBI R1, R1, \#40} & \textit{-- Iteration Complete --} \\ \hline
+\textbf{CC 11} & \texttt{BNEZ R1, Loop} & \textit{-- Iteration Complete --} \\ \hline
+\textbf{CC 12} & \texttt{S.D 8(R1), F20} (Branch slot fill) & \textit{-- Iteration Complete --} \\ \hline
+\end{tabularx}
+\end{table}
+
+\begin{observation}{Comparative Evaluation: Superscalar vs. \glsfmtshort{vliw} Unrolling}{superscalar-vs-vliw-unrolling}
+Analyzing the schedule execution parameters reveals critical architectural trade-offs:
+\begin{itemize}
+    \item \textbf{Execution Latency per Iteration:}
+    \begin{itemize}
+        \item \textit{Superscalar ($5\times$ Unrolled):} Requires 12 clock cycles for 5 iterations $\implies$ 2.4 cycles/iteration ($1.46\times$ speedup over baseline).
+        \item \textit{\glsfmtshort{vliw} ($7\times$ Unrolled):} Requires 9 clock cycles for 7 iterations $\implies$ 1.29 cycles/iteration ($\approx 1.3$) ($1.8\times$ speedup over baseline).
+    \end{itemize}
+    \item \textbf{Issue Slot Efficiency and Operational Density:}
+    In the 5-issue \gls{vliw} schedule, 7 results are computed in 9 cycles (totaling 23 operations across $9 \times 5 = 45$ potential issue slots). This yields an average issue rate of 2.5 operations per clock cycle, representing a 50\% issue slot utilization efficiency (owing to unfillable \texttt{NOP} slots caused by strict memory and execution dependencies).
+    \item \textbf{Register Pressure Inflation:}
+    To eliminate Write-After-Read (\gls{war}) and Write-After-Write (\gls{waw}) hazards statically, the \gls{vliw} compiler requires 15 distinct architectural registers, compared to 11 registers for the superscalar baseline.
+\end{itemize}
+\end{observation}
+
+\section{Advanced Compile-Time Scheduling Techniques}
+\label{sec:advanced_vliw_compiler_techniques}
+
+Beyond static loop unrolling, \gls{vliw} compilers employ specialized global optimization algorithms to maximize horizontal instruction compaction.
+
+\subsubsection{Software Pipelining (Modulo Scheduling)}
+
+While loop unrolling replicates the loop body statically, it inflates code size and creates execution bottlenecks at loop boundaries. Software Pipelining reorganizes loop execution such that an individual iteration is constructed from operations originating from different, consecutive loop iterations.
+
+\begin{definition}{Software Pipelining}{software-pipelining-def}
+    Software Pipelining is a compile-time technique that interleaves instructions from iteration $i$, iteration $i+1$, and iteration $i+2$ into a single compact loop body (the kernel), preceded by a startup phase (\textbf{Prologue}) and followed by a completion phase (\textbf{Epilogue}).
+\end{definition}
+
+By overlapping different stages of consecutive iterations, functional unit pipeline latency is completely hidden without requiring massive static loop unrolling.
+
+\subsubsection{Trace Scheduling and Static Speculation}
+
+Standard basic blocks in control-intensive code are typically short (4–7 instructions), limiting horizontal \gls{vliw} compaction. Trace Scheduling breaks basic block boundaries by scheduling instructions across global program paths:
+
+\begin{enumerate}
+    \item \textbf{Trace Selection:} The compiler uses static profiling data to identify the most frequently executed sequential sequence of basic blocks (a \textit{trace}).
+    \item \textbf{Trace Compaction:} The compiler treats the selected trace as a single large basic block, aggressively hoisting independent operations (including speculative loads) across conditional branch boundaries.
+    \item \textbf{Compensation Code Generation:} Because branches may take non-profiled paths, the compiler inserts explicit \textbf{compensation code} along side-exits and side-entries to restore correct program state if a branch diverges from the primary trace.
+\end{enumerate}
+
+\subsubsection{Predication and If-Conversion}
+
+Conditional branches force control dependency stalls in static \gls{vliw} schedules. Using Predicated Execution, the compiler applies If-Conversion to translate control flow into dataflow:
+
+\begin{itemize}
+    \item Conditional branches are eliminated and replaced by conditional compute operations tagged with boolean predicate registers (e.g., \texttt{(p1) ADD.D F4, F0, F2}).
+    \item Operations from both \textsf{THEN} and \textsf{ELSE} execution paths are merged into the same wide \gls{vliw} instruction bundle.
+    \item Both paths execute concurrently; the hardware evaluates predicate conditions in parallel and commits results only for operations whose assigned predicate evaluates to \textsf{true}.
+\end{itemize}
