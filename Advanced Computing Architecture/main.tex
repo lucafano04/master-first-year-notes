@@ -39,7 +39,7 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tikz}
-\usetikzlibrary{automata, positioning, arrows, arrows.meta, shapes.geometric, patterns}
+\usetikzlibrary{automata, positioning, arrows, arrows.meta, shapes.geometric, patterns, calc, shadows.blur}
 
 % Box per Teoremi, Definizioni, Algoritmi
 \usepackage{tcolorbox}
@@ -49,6 +49,7 @@
 \usepackage{listings}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{tabularx}
 
 % ==========================================
 % CUSTOMIZATION & BRANDING (UNITN STYLE)
@@ -185,6 +186,24 @@
 \newacronym{rs}{RS}{Reservation Station}
 \newacronym{cdb}{CDB}{Common Data Bus}
 \newacronym{rob}{ROB}{RecOrder Buffer}
+\newacronym{ifq}{IFQ}{Instruction Feed Queue}
+\newacronym{prf}{PRF}{Phisical Register File}
+\newacronym{rat}{RAT}{Register Alias Table}
+\newacronym[parent=rat]{arat}{ARAT}{Architectural \glsxtrlong{rat}}
+\newacronym{lvp}{LVP}{Load Value Prediction}
+\newacronym{fcm}{FCM}{Finite Context Method}
+\newacronym{ssb}{SSB}{Speculative Storage Buffer}
+\newacronym{tlp}{TLP}{Thread Level Parallelism}
+\newacronym{dlp}{DLP}{Data Level Parallelism}
+\newacronym{smt}{SMT}{Simultaneus MultiThreading}
+\newacronym{cmp}{CMP}{Chip MultiProcessing}
+\newacronym{asid}{ASID}{Address Space IDentifiers}
+\newacronym{vliw}{VLIW}{Very Long Instruction Words}
+\newacronym{iw}{IW}{Instruction Window}
+\newacronym{alat}{ALAT}{Advanced Load Address Table}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
 
 % Stile del Codice
 \lstset{
@@ -354,6 +373,10 @@
 \include{chapters/04-MemoryOrganization}
 \include{chapters/05-BranchPrediction}
 \include{chapters/06-DynamicScheduling}
+\include{chapters/07-HardwareBasedSpeculation}
+\include{chapters/08-instructionLevelParallelism}
+\include{chapters/09-ThreadLevelParallelism}
+\include{chapters/10-VLIWarchitectures}
 
 
 \backmatter
