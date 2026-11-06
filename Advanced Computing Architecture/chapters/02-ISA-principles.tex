@@ -1,6 +1,6 @@
 \chapter{Instruction Set Architecture Principles}
 
-\section{ISA Principles}
+\section{\glsfmtshort{isa} Principles}
 Fundamentally, an \gls{isa} is composed of an Instruction Set, an Instruction Classification, and Addressing Modes.
 
 \begin{definition}{Instruction Set Architecture (\gls*{isa})}{isa}
@@ -22,7 +22,7 @@ Fundamentally, an \gls{isa} is composed of an Instruction Set, an Instruction Cl
     \item \textbf{Data Transfer:} Moving data between registers and memory;
     \item \textbf{Control:} Branching, jumping, and flow redirection;
     \item \textbf{System:} Privileged operations and hardware management;
-    \item \textbf{\gls{fp}:} Specialized arithmetic for real numbers handled by an optional \gls{fpu} ISA extension;
+    \item \textbf{\gls{fp}:} Specialized arithmetic for real numbers handled by an optional \gls{fpu} \gls{isa} extension;
     \item \textbf{Decimal and String:} Legacy primitives historically used for commercial data processing (largely deprecated in modern architectures);
     \item \textbf{Graphics and Multimedia:} \glsxtrfull{simd}-style instructions operating on multiple smaller data elements in parallel (e.g., executing four 16-bit operations within a single 64-bit operand).
 \end{itemize}
@@ -63,7 +63,7 @@ Most control flow is managed by conditional branches. For pipeline optimization,
          \hline
          \textbf{Condition Register} & Alpha, MIPS & Tests evaluate an arbitrary register containing the boolean result of a comparison. & Simple hardware implementation and usage. & Consumes a general-purpose register.\\
          \hline
-         \textbf{Compare and Branch} & PA-RISC, VAX & The comparison logic is integrated directly into the branch instruction itself. & Only one instruction is needed for a conditional branch. & May require too much work per instruction in heavily pipelined architectures. \\
+         \textbf{Compare and Branch} & PA-\gls{risc}, VAX & The comparison logic is integrated directly into the branch instruction itself. & Only one instruction is needed for a conditional branch. & May require too much work per instruction in heavily pipelined architectures. \\
          \hline
     \end{tabular}
     \caption{Comparison of Architectural Branch Condition Evaluation Strategies}
@@ -75,7 +75,7 @@ Most control flow is managed by conditional branches. For pipeline optimization,
 \subsubsection{System and Other Instructions}
 All remaining non-standard instructions fall into this category. This includes, but is not limited to, virtual memory management, system calls, interrupt handling, peripheral management, complex bit manipulations, and iterative execution sequences (such as hardware division and square root operations).
 
-\subsection{Why RISC?} 
+\subsection{Why \glsfmtshort{risc}?} 
 Statistical profiling reported that across 5 representative programs from the \gls{spec} benchmark suite running on x86 architectures, \textbf{96\% of executed instructions fell within the 10 simplest instruction types}. 
 
 In accordance with Amdahl's Law (\cref{thm:amdahl-law}), optimizing the common case yields vastly superior returns compared to over-engineering rare pathways. 
@@ -84,7 +84,7 @@ In accordance with Amdahl's Law (\cref{thm:amdahl-law}), optimizing the common c
     Amdahl's law dictates that the overall performance improvement gained by optimizing a single part of a system is limited by the fraction of time that the targeted part is actually used. Consequently, focusing hardware optimization on the most frequent instructions provides maximum effectiveness.
 \end{observation}
 
-\noindent Consequently, \gls{risc} architectures are inherently more efficient. Modern hybrids (such as x86 processors) maintain internal hardware optimization layers that decode \gls{cisc} instructions dynamically into RISC-like micro-operations, balancing software complexity compatibility with high-performance execution cores.
+\noindent Consequently, \gls{risc} architectures are inherently more efficient. Modern hybrids (such as x86 processors) maintain internal hardware optimization layers that decode \gls{cisc} instructions dynamically into \gls{risc}-like micro-operations, balancing software complexity compatibility with high-performance execution cores.
 
 \section{Addressing Modes}
 Before detailing specific addressing modes, we must classify how architectures handle operand access. Specifically, instruction sets can be categorized by where they store operands and results.
@@ -206,7 +206,7 @@ DLX instructions are strictly fixed at 32-bits wide with a 6-bit opcode. The arc
 \subsection{Specific \glsfmtshort{isa} features in \glsfmtfullpl{dsp}}
 Digital signal processors are widely used in several embedded applications, including wireless communications, consumer audio, hard disk drives, multimedia, instrumentation, and the automotive industry. Compared to other embedded applications, \glspl{dsp} are characterized by: computationally demanding numeric algorithms (often relying on vector dot products), high sensitivity to small numeric errors, strict real-time requirements, continuous analog-to-digital data streams, high data bandwidth, and highly predictable memory access and program flow. For these reasons, a dedicated \gls{isa} for \glspl{dsp} must be highly optimized for mathematical calculations and support complex addressing modes.
 
-\paragraph{\glsxtrfull{mac}} 
+\paragraph{\glsfmtfull{mac}} 
 The sum of products is the foundational operation for most digital signal processing algorithms:
 \[
 \begin{aligned}
@@ -241,7 +241,7 @@ Bit-reversed addressing is specifically targeted to speed up \glsxtrfull{fft} al
 The Texas Instruments TMS320C54x is a classic 16-bit fixed-point \gls{dsp} designed specifically for low-power, high-performance telecommunications applications. Its architecture is built around an advanced modified Harvard bus structure, allowing concurrent instruction and multi-operand data fetches. The main characteristics of this processor include:
 \begin{itemize}
     \item \textbf{Modified Harvard Architecture:} Features dual-access memory managed through multiple 16-bit buses (including a program bus and dedicated data buses like CB and DB), allowing parallel instruction fetching and dual data loads.
-    \item \textbf{40-bit ALU:} While it is fundamentally a 16-bit processor, the \gls{alu} is 40 bits wide. This accommodates 32-bit results from the multiplier, while reserving 8 extra ``guard bits'' to prevent numerical overflow during prolonged \gls{mac} accumulation loops.
+    \item \textbf{40-bit \gls{alu}:} While it is fundamentally a 16-bit processor, the \gls{alu} is 40 bits wide. This accommodates 32-bit results from the multiplier, while reserving 8 extra ``guard bits'' to prevent numerical overflow during prolonged \gls{mac} accumulation loops.
     \item \textbf{Hardware Multiplier:} A dedicated $16 \times 16$-bit hardware multiplier that generates a 32-bit product in a single clock cycle.
     \item \textbf{Dual 40-bit Accumulators:} Two independent accumulators allow parallel processing and temporary storage of wide mathematical results without having to route them back to main memory.
     \item \textbf{Advanced Multiplexing:} Most operand combinations can be fed directly to the \gls{alu} inputs through appropriate internal multiplexers, bypassing the register file and avoiding bottleneck delays.

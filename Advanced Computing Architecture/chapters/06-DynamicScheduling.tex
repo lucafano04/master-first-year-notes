@@ -63,7 +63,7 @@ To accurately control the out-of-order execution pipeline, the Scoreboard must m
 
 \begin{itemize}
     \item \textbf{Instruction Status Table:} Tracks the current execution phase of each active instruction (Issue, Read Operands, Execute, or Write Result).
-    \item \textbf{Functional Unit (FU) Status Table:} Tracks the state of all functional units in the system. Each entry contains several fields:
+    \item \textbf{\glsxtrfull{fu} Status Table:} Tracks the state of all functional units in the system. Each entry contains several fields:
     \begin{itemize}
         \item \textbf{Busy:} A boolean flag indicating whether the unit is currently in use.
         \item \textbf{Op:} The specific operation to be performed in the unit (e.g., ADD, SUB, DIV).
@@ -77,7 +77,7 @@ To accurately control the out-of-order execution pipeline, the Scoreboard must m
 
 \subsection{Execution Phases}
 
-Under Scoreboarding, an instruction's lifecycle through the processor pipeline is divided into four distinct phases, replacing the standard 5-stage RISC pipeline execution flow.
+Under Scoreboarding, an instruction's lifecycle through the processor pipeline is divided into four distinct phases, replacing the standard 5-stage \gls{risc} pipeline execution flow.
 
 \subsubsection{1. Issue}
 During this phase, the hardware decodes the instruction and checks for two specific hazards:
@@ -120,9 +120,9 @@ ADDD    F6, F8, F2
 Assume a classical CDC 6600 hardware configuration with single functional units per type and the following execution latencies:
 \begin{itemize}
     \item \textbf{Load Unit (1 unit):} 1 clock cycle
-    \item \textbf{FP Adder Unit (1 unit):} 2 clock cycles
-    \item \textbf{FP Multiplier Unit (1 unit):} 10 clock cycles
-    \item \textbf{FP Divider Unit (1 unit):} 40 clock cycles
+    \item \textbf{\gls{fp} Adder Unit (1 unit):} 2 clock cycles
+    \item \textbf{\gls{fp} Multiplier Unit (1 unit):} 10 clock cycles
+    \item \textbf{\gls{fp} Divider Unit (1 unit):} 40 clock cycles
 \end{itemize}
 
 \begin{table}[htpb]
@@ -146,7 +146,7 @@ Assume a classical CDC 6600 hardware configuration with single functional units 
 As shown in \cref{tab:scoreboard-timing}, the Scoreboard dynamically orchestrates execution across the four pipeline phases:
 
 \begin{itemize}
-    \item \textbf{Structural Hazard Stalls at Issue:} The second \texttt{LD} cannot issue at cycle 2 because the single Load unit is occupied by the first \texttt{LD} until cycle 4; thus, it issues at cycle 5. Similarly, \texttt{ADDD} cannot issue at cycle 8 because the single FP Adder unit is occupied by \texttt{SUBD} until cycle 12, forcing \texttt{ADDD} to stall at the \textit{Issue} phase until cycle 13.
+    \item \textbf{Structural Hazard Stalls at Issue:} The second \texttt{LD} cannot issue at cycle 2 because the single Load unit is occupied by the first \texttt{LD} until cycle 4; thus, it issues at cycle 5. Similarly, \texttt{ADDD} cannot issue at cycle 8 because the single \gls{fp} Adder unit is occupied by \texttt{SUBD} until cycle 12, forcing \texttt{ADDD} to stall at the \textit{Issue} phase until cycle 13.
     \item \textbf{Out-of-Order Execution (\gls{raw} Handling):} \texttt{MULTD} issues at cycle 6 but stalls in \textit{Read Operands} until cycle 9, when \texttt{LD F2} finishes writing \texttt{F2} at cycle 8. Likewise, \texttt{DIVD} issues at cycle 8 but stalls in \textit{Read Operands} until cycle 21, waiting for \texttt{MULTD} to write \texttt{F0} at cycle 20. Meanwhile, \texttt{SUBD} reads its operands at cycle 9, completes execution at cycle 11, and writes back at cycle 12 bypassing both \texttt{MULTD} and \texttt{DIVD} completely.
     \item \textbf{Stalling on a \gls{war} Hazard:} The final \texttt{ADDD} instruction creates a critical \gls{war} hazard on register \texttt{F6} with \texttt{DIVD}. \texttt{DIVD} needs the old value of \texttt{F6} loaded by the first \texttt{LD}. Because \texttt{DIVD} is stalled waiting for \texttt{F0}, it only reads \texttt{F6} at cycle 21. \texttt{ADDD} finishes execution at cycle 16, but the Scoreboard strictly holds it in the \textit{Write Result} phase until cycle 22 immediately after \texttt{DIVD} performs its read-preventing register corruption.
 \end{itemize}
@@ -159,7 +159,7 @@ Although Scoreboarding successfully enables out-of-order execution, it suffers f
     \item \textbf{Lack of Data Forwarding:} Operands are read from the register file only when \textit{both} required source operands become available. The basic Scoreboard mechanism does not incorporate data forwarding (bypassing) paths, forcing dependent instructions to wait until results are formally written back to the register file before they can be read.
     \item \textbf{Non-Overlapping Pipeline Stages:} An additional clock cycle of latency is incurred because the \textit{Write Result} and \textit{Read Operands} stages cannot overlap. A register cannot be read in the exact same cycle that a computed result is being written to it.
     \item \textbf{Stalls on False Dependencies (\gls{war} and \gls{waw}):} To prevent data corruption, the Scoreboard must explicitly stall execution when \gls{war} or \gls{waw} hazards occur. Although out-of-order execution partially counterbalances these stalls by allowing unconstrained instructions to bypass waiting ones, name dependencies remain a major source of hardware stalls.
-    \item \textbf{Bus Contention and Hardware Escalation:} Merely adding more Functional Units (\glspl{fu}) yields diminishing performance returns unless the number of internal register and result buses is increased proportionally. However, expanding the bus interconnect architecture introduces substantial hardware complexity and area overhead.
+    \item \textbf{Bus Contention and Hardware Escalation:} Merely adding more \glsxtrfullpl{fu} yields diminishing performance returns unless the number of internal register and result buses is increased proportionally. However, expanding the bus interconnect architecture introduces substantial hardware complexity and area overhead.
     \item \textbf{Small Issue Window and Basic Block Bounds:} The degree of exploitable \gls{ilp} is strictly bounded by the small size of the Scoreboard table (the \textit{issue window}). Moreover, basic Scoreboarding limits its scheduling logic to single basic blocks (straight-line instruction sequences without branches), preventing the processor from dynamically exploiting parallelism across branch boundaries.
 \end{itemize}
 
@@ -177,16 +177,16 @@ Tomasulo's algorithm is a dynamic hardware-scheduling scheme that combines distr
 While built upon the fundamental dynamic scheduling principles of Scoreboarding, Tomasulo's scheme introduces four critical architectural innovations:
 
 \begin{itemize}
-\item \textbf{Distributed Control via Reservation Stations (\glspl{rs}):} Rather than relying on a centralized hardware table, control logic and operand buffering are distributed directly to the individual \glspl{fu} via sets of \glspl{rs}.
+\item \textbf{Distributed Control via \glsxtrfullpl{rs}:} Rather than relying on a centralized hardware table, control logic and operand buffering are distributed directly to the individual \glspl{fu} via sets of \glspl{rs}.
 \item \textbf{Implicit Register Renaming:} Pending destination registers and instruction outputs are designated by unique reservation station tags rather than architectural register numbers. This renames registers dynamically, eliminating name dependencies (\gls{war} and \gls{waw}) at the issue phase.
 \item \textbf{Unified Memory Buffering:} Load and store buffers are treated as distinct functional units with dedicated scheduling logic, allowing memory access dependencies and address calculations to be dynamically resolved.
-\item \textbf{Broadcasting via the Common Data Bus (\gls{cdb}):} Results computed by any \gls{fu} are broadcast directly across a dedicated interconnect the \gls{cdb} to all waiting \glspl{rs}, load/store buffers, and register entries simultaneously, implementing automatic data forwarding and bypassing the register file writeback delay.
+\item \textbf{Broadcasting via the \glsxtrfull{cdb}:} Results computed by any \gls{fu} are broadcast directly across a dedicated interconnect the \gls{cdb} to all waiting \glspl{rs}, load/store buffers, and register entries simultaneously, implementing automatic data forwarding and bypassing the register file writeback delay.
 \end{itemize}
 
 \subsection{\glsfmtshort{fp} Architecture Based on Tomasulo's Algorithm}
 \label{subsec:tomasulo_fp_arch}
 
-In an architecture using Tomasulo's algorithm, centralized register files are augmented by distributed hardware buffers attached directly to each \gls{fu}, known as **Reservation Stations** (\glspl{rs}). 
+In an architecture using Tomasulo's algorithm, centralized register files are augmented by distributed hardware buffers attached directly to each \gls{fu}, known as \textbf{\glsxtrfullpl{rs}}.
 
 Each \gls{rs} entry consists of the following tracking fields:
 \begin{itemize}
@@ -198,7 +198,7 @@ Each \gls{rs} entry consists of the following tracking fields:
     \item \textbf{$A$:} Holds immediate values or offset addresses for memory operations (Load/Store buffers).
 \end{itemize}
 
-Additionally, the **Register Status Table** tracks pending writes to the architectural register file. Each register $R_i$ contains a field, $Q_i$, which holds the tag of the \gls{rs} that will compute its future value. If no active instruction is slated to write to $R_i$, $Q_i$ remains blank or zero.
+Additionally, the 	extbf{Register Status Table} tracks pending writes to the architectural register file. Each register $R_i$ contains a field, $Q_i$, which holds the tag of the \gls{rs} that will compute its future value. If no active instruction is slated to write to $R_i$, $Q_i$ remains blank or zero.
 
 \subsubsection{1. Issue}
 Instructions are fetched sequentially from the instruction queue and issued in program order. During this stage:
@@ -239,7 +239,7 @@ When the \gls{fu} completes computation, the result is broadcast to clear depend
 While Tomasulo's algorithm significantly outperforms Scoreboarding by enabling dynamic execution and bypassing register bottlenecks, its microarchitectural behavior introduces specific trade-offs, advantages, and physical execution limits.
 
 \subsubsection{Dynamic Loop Unrolling and Memory Disambiguation}
-A major strength of Tomasulo's algorithm is its ability to perform **implicit dynamic loop unrolling** at runtime. Because destination registers are immediately renamed to \gls{rs} tags upon issue, instructions from consecutive loop iterations can be issued into reservation stations without stalling on \gls{war} or \gls{waw} register dependencies. This allows functional units to execute operations from multiple iterations simultaneously.
+A major strength of Tomasulo's algorithm is its ability to perform 	extbf{implicit dynamic loop unrolling} at runtime. Because destination registers are immediately renamed to \gls{rs} tags upon issue, instructions from consecutive loop iterations can be issued into reservation stations without stalling on \gls{war} or \gls{waw} register dependencies. This allows functional units to execute operations from multiple iterations simultaneously.
 
 However, register renaming alone does not eliminate hazards occurring through memory:
 \begin{itemize}
@@ -257,7 +257,7 @@ However, register renaming alone does not eliminate hazards occurring through me
 \subsubsection{Key Drawbacks and Microarchitectural Bottlenecks}
 \begin{itemize}
     \item \textbf{Hardware and Wiring Complexity:} Each \gls{rs} entry requires complex associative comparison hardware (snooping logic) to check broadcasted \gls{cdb} tags against pending $Q_j$ and $Q_k$ fields every clock cycle.
-    \item \textbf{The \glsfmtshort{cdb} Bottleneck:} A single \gls{cdb} restricts total system throughput by allowing only one \gls{fu} to write its result per cycle. While adding multiple buses increases bandwidth, it requires multiplying input ports and comparator logic across every \gls{rs} entry and register file slot.
+    \item \textbf{The \gls{cdb} Bottleneck:} A single \gls{cdb} restricts total system throughput by allowing only one \gls{fu} to write its result per cycle. While adding multiple buses increases bandwidth, it requires multiplying input ports and comparator logic across every \gls{rs} entry and register file slot.
     \item \textbf{Control Dependency Limits:} Without speculative execution and branch prediction, instruction issue stalls at control flow boundaries (e.g., conditional branches), capping the exploitable \gls{ilp} to the size of individual basic blocks.
-    \item \textbf{Imprecise Exceptions:} Because instructions complete out of program order, an exception raised by a long-latency instruction (e.g., floating-point divide) may occur after subsequent instructions have already modified the register file or memory state. This lack of in-order retirement creates imprecise exceptions, making state recovery and debugging significantly more difficult without additional hardware like a Reorder Buffer (\gls{rob}).
+    \item \textbf{Imprecise Exceptions:} Because instructions complete out of program order, an exception raised by a long-latency instruction (e.g., floating-point divide) may occur after subsequent instructions have already modified the register file or memory state. This lack of in-order retirement creates imprecise exceptions, making state recovery and debugging significantly more difficult without additional hardware like a \glsxtrfull{rob}.
 \end{itemize}

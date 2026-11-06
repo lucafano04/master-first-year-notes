@@ -48,9 +48,9 @@ The execution timeline strictly depends on the pipeline's internal latency rules
     \begin{tabular}{l l c}
         \textbf{Instruction producing result} & \textbf{Instruction using result} & \textbf{Latency in clock cycles} \\
         \hline
-        FP ALU op & Another FP ALU op & 3 \\
-        FP ALU op & Store double & 2 \\
-        Load double & FP ALU op & 1 \\
+        \gls{fp} \gls{alu} op & Another \gls{fp} \gls{alu} op & 3 \\
+        \gls{fp} \gls{alu} op & Store double & 2 \\
+        Load double & \gls{fp} \gls{alu} op & 1 \\
         Load double & Store double & 0 \\
         \hline
     \end{tabular}
@@ -169,7 +169,7 @@ A more refined static approach relies on software profiling from earlier executi
 Unlike static methods, \textbf{dynamic branch prediction} utilizes information available exclusively at runtime. Because a program's behavior can shift between different phases of execution, a dynamic predictor adapts by using the previous outcome (or sequence of outcomes) of a specific branch to predict its next execution. The prediction is no longer hardcoded; it fluidly changes alongside the program's dynamics.
 
 \subsubsection{The 1-Bit Predictor Finite State Machine}
-The basic 1-bit predictor operates using a simple 2-state Finite State Machine (\gls{fsm}). The predictor changes its guess immediately upon observing a misprediction.
+The basic 1-bit predictor operates using a simple 2-state \glsxtrfull{fsm}. The predictor changes its guess immediately upon observing a misprediction.
 
 \begin{figure}[htpb]
     \centering
@@ -182,7 +182,7 @@ The basic 1-bit predictor operates using a simple 2-state Finite State Machine (
               (1) edge [bend left] node {NT} (0)
               (1) edge [loop right] node {T} (1);
     \end{tikzpicture}
-    \caption{1-Bit Predictor FSM}
+    \caption{1-Bit Predictor \gls{fsm}}
     \label{fig:1bit-fsm}
 \end{figure}
 
@@ -319,7 +319,7 @@ This introduces \textbf{hysteresis} into the decision-making process: the predic
             (00) edge [loop below, min distance=12mm, in=240, out=300] node[edgetext, below] {NT} (00);
             
     \end{tikzpicture}
-    \caption{2-Bit Bimodal Predictor FSM (Hysteresis Topology)}
+    \caption{2-Bit Bimodal Predictor \gls{fsm} (Hysteresis Topology)}
     \label{fig:2bit-fsm}
 \end{figure}
 
@@ -332,7 +332,7 @@ By adding hysteresis, the 2-bit predictor successfully drops the misprediction r
 
 \subsection{Prediction Accuracy and \texorpdfstring{\(n\)}{n}-Bit Predictors}
 
-Ultimately, prediction accuracy is heavily reliant on the software application's characteristics. For instance, integer benchmarks tend to have complex, data-driven branches that are far less predictable compared to floating-point (FP) benchmarks, which often feature highly regular geometric or scientific loops.
+Ultimately, prediction accuracy is heavily reliant on the software application's characteristics. For instance, integer benchmarks tend to have complex, data-driven branches that are far less predictable compared to \glsxtrfull{fp} benchmarks, which often feature highly regular geometric or scientific loops.
 
 Interestingly, prediction accuracy is not significantly improved by simply increasing the size of the prediction buffers. When standard dimensional scaling yields diminishing returns, completely changing the underlying prediction mechanism (e.g., using correlating or tournament predictors) is required to achieve substantial results.
 
@@ -395,7 +395,7 @@ If we assume \texttt{d} toggles strictly between 2 and 0, and we use a simple 1-
 Because the predictor is always exactly one step out of phase with the alternating sequence, it mispredicts 100\% of the time!
 
 \subsubsection{The (1, 1) Predictor}
-To solve this, we can assume that for every entry of the Branch History Table (\gls{bht}) we have \textbf{two} plain 1-bit predictors:
+To solve this, we can assume that for every entry of the \glsxtrfull{bht} we have \textbf{two} plain 1-bit predictors:
 \begin{itemize}
     \item One used when the last executed branch globally was \textbf{not taken}.
     \item The other used when the last executed branch globally was \textbf{taken}.
@@ -523,7 +523,7 @@ The hardware runs both predictors simultaneously and monitors their outcomes. Th
     \item If the predictor in use predicts incorrectly, and the alternative predicts correctly, switch the preferred predictor.
 \end{itemize}
 
-To prevent the selector from thrashing wildly due to a single anomaly, hardware implementations add hysteresis using a 2-bit Finite State Machine (\gls{fsm}). 
+To prevent the selector from thrashing wildly due to a single anomaly, hardware implementations add hysteresis using a 2-bit \glsxtrfull{fsm}. 
 
 \begin{figure}[htpb]
     \centering
@@ -557,7 +557,7 @@ To prevent the selector from thrashing wildly due to a single anomaly, hardware 
             (SP1) edge [loop left, min distance=12mm, in=150, out=210] node[left, font=\sffamily\scriptsize] {\texttt{1/0}} (SP1)
             (SP2) edge [loop left, min distance=12mm, in=150, out=210] node[left, font=\sffamily\scriptsize] {\texttt{0/1}} (SP2);
     \end{tikzpicture}
-    \caption{2-Bit Tournament Selector FSM. Transitions are dictated by the correctness of each predictor, denoted as \texttt{Pred\_1 / Pred\_2} (where \texttt{1} = correct prediction, \texttt{0} = wrong prediction). If both predictors are correct (\texttt{1/1}) or both are wrong (\texttt{0/0}), the state remains unchanged.}
+    \caption{2-Bit Tournament Selector \gls{fsm}. Transitions are dictated by the correctness of each predictor, denoted as \texttt{Pred\_1 / Pred\_2} (where \texttt{1} = correct prediction, \texttt{0} = wrong prediction). If both predictors are correct (\texttt{1/1}) or both are wrong (\texttt{0/0}), the state remains unchanged.}
     \label{fig:tournament-fsm}
 \end{figure}
 
@@ -591,10 +591,10 @@ For our standard 5-stage pipeline, to completely avoid stalls, we should know fr
 The \gls{btb} is accessed during the IF stage using the address of the currently fetched instruction to index the buffer. 
 
 \begin{itemize}
-    \item \textbf{BTB Hit (Predicted Taken):} If the \gls{pc} of an instruction is found in the \gls{btb}, then the instruction must be a predicted taken branch; thus, fetching immediately begins from the predicted \gls{pc}. 
+    \item \textbf{\gls{btb} Hit (Predicted Taken):} If the \gls{pc} of an instruction is found in the \gls{btb}, then the instruction must be a predicted taken branch; thus, fetching immediately begins from the predicted \gls{pc}. 
     \item \textbf{Correct Prediction:} If the instruction is a branch, is found, and is correctly predicted, then execution proceeds with no delays.
     \item \textbf{False Hit (Misprediction):} If the entry is found, but the instruction turns out not to be a taken branch, it is removed from the buffer.
-    \item \textbf{BTB Miss (Resolved as Taken):} If the entry is not found and it subsequently turns out to be a taken branch, it is entered in the \gls{btb} along with the Branch Target Address (BTA), which becomes known at the end of the Instruction Decode (ID) stage.
+    \item \textbf{\gls{btb} Miss (Resolved as Taken):} If the entry is not found and it subsequently turns out to be a taken branch, it is entered in the \gls{btb} along with the \glsxtrfull{bta}, which becomes known at the end of the Instruction Decode (ID) stage.
 \end{itemize}
 
 As an architectural optimization, we only need to store the predicted-taken branches in the \gls{btb}, since an untaken branch follows the same strategy (fetch the next sequential instruction) as a standard non-branch instruction. However, complications arise when we are using a two-bit predictor, since this requires that we store information for both taken and untaken branches to track the state machine.

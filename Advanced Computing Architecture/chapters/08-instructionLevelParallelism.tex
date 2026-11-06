@@ -1,7 +1,7 @@
 \chapter{Limits to Instruction-Level Parallelism}
 \label{ch:limits_to_ilp}
 
-The theoretical and practical bounds of Instruction-Level Parallelism (\gls{ilp}) have been the subject of extensive architectural research. Historical studies have often presented conflicting estimates regarding the maximum achievable parallelism—ranging from modest speedups of 2 to 4 in early non-speculative integer execution to theoretical gains exceeding 100 in vectorized numerical workloads. These discrepancies stem from varying assumptions regarding workload characteristics (e.g., highly parallelized FORTRAN floating-point benchmarks versus control-heavy integer C applications), compiler optimization capabilities, and available microarchitectural hardware budgets.
+The theoretical and practical bounds of \glsxtrfull{ilp} have been the subject of extensive architectural research. Historical studies have often presented conflicting estimates regarding the maximum achievable parallelism—ranging from modest speedups of 2 to 4 in early non-speculative integer execution to theoretical gains exceeding 100 in vectorized numerical workloads. These discrepancies stem from varying assumptions regarding workload characteristics (e.g., highly parallelized FORTRAN floating-point benchmarks versus control-heavy integer C applications), compiler optimization capabilities, and available microarchitectural hardware budgets.
 
 This chapter examines the fundamental limits of \gls{ilp}. By evaluating an idealized processor model constrained solely by true data dependencies, we establish an empirical upper bound on performance and evaluate how realistic hardware bottlenecks—such as instruction window size, finite register files, and dependency check logic—degrade throughput.
 
@@ -13,7 +13,7 @@ To establish the absolute upper bound of \gls{ilp} inherent in application softw
 \begin{definition}{Ideal Processor Model}{ideal-processor}
 An \textbf{Ideal Processor} is an unbounded theoretical execution engine characterized by the following parameters:
 \begin{enumerate}
-    \item \textbf{Infinite Register Renaming:} An infinite pool of physical virtual registers is available, completely eliminating Write-After-Write (\glsfmtshort{waw}) and Write-After-Read (\glsfmtshort{war}) name hazards.
+    \item \textbf{Infinite Register Renaming:} An infinite pool of physical virtual registers is available, completely eliminating \glsxtrfull{waw} and \glsxtrfull{war} name hazards.
     \item \textbf{Perfect Branch and Jump Prediction:} All conditional branches, indirect jumps, and procedure calls are predicted with 100\% accuracy. Branch targets are known instantaneously at Fetch, allowing instructions from arbitrary execution paths to enter the pipeline without control stalls.
     \item \textbf{Perfect Memory Alias Analysis:} The exact memory effective address of every load and store instruction is determined instantaneously. A memory load instruction can be speculatively moved ahead of preceding store instructions provided their target addresses do not conflict (no address aliasing).
     \item \textbf{Ideal Memory Hierarchy (Perfect Cache):} All memory accesses (instruction fetches and data loads/stores) hit in cache with a deterministic 1-cycle latency. Memory bandwidth and port contention are infinite.
@@ -128,15 +128,15 @@ Figure~\ref{fig:ilp_ideal_machine} illustrates the empirical performance limits 
     \node[below=4pt, font=\bfseries\small] at (9.8, 0) {tomcatv};
 
 \end{tikzpicture}
-\caption{Upper Limit to ILP on an Ideal Processor Model across Integer and Floating-Point Benchmarks.}
+\caption{Upper Limit to \gls{ilp} on an Ideal Processor Model across Integer and Floating-Point Benchmarks.}
 \label{fig:ilp_ideal_machine}
 \end{figure}
 
 \begin{observation}{Workload Disparity in Unbounded Parallelism}{workload-disparity}
 As depicted in Figure~\ref{fig:ilp_ideal_machine}, theoretical parallelism varies drastically by application domain:
 \begin{itemize}
-    \item \textbf{Integer Programs (18 -- 60 IPC):} Integer benchmarks (\texttt{gcc}, \texttt{espresso}, \texttt{li}) exhibit lower overall parallelism. Integer code is dominated by tight control dependencies, complex pointer chasing, and frequent conditional branches that constrain execution distance even with perfect branch prediction.
-    \item \textbf{Floating-Point Programs (75 -- 150 IPC):} Floating-point benchmarks (\texttt{fpppp}, \texttt{doduc}, \texttt{tomcatv}) achieve massive parallelism. FP applications derive their parallelism primarily from regular loop-level parallelism operating over large, unrolled vector and matrix structures.
+    \item \textbf{Integer Programs (18 -- 60 \gls{ipc}):} Integer benchmarks (\texttt{gcc}, \texttt{espresso}, \texttt{li}) exhibit lower overall parallelism. Integer code is dominated by tight control dependencies, complex pointer chasing, and frequent conditional branches that constrain execution distance even with perfect branch prediction.
+    \item \textbf{Floating-Point Programs (75 -- 150 \gls{ipc}):} Floating-point benchmarks (\texttt{fpppp}, \texttt{doduc}, \texttt{tomcatv}) achieve massive parallelism. \gls{fp} applications derive their parallelism primarily from regular loop-level parallelism operating over large, unrolled vector and matrix structures.
 \end{itemize}
 \end{observation}
 
@@ -246,14 +246,14 @@ To evaluate performance under more realistic hardware conditions, we constrain t
     \end{scope}
 
 \end{tikzpicture}
-\caption{Impact of Restricting Instruction Window Size on Achievable ILP.}
+\caption{Impact of Restricting Instruction Window Size on Achievable \gls{ilp}.}
 \label{fig:ilp_window_impact}
 \end{figure}
 
 \begin{observation}{Key Takeaways from Instruction Window Analysis}{window-impact-takeaways}
 Evaluating Figure~\ref{fig:ilp_window_impact} reveals critical insights into hardware scheduling:
 \begin{enumerate}
-    \item \textbf{Sensitivity to Window Shrinkage:} Reducing the instruction window size from infinite down to realistic sizes (32 to 128 entries) causes a severe degradation in IPC. At a window size of 32, integer IPC falls to 8--9, while floating-point IPC drops to 9--14.
+    \item \textbf{Sensitivity to Window Shrinkage:} Reducing the instruction window size from infinite down to realistic sizes (32 to 128 entries) causes a severe degradation in \gls{ipc}. At a window size of 32, integer \gls{ipc} falls to 8--9, while floating-point \gls{ipc} drops to 9--14.
     \item \textbf{Intra-Iteration Bottlenecks:} At low window sizes, hardware cannot look far enough ahead into the instruction stream to overlap independent iterations of loops. Dependencies within single loop bodies constrain execution unless aggressive compiler optimizations (such as static loop unrolling and software pipelining) reorganize the instruction stream.
     \item \textbf{Diminishing Returns Above 2048 Entries:} Expanding the window beyond 2048 entries yields diminishing marginal returns for integer workloads, as control dependencies and address aliasing cap usable parallelism.
 \end{enumerate}
@@ -465,8 +465,8 @@ To understand why the selective (tournament) predictor yields superior issue rat
 Comparing the empirical results across prediction models demonstrates:
 \begin{itemize}
     \item \textbf{Dominance of Selective Prediction:} The 8K-entry selective (tournament) predictor outperforms both standard 2-bit counters and profile-based static prediction, suppressing misprediction rates to between 0\% (in numerical loops like \texttt{tomcatv}) and 6\% (in control-heavy benchmarks like \texttt{gcc}).
-    \item \textbf{Performance Degradation from Branch Mispredictions:} Even a modest misprediction rate drastically reduces IPC compared to perfect prediction. In \texttt{gcc}, a 6\% misprediction rate under the selective predictor reduces performance from 35.2 IPC down to 8.6 IPC—a nearly $4\times$ throughput penalty. Similar severe drops occur in \texttt{espresso}, \texttt{doduc}, and \texttt{fpppp}.
-    \item \textbf{Integer vs. Floating-Point Sensitivities:} Integer applications are constrained to 6--16 IPC under realistic branch prediction due to frequent unpredictable branches, whereas FP applications retain 13--48 IPC because loop-branch structures are highly predictable.
+    \item \textbf{Performance Degradation from Branch Mispredictions:} Even a modest misprediction rate drastically reduces \gls{ipc} compared to perfect prediction. In \texttt{gcc}, a 6\% misprediction rate under the selective predictor reduces performance from 35.2 \gls{ipc} down to 8.6 \gls{ipc}—a nearly $4\times$ throughput penalty. Similar severe drops occur in \texttt{espresso}, \texttt{doduc}, and \texttt{fpppp}.
+    \item \textbf{Integer vs. Floating-Point Sensitivities:} Integer applications are constrained to 6--16 \gls{ipc} under realistic branch prediction due to frequent unpredictable branches, whereas \gls{fp} applications retain 13--48 \gls{ipc} because loop-branch structures are highly predictable.
 \end{itemize}
 \end{observation}
 
@@ -483,7 +483,7 @@ Unlike register operands whose target specifiers are known at Decode, memory dep
     \item \textbf{None (No Disambiguation):} All memory references are conservatively assumed to alias with every preceding uncommitted store. A load instruction must stall until all preceding store effective addresses are fully computed and resolved.
 \end{enumerate}
 
-Figure~\ref{fig:ilp_memory_alias_impact} presents the resulting IPC across integer and floating-point benchmarks under these four alias analysis models.
+Figure~\ref{fig:ilp_memory_alias_impact} presents the resulting \gls{ipc} across integer and floating-point benchmarks under these four alias analysis models.
 
 \begin{figure}[htpb]
 \centering
@@ -575,15 +575,15 @@ Figure~\ref{fig:ilp_memory_alias_impact} presents the resulting IPC across integ
     \end{scope}
 
 \end{tikzpicture}
-\caption{Impact of Memory Address Alias Disambiguation Models on Achievable ILP.}
+\caption{Impact of Memory Address Alias Disambiguation Models on Achievable \gls{ilp}.}
 \label{fig:ilp_memory_alias_impact}
 \end{figure}
 
 \begin{observation}{Key Takeaways from Memory Alias Disambiguation}{memory-alias-takeaways}
 Evaluating Figure~\ref{fig:ilp_memory_alias_impact} highlights distinct memory behavior across software paradigms:
 \begin{itemize}
-    \item \textbf{Floating-Point / Fortran Workload Characteristics:} In FORTRAN numerical floating-point benchmarks (\texttt{fpppp}, \texttt{doduc}, \texttt{tomcatv}), data is stored entirely in global static arrays or stack frames with zero dynamic heap allocation. Consequently, the Global/Stack Perfect model achieves identical performance to the Perfect alias model (49 IPC in \texttt{fpppp}, 45 IPC in \texttt{tomcatv}). However, static Inspection or None models cause performance to collapse to 3--6 IPC due to false memory dependency stalls.
-    \item \textbf{Integer / C Workload Heap Reliance:} C integer programs (\texttt{gcc}, \texttt{espresso}, \texttt{li}) make extensive use of heap allocation (via \texttt{malloc}). Restricting perfect alias disambiguation to global and stack references reduces performance in \texttt{gcc} from 10 IPC down to 7 IPC, while Inspection drops performance down to 4 IPC.
+    \item \textbf{Floating-Point / Fortran Workload Characteristics:} In FORTRAN numerical floating-point benchmarks (\texttt{fpppp}, \texttt{doduc}, \texttt{tomcatv}), data is stored entirely in global static arrays or stack frames with zero dynamic heap allocation. Consequently, the Global/Stack Perfect model achieves identical performance to the Perfect alias model (49 \gls{ipc} in \texttt{fpppp}, 45 \gls{ipc} in \texttt{tomcatv}). However, static Inspection or None models cause performance to collapse to 3--6 \gls{ipc} due to false memory dependency stalls.
+    \item \textbf{Integer / C Workload Heap Reliance:} C integer programs (\texttt{gcc}, \texttt{espresso}, \texttt{li}) make extensive use of heap allocation (via \texttt{malloc}). Restricting perfect alias disambiguation to global and stack references reduces performance in \texttt{gcc} from 10 \gls{ipc} down to 7 \gls{ipc}, while Inspection drops performance down to 4 \gls{ipc}.
 \end{itemize}
 \end{observation}
 
@@ -597,7 +597,7 @@ Finally, we integrate all realistic hardware constraints simultaneously:
     \item \textbf{Memory Disambiguation:} Dynamic hardware memory address alias disambiguation.
 \end{itemize}
 
-Under these cumulative constraints, we vary the Instruction Window Size across eight configurations: Infinite, 256, 128, 64, 32, 16, 8, and 4 instructions. Figure~\ref{fig:ilp_realistic_window_impact} summarizes the achievable IPC.
+Under these cumulative constraints, we vary the Instruction Window Size across eight configurations: Infinite, 256, 128, 64, 32, 16, 8, and 4 instructions. Figure~\ref{fig:ilp_realistic_window_impact} summarizes the achievable \gls{ipc}.
 
 \begin{figure}[htpb]
 \centering
@@ -732,12 +732,12 @@ Under these cumulative constraints, we vary the Instruction Window Size across e
 \begin{observation}{Curved Drop Off in Realistic Parallelism}{realistic-window-takeaways}
 As shown in Figure~\ref{fig:ilp_realistic_window_impact}, introducing realistic branch prediction, register renaming, and memory disambiguation creates a characteristic "curved" degradation profile:
 \begin{itemize}
-    \item \textbf{Integer Benchmark Saturation (6 -- 12 IPC):} Integer applications (\texttt{gcc}, \texttt{espresso}, \texttt{li}) saturate early. Performance drops slightly from Infinite down to 256 entries, remains relatively stable between 256 and 128 entries (10--12 IPC), and drops steeply once the window shrinks below 64 entries.
-    \item \textbf{Floating-Point Sensitivity (8 -- 45 IPC):} Floating-point workloads exhibit sharp performance drops at every window size boundary (e.g., \texttt{tomcatv} drops from 56 IPC down to 45 IPC at 256 entries, 34 IPC at 128 entries, and 22 IPC at 64 entries).
+    \item \textbf{Integer Benchmark Saturation (6 -- 12 \gls{ipc}):} Integer applications (\texttt{gcc}, \texttt{espresso}, \texttt{li}) saturate early. Performance drops slightly from Infinite down to 256 entries, remains relatively stable between 256 and 128 entries (10--12 \gls{ipc}), and drops steeply once the window shrinks below 64 entries.
+    \item \textbf{Floating-Point Sensitivity (8 -- 45 \gls{ipc}):} Floating-point workloads exhibit sharp performance drops at every window size boundary (e.g., \texttt{tomcatv} drops from 56 \gls{ipc} down to 45 \gls{ipc} at 256 entries, 34 \gls{ipc} at 128 entries, and 22 \gls{ipc} at 64 entries).
 \end{itemize}
 \end{observation}
 
-\section{Summary and Practical Bounds on Achievable ILP}
+\section{Summary and Practical Bounds on Achievable \glsfmtshort{ilp}}
 \label{sec:summary_ilp_bounds}
 
 Understanding the limits of Instruction-Level Parallelism provides crucial design guidelines for microarchitects and compiler authors:
@@ -756,7 +756,7 @@ Understanding the limits of Instruction-Level Parallelism provides crucial desig
     \item \textbf{Evolution of Processing Paradigms:}
     \begin{itemize}
         \item Over recent decades, industry focus shifted heavily toward integer and irregular data structures.
-        \item Rather than pushing for unfeasible single-thread ILP bounds via ultra-wide dynamic instruction windows, modern high-performance microarchitectures embrace domain-specific hardware, wide \glsfmtshort{simd} vector extensions, and data-parallel accelerator architectures (GPUs/TPUs) to drive machine learning and high-throughput computing performance curves.
+        \item Rather than pushing for unfeasible single-thread \gls{ilp} bounds via ultra-wide dynamic instruction windows, modern high-performance microarchitectures embrace domain-specific hardware, wide \gls{simd} vector extensions, and data-parallel accelerator architectures (GPUs/TPUs) to drive machine learning and high-throughput computing performance curves.
     \end{itemize}
 \end{enumerate}
 \end{concept}

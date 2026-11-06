@@ -59,7 +59,7 @@ Embedded architectures usually run a single application alongside a very small, 
         \textbf{Characteristics} & \textbf{Registers} & \textbf{Cache} & \textbf{Main Memory} & \textbf{Disk Storage} \\
         \hline
         \textbf{Size} & $< 1$ KB & $< 16$ MB & $< 512$ GB & $> 1$ TB \\
-        \textbf{Technology} & Custom multi-port memory & On/Off-chip CMOS SRAM & CMOS DRAM & Magnetic Disk / SSD \\
+        \textbf{Technology} & Custom multi-port memory & On/Off-chip \gls{cmos} \gls{sram} & \gls{cmos} \gls{dram} & Magnetic Disk / SSD \\
         \textbf{First Access Time (ns)} & 0.25 -- 0.5 & 0.5 -- 25 & 50 -- 250 & $\sim 5,000,000$ \\
         \textbf{Bandwidth (MB/s)} & 50,000 -- 500,000 & 5,000 -- 20,000 & 2,500 -- 10,000 & 50 -- 500 \\
         \textbf{Managed By} & Compiler & Hardware & \gls{os} & \gls{os} / Operator \\
@@ -81,10 +81,10 @@ This quadratic increase in chip area is primarily driven by the massive amount o
 
 Due to these severe hardware limitations, a register file is typically capped at a maximum of 15 to 20 ports. When an architecture employs more than 4 functional units, architectural trade-offs dictate that 12 ports offers the absolute optimal balance between parallel throughput, physical space, and access latency.
 
-\section{On-Chip Cache and RAM Memories}
+\section{On-Chip Cache and \glsfmtshort{ram} Memories}
 The first level of memory, typically located directly on-chip, is the fastest type of memory available (excluding the \gls{cpu} registers). This memory is constructed using high-speed \gls{sram} and serves as the primary storage for immediately required data and instructions. Due to its limited physical size, architects typically implement one of two primary memory solutions at this level: standard \gls{sram} or a hardware Cache.
 
-\paragraph{Standard \gls{sram}} 
+\paragraph{Standard \glsfmtshort{sram}} 
 This type of memory is explicitly exposed to the programmer and the compiler. Data transfers must be performed manually by the software. Its use is generally restricted to low-end and specialized embedded processors, where strict worst-case latency guarantees and low power consumption are the primary concerns (often utilizing standard Von Neumann or Harvard architectures).
 
 \paragraph{Scratch Pad Memories}
@@ -152,14 +152,14 @@ Snippet di codice
 \subsection{Direct-Mapped Caches}
 The simplest approach to the placement problem is the \textbf{direct-mapped cache}. 
 
-Let $NB$ be the total number of blocks in the cache. Let $BAR$ (Block Address in RAM) be the main memory address stripped of its lower bits (i.e., removing the bits identifying the specific byte within the word and the word within the block). 
+Let $NB$ be the total number of blocks in the cache. Let $BAR$ (Block Address in \gls{ram}) be the main memory address stripped of its lower bits (i.e., removing the bits identifying the specific byte within the word and the word within the block). 
 
-In a direct-mapped cache, each block from RAM can be placed in \textit{one and only one} specific location in the cache, calculated via modulo arithmetic:
+In a direct-mapped cache, each block from \gls{ram} can be placed in \textit{one and only one} specific location in the cache, calculated via modulo arithmetic:
 \[ BAC = BAR \pmod{NB} \]
 where $BAC$ is the Block Address in the Cache, commonly referred to as the \textbf{cache index}. If $NB$ is a power of 2 (i.e., $NB = 2^{NAC}$), then the cache index corresponds precisely to the $NAC = \log_2(NB)$ least significant bits of the $BAR$.
 
 \paragraph{Solving Search and Placement in Direct-Mapped Caches}
-Because of the strict modulo mapping, the placement problem is trivial: blocks have a fixed, predetermined destination. However, the search problem is more challenging because multiple different memory blocks from different parts of RAM map to the exact same cache slot (creating potential ``cache collisions'').
+Because of the strict modulo mapping, the placement problem is trivial: blocks have a fixed, predetermined destination. However, the search problem is more challenging because multiple different memory blocks from different parts of \gls{ram} map to the exact same cache slot (creating potential ``cache collisions'').
 
 To solve this, each cache line must be equipped with two hardware fields:
 \begin{itemize}
@@ -200,15 +200,15 @@ If you double the degree of associativity ($N$) while keeping total cache size c
 \end{itemize}
 
 \subsection{Fully Associative Caches}
-At the opposite extreme of the design spectrum is the \textbf{fully associative cache}, where every block of RAM can be mapped onto \emph{any} block line in the cache with zero placement constraints.
+At the opposite extreme of the design spectrum is the \textbf{fully associative cache}, where every block of \gls{ram} can be mapped onto \emph{any} block line in the cache with zero placement constraints.
 \begin{itemize}
     \item \textbf{Placement Problem:} Non-existent. The cache index size is $0$ bits, and the tag comprises the complete address minus the block and byte displacements.
     \item \textbf{Search Problem:} Because a block can reside anywhere, the hardware cannot use an index lookup. Instead, it must run a \textbf{parallel comparison} of the requested address against all tags in the cache simultaneously. This requires a massive array of comparators, making it extremely expensive in silicon area and power consumption.
     \item \textbf{Replacement Problem:} Because placement is completely flexible, the cache requires explicit replacement policies when a miss occurs and the cache is full:
     \begin{itemize}
         \item \textbf{Random:} The block to be substituted is chosen randomly. It is simple and requires minimal hardware (a pseudo-random number generator), but its miss-rate efficiency is poor because it ignores temporal locality.
-        \item \textbf{Least Recently Used (LRU):} Evicts the block left unused for the longest time. It fully exploits temporal locality for maximum efficiency, but requires heavy hardware counter tracking whose complexity scales poorly with the number of blocks.
-        \item \textbf{First-In, First-Out (FIFO) / Round-Robin:} Evicts the oldest block by entry order. It provides the best practical trade-off between performance and hardware complexity and is widely used in modern systems, though it only approximates locality.
+        \item \textbf{\glsxtrfull{lru}:} Evicts the block left unused for the longest time. It fully exploits temporal locality for maximum efficiency, but requires heavy hardware counter tracking whose complexity scales poorly with the number of blocks.
+        \item \textbf{\glsxtrfull{fifo} / Round-Robin:} Evicts the oldest block by entry order. It provides the best practical trade-off between performance and hardware complexity and is widely used in modern systems, though it only approximates locality.
     \end{itemize}
 \end{itemize}
 
@@ -282,7 +282,7 @@ If a system relied solely on physical memory, it would be strictly limited in bo
     Every process is provided with the illusion of a dedicated, contiguous \textbf{virtual address space}. The blocks within this virtual space can be allocated anywhere in physical memory or offloaded to secondary storage. This layer of abstraction also permits seamless dynamic data relocation on the physical side without the process ever knowing.
 \end{concept}
 
-Similar to how a CPU cache operates, virtual memory relies on block-based data management. In a virtual memory system, these blocks are called \textbf{pages} (or segments), and a cache miss is referred to as a \textbf{page fault}. 
+Similar to how a \gls{cpu} cache operates, virtual memory relies on block-based data management. In a virtual memory system, these blocks are called \textbf{pages} (or segments), and a cache miss is referred to as a \textbf{page fault}. 
 
 Because processes operate entirely within their virtual spaces, the virtual addresses generated by a process must be continuously translated into actual physical addresses. This continuous translation process is known as \textbf{memory mapping} or address translation.
 
@@ -338,20 +338,20 @@ Because processes operate entirely within their virtual spaces, the virtual addr
 \end{concept}
 
 \paragraph{Fast Address Translation} 
-Because the page table is usually large, it is stored in main memory (and may itself be paged). Consequently, every memory reference conceptually requires \textit{two} physical memory accesses: one to fetch the translation from the page table, and a second to access the actual data. To mitigate this severe performance penalty, modern processors use a specialized, fully associative cache dedicated solely to address translation, known as a \textbf{\glsxtrfull{tlb}} (or simply TLB).
+Because the page table is usually large, it is stored in main memory (and may itself be paged). Consequently, every memory reference conceptually requires \textit{two} physical memory accesses: one to fetch the translation from the page table, and a second to access the actual data. To mitigate this severe performance penalty, modern processors use a specialized, fully associative cache dedicated solely to address translation, known as a \textbf{\glsxtrfull{tlb}} (or simply \gls{tlb}).
 
 \paragraph{Case Study: ARM Cortex-A8 Memory Hierarchy}
 To illustrate these concepts in practice, consider the ARM Cortex-A8 processor (notably used in devices like the original iPad and iPhone 4). Operating at up to 1~GHz with a dual-issue superscalar pipeline, it employs a sophisticated memory hierarchy featuring a split L1 cache and a unified L2 cache:
 \begin{itemize}
-    \item \textbf{\glsfmtshort{tlb}:} Fully associative with 32 entries. It utilizes a round-robin replacement policy and supports variable page sizes (4~KB, 16~KB, 64~KB, 1~MB, and 16~MB).
+    \item \textbf{\gls{tlb}:} Fully associative with 32 entries. It utilizes a round-robin replacement policy and supports variable page sizes (4~KB, 16~KB, 64~KB, 1~MB, and 16~MB).
     \item \textbf{L1 Cache:} 32~KB capacity, four-way set associative with 64-byte blocks and a random replacement policy. It is \textit{virtually indexed and physically tagged}, with a miss penalty of 11 clock cycles at 1~GHz.
     \item \textbf{L2 Cache:} 1~MB capacity, eight-way set associative with 64-byte blocks. Unlike the L1 cache, it is \textit{physically indexed and physically tagged}, carrying a higher miss penalty of 60 clock cycles.
 \end{itemize}
 
 \section{Main Memory}
 
-\paragraph{The \glsxtrfull{dram} Cell}
-Most dynamic random-access memory (\glsfmtshort{dram}) cells are built using a highly compact 1-transistor, 1-capacitor (1T1C) architecture, where data is stored as an electrical charge on a microscopic storage capacitor (\(C_i\)). 
+\paragraph{The \glsfmtfull{dram} Cell}
+Most \glsxtrfull{dram} cells are built using a highly compact 1-transistor, 1-capacitor (1T1C) architecture, where data is stored as an electrical charge on a microscopic storage capacitor (\(C_i\)). 
 
 When reading from the cell, this charge is shared with the bit-line. Because the cell capacitance is drastically smaller than the bit-line capacitance (\(C_i \ll C_{\text{BL}}\)), the reading process is heavily constrained. Furthermore, due to inevitable leakage currents, the charge slowly dissipates over time; therefore, the memory cell content \textit{must} be refreshed periodically. 
 
@@ -392,7 +392,7 @@ A read operation in a \gls{dram} cell is naturally destructive. Reading the data
         % Labels
         \node[align=center] at (3.2, 2.3) {Access\\Transistor};
     \end{tikzpicture}
-    \caption{Schematic of a 1T1C DRAM Cell}
+    \caption{Schematic of a 1T1C \gls{dram} Cell}
     \label{fig:dram-cell}
 \end{figure}
 
@@ -484,7 +484,7 @@ A read operation in a \gls{dram} cell is naturally destructive. Reading the data
 \end{figure}
 
 \paragraph{Memory Access Commands}
-To manage the complex internal state of dynamic memory (such as SDRAM and DDR), the memory controller issues specific commands:
+To manage the complex internal state of dynamic memory (such as \gls{sdram} and \gls{ddr}), the memory controller issues specific commands:
 
 \begin{description}
     \item[PRECHARGE] Closes the currently open row and prepares the memory bank for a new \texttt{ACTIVATE} command.
@@ -495,7 +495,7 @@ To manage the complex internal state of dynamic memory (such as SDRAM and DDR), 
 \end{description}
 
 \paragraph{Memory Access Commands}
-To manage the complex internal state of dynamic memory (such as SDRAM and DDR), the memory controller issues specific commands:
+To manage the complex internal state of dynamic memory (such as \gls{sdram} and \gls{ddr}), the memory controller issues specific commands:
 
 \begin{description}
     \item[PRECHARGE] Closes the currently open row and prepares the memory bank for a new \texttt{ACTIVATE} command.
@@ -505,7 +505,7 @@ To manage the complex internal state of dynamic memory (such as SDRAM and DDR), 
     \item[REFRESH] Restores the capacitor charge in the rows to prevent data loss from leakage. It essentially functions as a periodic, automated \texttt{ACTIVATE} and \texttt{PRECHARGE} sequence.
 \end{description}
 
-\paragraph{Basic DRAM Access Sequence}
+\paragraph{Basic \glsfmtshort{dram} Access Sequence}
 The process of reading from a dynamic memory chip follows a strict sequential timing protocol, as addresses are multiplexed over a shared address bus to save physical pins:
 
 \begin{enumerate}
@@ -639,7 +639,7 @@ The process of reading from a dynamic memory chip follows a strict sequential ti
         
     \end{tikzpicture}
     }
-    \caption{Detailed Timing Diagram for a DRAM Read Cycle. Note the explicit latching of the ROW and COLUMN addresses triggered by the falling edges of \(\overline{\text{RAS}}\) and \(\overline{\text{CAS}}\).}
+    \caption{Detailed Timing Diagram for a \gls{dram} Read Cycle. Note the explicit latching of the ROW and COLUMN addresses triggered by the falling edges of \(\overline{\text{RAS}}\) and \(\overline{\text{CAS}}\).}
     \label{fig:dram-read-cycle}
 \end{figure}
 
@@ -749,18 +749,18 @@ The process of reading from a dynamic memory chip follows a strict sequential ti
         
     \end{tikzpicture}
     }
-    \caption{Detailed Timing Diagram for a DRAM Write Cycle. The falling edge of \(\overline{\text{CAS}}\) latches the incoming data (\texttt{DQ}) when \(\overline{\text{WE}}\) is active.}
+    \caption{Detailed Timing Diagram for a \gls{dram} Write Cycle. The falling edge of \(\overline{\text{CAS}}\) latches the incoming data (\texttt{DQ}) when \(\overline{\text{WE}}\) is active.}
     \label{fig:dram-write-cycle}
 \end{figure}
 
-\paragraph{\glsxtrfull{sdram}}
-Synchronous Dynamic Random-Access Memory (\glsfmtshort{sdram}) improves upon classic asynchronous \gls{dram} architectures by introducing a fully synchronized interface. This architecture offers several critical performance advantages:
+\paragraph{\glsfmtfull{sdram}}
+\glsxtrfull{sdram} improves upon classic asynchronous \gls{dram} architectures by introducing a fully synchronized interface. This architecture offers several critical performance advantages:
 
 \begin{itemize}
     \item \textbf{Synchronous Operation:} All read and write operations are strictly coordinated by a dedicated clock signal (\texttt{CLK}). Consequently, all communication times, delays, and latencies are deterministic and measured as discrete multiples of the clock period.
     \item \textbf{Pipelined Commands:} Commands are dispatched and managed similarly to an instruction pipeline. The memory controller can issue a new command before the previous one has fully completed its data transfer, maximizing bus utilization and hiding internal array access times.
     \item \textbf{Burst Transfers:} \gls{sdram} supports burst mode, where a single addressing phase (one \texttt{READ} or \texttt{WRITE} command) initiates the rapid transfer of a contiguous block of data chunks. This greatly increases data throughput for sequential accesses.
-    \item \textbf{Double Data Rate (DDR):} In \gls{ddr} \gls{sdram} variants, data is transferred on both the rising and the falling edges of the clock signal. This technique effectively doubles the data bandwidth without requiring an increase in the base clock frequency.
+    \item \textbf{\glsxtrfull{ddr}:} In \gls{ddr} \gls{sdram} variants, data is transferred on both the rising and the falling edges of the clock signal. This technique effectively doubles the data bandwidth without requiring an increase in the base clock frequency.
 \end{itemize}
 
 \begin{concept}{CAS Latency (CL)}{cas-latency}
@@ -865,7 +865,7 @@ Synchronous Dynamic Random-Access Memory (\glsfmtshort{sdram}) improves upon cla
 
     \end{tikzpicture}
     }
-    \caption{Timing diagram comparing CAS Latency (CL) of 2 versus 3 in an SDRAM read burst sequence (Burst Length = 4). The latency defines the number of clock cycles between the READ command registration at $T_0$ and the first valid data output.}
+    \caption{Timing diagram comparing CAS Latency (CL) of 2 versus 3 in an \gls{sdram} read burst sequence (Burst Length = 4). The latency defines the number of clock cycles between the READ command registration at $T_0$ and the first valid data output.}
     \label{fig:sdram-cas-latency}
 \end{figure}
 
@@ -896,13 +896,13 @@ To read or write information, a movable actuator arm sweeps a read/write head ov
 \begin{description}
     \item[Seek time ($T_s$)] The mechanical time required to move the actuator arm to the desired track. This is typically 5--12 ms on average.
     \item[Rotation latency ($T_r$)] The time spent waiting for the requested sector to rotate under the read/write head. On average, this is half of a full rotation (3--5 ms depending on RPM).
-    \item[Transfer time ($T_t$)] The time needed to physically transfer the block of bits (typically a sector) under the head. This depends on block size, rotation speed, track recording density, and electronic interface speed. Modern disks use a built-in RAM buffer (4--16 MB) to cache reads/writes, exploiting spatial locality to drastically reduce $T_t$.
+    \item[Transfer time ($T_t$)] The time needed to physically transfer the block of bits (typically a sector) under the head. This depends on block size, rotation speed, track recording density, and electronic interface speed. Modern disks use a built-in \gls{ram} buffer (4--16 MB) to cache reads/writes, exploiting spatial locality to drastically reduce $T_t$.
     \item[Controller time ($T_c$)] The computational overhead imposed by the disk controller to decode the request, perform addressing math, and manage the bus interaction.
 \end{description}
 
 
 \subsection{Flash \glsfmtshort{rom} and \glsfmtshort{eeprom}}
-Solid-state storage, notably Flash memory and Electrically Erasable Programmable Read-Only Memory (\gls{eeprom}), is extensively used as rewritable \gls{rom} and main storage in embedded systems. Due to strict power and size constraints, solid-state memory is vastly preferred over mechanical hard disks in mobile and portable devices.
+Solid-state storage, notably Flash memory and \glsxtrfull{eeprom}, is extensively used as rewritable \gls{rom} and main storage in embedded systems. Due to strict power and size constraints, solid-state memory is vastly preferred over mechanical hard disks in mobile and portable devices.
 
 \paragraph{Floating Gate Transistors}
 At the hardware level, a Flash or \gls{eeprom} bit cell is constructed using a \textbf{Floating Gate MOS transistor}. Memory is written by forcing electrons to cross an insulating oxide layer into a "floating gate" via quantum tunneling or avalanche injection. 

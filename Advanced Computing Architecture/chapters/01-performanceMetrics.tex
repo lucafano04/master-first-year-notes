@@ -57,7 +57,7 @@ In modern \gls{cmos} technology, power consumption is driven by two primary comp
 \end{definition}
 
 \section{Cost Estimation}
-Device cost tends to decrease over time even without improvements in fabrication technology, driven by the \textbf{learning curve effect}. By increasing production volumes, manufacturing costs drop significantly ($\sim 10\%$ cost reduction per doubling of volume), allowing non-recurring engineering (\gls{nre}) and development costs to be amortized over a massive machine base.
+Device cost tends to decrease over time even without improvements in fabrication technology, driven by the \textbf{learning curve effect}. By increasing production volumes, manufacturing costs drop significantly ($\sim 10\%$ cost reduction per doubling of volume), allowing \glsxtrfull{nre} and development costs to be amortized over a massive machine base.
 
 \begin{definition}{Integrated Circuit Cost}{ic-cost}
     The cost of a manufactured \gls{ic} is governed by:
@@ -99,10 +99,10 @@ Historically, microprocessor performance scaling was driven by \textbf{Moore's L
 \end{definition}
 
 \subsection{The Clock Rate}
-While clock rate is repeatable, easy to measure, consistent, and independent, it is a **misleading metric** (pushed primarily for marketing). It is neither linear nor reliable because it ignores instructions per cycle, computational complexity per cycle, and memory/I/O bottlenecks.
+While clock rate is repeatable, easy to measure, consistent, and independent, it is a 	extbf{misleading metric} (pushed primarily for marketing). It is neither linear nor reliable because it ignores instructions per cycle, computational complexity per cycle, and memory/I/O bottlenecks.
 
 \subsection{Instruction and Operation Metrics}
-\begin{definition}{MIPS (Million Instructions Per Second)}{mips-def}
+\begin{definition}{\glsfmtfull{mips}}{mips-def}
     Defined as the execution instruction throughput:
     \[
         \text{\gls{mips}} = \frac{N}{T \cdot 10^6}
@@ -110,7 +110,7 @@ While clock rate is repeatable, easy to measure, consistent, and independent, it
     where \(N\) is total instruction count and \(T\) is execution time. While easy to measure, it is non-linear and inconsistent across different \glspl{isa}.
 \end{definition}
 
-\begin{definition}{MOPS and MFLOPS}{mops-mflops-def}
+\begin{definition}{\glsfmtshort{mops} and \glsfmtshort{mflops}}{mops-mflops-def}
     Arithmetic throughput metrics measuring integer operations (\gls{mops}) and floating-point operations (\gls{mflops}) per second:
     \begin{align*}
         \text{\gls{mops}} &= \frac{O}{T \cdot 10^6} & \text{\gls{mflops}} &= \frac{F}{T \cdot 10^6}
@@ -125,7 +125,7 @@ While clock rate is repeatable, easy to measure, consistent, and independent, it
 
 \noindent \textbf{Execution Time vs. \gls{cpu} Time:} \gls{cpu} time measures pure processor engagement and is divided into \textbf{User time} (executing application instructions) and \textbf{System time} (executing \gls{os} kernel instructions on behalf of the task).
 
-\begin{definition}{CPU Performance Equation}{cpu-perf-eq}
+\begin{definition}{\glsfmtshort{cpu} Performance Equation}{cpu-perf-eq}
     Total \gls{cpu} time is evaluated using the fundamental performance equation:
     \[
         \text{\gls{cpu} Time} = N_{\text{CLK}} \cdot T_{\text{CLK}} = \text{CPI} \cdot \text{IC} \cdot T_{\text{CLK}}
@@ -133,7 +133,7 @@ While clock rate is repeatable, easy to measure, consistent, and independent, it
     where \(\text{IC}\) is Instruction Count, \(\text{CPI}\) is \gls{cpi}, and \(T_{\text{CLK}}\) is the clock period.
 \end{definition}
 
-\begin{definition}{Average CPI}{avg-cpi}
+\begin{definition}{Average \glsfmtshort{cpi}}{avg-cpi}
     Computed across distinct instruction classes:
     \[
         \text{CPI} = \frac{\sum_{i=1}^n \text{IC}_i \cdot \text{CPI}_i}{\text{IC}}

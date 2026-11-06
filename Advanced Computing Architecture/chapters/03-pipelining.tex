@@ -57,7 +57,7 @@ The final result is written back into the register file. For \gls{alu} instructi
     \renewcommand{\arraystretch}{1.5} % Adds vertical breathing room between stages
     \begin{tabular}{| >{\raggedright\arraybackslash}p{0.08\textwidth} | >{\raggedright\arraybackslash}p{0.26\textwidth} | >{\raggedright\arraybackslash}p{0.26\textwidth} | >{\raggedright\arraybackslash}p{0.26\textwidth} |}
          \hline
-         \textbf{Stage} & \textbf{ALU Instruction} & \textbf{Load/Store Instruction} & \textbf{Branch Instruction} \\
+         \textbf{Stage} & \textbf{\gls{alu} Instruction} & \textbf{Load/Store Instruction} & \textbf{Branch Instruction} \\
          \hline\hline
          
          \textbf{IF} & 
@@ -96,7 +96,7 @@ The final result is written back into the register file. For \gls{alu} instructi
 
 \noindent Note that this baseline, unpipelined architecture executes each instruction in at most 5 clock cycles under the supervision of a simplified \gls{cu}. At the end of every clock cycle, all computed values are systematically written into an architectural or intermediate storage element (e.g., main memory, \glspl{gpr}, the \gls{pc}, or temporary pipeline registers). It is important to emphasize that this specific datapath is neither the only possible implementation of our \gls{isa}, nor the most efficient.
 
-\paragraph{Unpipelined CPI Computation Example} 
+\paragraph{Unpipelined \glsfmtshort{cpi} Computation Example} 
 Assume a processor operating with a \(1\,\text{ns}\) clock cycle, where \gls{alu} and Branch instructions take 4 cycles to complete, and Memory (Load/Store) instructions require the full 5 cycles. 
 
 Given a typical instruction frequency distribution of:
@@ -145,7 +145,7 @@ In an ideal scenario without any interruptions, once the pipeline is full, every
 
 \noindent Notice that during Clock Cycle 5, the pipeline is fully saturated: the \gls{cpu} is simultaneously writing back instruction \(i\), accessing memory for \(i+1\), executing \(i+2\), decoding \(i+3\), and fetching \(i+4\).
 
-\paragraph{Pipelined CPI and Speedup Computation}
+\paragraph{Pipelined \glsfmtshort{cpi} and Speedup Computation}
 In this ideal pipeline, there are no stalls (no structural, data, or control hazards). After the initial \(p-1\) cycles required to fill the pipeline (where \(p=5\) stages), exactly one instruction finishes execution during every single clock cycle. Thus, the ideal pipelined \gls{cpi} remains strictly $1.0$.
 
 However, physical pipelining requires the insertion of intermediate pipeline registers between stages. These registers introduce unavoidable hardware overhead (\(t_o\)), such as register setup time, propagation delay, and clock skew. Assuming this overhead forces our clock cycle period to increase from the unpipelined \(1.0\,\text{ns}\) to \(1.2\,\text{ns}\), the pipelined performance is calculated as follows:
@@ -227,7 +227,7 @@ There are several methods to mitigate control hazards. The simplest four approac
 Although theoretical branch delay slots can be multiple instructions long, in practice, it is difficult for compilers to find enough independent instructions to fill more than one delay slot. To reduce the control hazard time penalty entirely, architects can shift the branch condition evaluation and the \gls{bta} calculation from the \texttt{EX} stage back to the \texttt{ID} stage. This requires adding a dedicated adder and comparator to the \texttt{ID} stage hardware, but it successfully decreases the branch penalty from three stalls down to just one.
 
 \subsection{\glsfmtshort{cpi} and Speedup after Hazards}
-\begin{concept}{Realistic CPI and Speedup with Hazards}{realistic-cpi}
+\begin{concept}{Realistic \glsfmtshort{cpi} and Speedup with Hazards}{realistic-cpi}
     The actual speedup of a pipelined processor, explicitly accounting for the delays introduced by data and control hazards, is calculated as follows:
     \[\text{Speedup} = \frac{\overline{\text{CPI}}_{\text{unpipelined}}}{\overline{\text{CPI}}_{\text{pipelined}}} \times \frac{T_{\text{clk, unpipelined}}}{T_{\text{clk, pipelined}}}\]
     Assuming \(\overline{N}_{\text{stalls}}\) represents the average number of stall cycles introduced per instruction due to hazards, the pipelined \gls{cpi} is:
@@ -251,10 +251,10 @@ There are numerous sources of exceptions, including:
 
 \noindent Not all \glspl{cpu} are designed to support every exception type natively; some higher-level exceptions, such as breakpoints or instruction tracing, are exclusively implemented for debugging purposes.
 
-\paragraph{Exception Handling in Non-Pipelined \glspl{cpu}} 
-In a non-pipelined architecture, execution management is relatively simple. Because only one instruction executes at a time, an exception is unambiguously associated with that specific instruction. These events are managed by dedicated routines. When an exception arises, the \gls{cpu} looks up a vector table containing the memory address of the corresponding Exception Service Routine (ESR). The hardware saves the current Program Counter (\gls{pc}), runs the ESR to handle the exception, and then returns control to the original program if required.
+\paragraph{Exception Handling in Non-Pipelined \glsfmtshortpl{cpu}} 
+In a non-pipelined architecture, execution management is relatively simple. Because only one instruction executes at a time, an exception is unambiguously associated with that specific instruction. These events are managed by dedicated routines. When an exception arises, the \gls{cpu} looks up a vector table containing the memory address of the corresponding Exception Service Routine (ESR). The hardware saves the current \glsxtrfull{pc}, runs the ESR to handle the exception, and then returns control to the original program if required.
 
-\paragraph{Exception Handling in Pipelined \glspl{cpu}} 
+\paragraph{Exception Handling in Pipelined \glsfmtshortpl{cpu}} 
 In pipelined architectures, the situation is drastically more complicated. The processor must correctly identify exactly which instruction in the pipeline caused the exception and save the precise machine state at that exact moment. Because different types of exceptions occur at different stages of the pipeline, the management unit must utilize distinct handling procedures. The most difficult scenario involves handling exceptions where the faulting instruction must be resumed after the exception is resolved (e.g., a page fault); this requires a completely \textbf{restartable pipeline}.
 
 \paragraph{Pipeline Stages and Specific Exceptions}
@@ -301,13 +301,13 @@ While superpipelining reduces the clock cycle time, it increases the total numbe
 \end{enumerate}
 
 \paragraph{Handling Multicycle Operations}
-Certain operations, such as floating-point arithmetic, cannot physically complete in a single cycle. To handle this, the \texttt{EX} stage is repeated as many times as necessary, and the \gls{cpu} employs multiple dedicated functional units (e.g., FP Add, FP Multiply, FP Divide). 
+Certain operations, such as floating-point arithmetic, cannot physically complete in a single cycle. To handle this, the \texttt{EX} stage is repeated as many times as necessary, and the \gls{cpu} employs multiple dedicated functional units (e.g., \gls{fp} Add, \gls{fp} Multiply, \gls{fp} Divide). 
 
 However, allowing multicycle operations means instructions no longer finish in strict program order, altering how hazards behave:
 \begin{itemize}
-    \item \textbf{WAW (Write-After-Write) Hazards:} These are now possible because a faster instruction might reach the \texttt{WB} stage before an older, slower multicycle instruction.
-    \item \textbf{WAR (Write-After-Read) Hazards:} These remain impossible because all operands are still strictly read in order during the \texttt{ID} stage.
-    \item \textbf{RAW (Read-After-Write) Stalls:} These become much more frequent due to the longer latency of the multicycle instructions.
+    \item \textbf{\glsxtrfull{waw} Hazards:} These are now possible because a faster instruction might reach the \texttt{WB} stage before an older, slower multicycle instruction.
+    \item \textbf{\glsxtrfull{war} Hazards:} These remain impossible because all operands are still strictly read in order during the \texttt{ID} stage.
+    \item \textbf{\glsxtrfull{raw} Stalls:} These become much more frequent due to the longer latency of the multicycle instructions.
     \item \textbf{Structural Hazards:} Stalls will occur if multiple instructions attempt to use the same functional unit, or if they arrive at the \texttt{MEM} or \texttt{WB} stages simultaneously.
 \end{itemize}
 

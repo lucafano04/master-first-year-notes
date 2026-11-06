@@ -32,13 +32,13 @@ To support both speculative branch execution and precise exception handling, a m
 
 \section{The Reorder Buffer (\glsfmtshort{rob})}
 
-The central hardware structure responsible for managing in-order retirement and speculative state is the Reorder Buffer (\gls{rob}).
+The central hardware structure responsible for managing in-order retirement and speculative state is the \glsxtrfull{rob}.
 
 \subsection{Role and Architecture of the \glsfmtshort{rob}}
 The \gls{rob} acts as an intermediate buffer holding instruction results from the time execution finishes until the instruction is safe to commit. In an architecture with speculation:
 \begin{itemize}
     \item The \gls{rob} extends the physical register storage, holding speculative values that have completed execution but have not yet committed.
-    \item The \gls{rob} replaces the register-renaming role previously handled by Reservation Station (\gls{rs}) tags in basic Tomasulo's algorithm. Register status fields now point to \gls{rob} entries rather than \gls{rs} entries.
+    \item The \gls{rob} replaces the register-renaming role previously handled by \glsxtrfull{rs} tags in basic Tomasulo's algorithm. Register status fields now point to \gls{rob} entries rather than \gls{rs} entries.
     \item \glspl{rs} are still required, but their role is reduced to buffering operands and tracking dependencies between issue and execution start.
 \end{itemize}
 
@@ -64,9 +64,9 @@ The \gls{rob} acts as an intermediate buffer holding instruction results from th
     % Direction arrow
     \draw[->, thick, gray] (110:1.7cm) arc (110:70:1.7cm) node[midway, above, font=\scriptsize] {In-Order Allocation};
     
-    \node at (0,0) {\textbf{\glsfmtshort{rob}}};
+    \node at (0,0) {\textbf{\gls{rob}}};
 \end{tikzpicture}
-\caption{Structure of the Reorder Buffer (\gls{rob}) as a FIFO circular queue.}
+\caption{Structure of the \glsxtrfull{rob} as a \gls{fifo} circular queue.}
 \label{fig:rob_circular_queue}
 \end{figure}
 
@@ -92,7 +92,7 @@ With the integration of the \gls{rob}, Tomasulo's algorithm expands from three t
 \subsection{Issue}
 Instructions are fetched from the instruction queue and dispatched in program order:
 \begin{itemize}
-    \item \textbf{Instruction Retrieval:} Fetch the next instruction from the Instruction Queue/Buffer (\gls{ifq}).
+    \item \textbf{Instruction Retrieval:} Fetch the next instruction from the \glsxtrfull{ifq}.
     \item \textbf{Resource Verification:} An instruction issues if a free reservation station \textit{and} a free \gls{rob} entry exist. If either is full, a structural hazard stalls the issue stage.
     \item \textbf{Operand Retrieval:} If a source operand is available in the architectural Register File, it is read into the assigned \gls{rs}. If the operand is pending (pointing to an active \gls{rob} entry), the \gls{rs} captures the \gls{rob} tag or reads the speculative value directly from the \gls{rob} if its Ready flag is set.
     \item \textbf{Register Renaming:} The destination register entry in the Register Status Table is updated to point to the allocated \gls{rob} entry index ($Q_i = \text{\gls{rob}}_{\text{tail}}$).
@@ -142,7 +142,7 @@ Commit occurs strictly in program order when an instruction reaches the Head of 
 \section{Hardware Data Structures for Speculation}
 \label{sec:speculation_data_structures}
 
-The integration of hardware speculation modifies the fundamental tracking structures used in Tomasulo's algorithm. The primary structural shift is that all register references and pending operand tags are translated to point directly to \glsfmtshort{rob} entry indices rather than Reservation Station (\gls{rs}) tags. 
+The integration of hardware speculation modifies the fundamental tracking structures used in Tomasulo's algorithm. The primary structural shift is that all register references and pending operand tags are translated to point directly to \gls{rob} entry indices rather than \glsxtrfull{rs} tags. 
 
 If an instruction requires a source register that is not currently being updated by any in-flight instruction, the value is read directly from the architectural Register File at the Issue stage. However, if a pending instruction will write to the register, the operand is tagged with the index of the \gls{rob} entry assigned to that producing instruction.
 
@@ -180,20 +180,20 @@ Reservation stations buffer instructions and operands prior to execution. In a s
 \small
 \begin{tabular}{lll}
 \hline
-\textbf{Architectural Feature} & \textbf{Basic Tomasulo's Algorithm} & \textbf{Speculative Architecture (+ \glsfmtshort{rob})} \\ \hline
+\textbf{Architectural Feature} & \textbf{Basic Tomasulo's Algorithm} & \textbf{Speculative Architecture (+ \gls{rob})} \\ \hline
 \textbf{Operand Tags ($Q_j, Q_k$)} & Point to producing \gls{rs} entry & Point to producing \gls{rob} entry \\
 \textbf{Register Status Pointer} & Points to producing \gls{rs} entry & Points to allocated \gls{rob} entry \\
 \textbf{Execution Result Target} & Broadcast to \gls{rs} \& Register File & Broadcast to \gls{rs} \& \gls{rob} \texttt{Value} field \\
 \textbf{Architectural State Update} & Immediate on \gls{cdb} broadcast & Deferred until in-order \gls{rob} Commit \\ \hline
 \end{tabular}
-\caption{Comparison of Tag Mapping: Basic Tomasulo's vs. Speculative Tomasulo + \glsfmtshort{rob}}
+\caption{Comparison of Tag Mapping: Basic Tomasulo's vs. Speculative Tomasulo + \gls{rob}}
 \label{tab:tomasulo_vs_rob_tags}
 \end{table}
 
 \section{Explicit Register Renaming}
 \label{sec:explicit_register_renaming}
 
-While basic Tomasulo's algorithm and \gls{rob}-based architectures employ implicit register renaming—where pending register outputs are dynamically mapped to reservation station (\gls{rs}) tags or \gls{rob} entry indices—modern high-performance processors often implement explicit register renaming. 
+While basic Tomasulo's algorithm and \gls{rob}-based architectures employ implicit register renaming—where pending register outputs are dynamically mapped to \glsxtrfull{rs} tags or \gls{rob} entry indices—modern high-performance processors often implement explicit register renaming. 
 
 Rather than holding speculative values inside distributed reservation stations or the \gls{rob}, explicit register renaming decouples architectural register names from physical storage by introducing a single, unified \glsxtrfull{prf} that contains significantly more registers than specified by the \gls{isa}.
 
@@ -258,7 +258,7 @@ Assume initial mappings: $F_0 \to P_0$, $F_2 \to P_2$, $F_4 \to P_4$, $F_6 \to P
 \small
 \begin{tabular}{c l c c l l}
 \hline
-\textbf{Inst} & \textbf{Pipeline Phase} & \textbf{Dest} & \textbf{Allocated} & \textbf{Active \glsfmtshort{rat} ($F_0$ Map)} & \textbf{Free List / Deallocation Event} \\ \hline
+\textbf{Inst} & \textbf{Pipeline Phase} & \textbf{Dest} & \textbf{Allocated} & \textbf{Active \gls{rat} ($F_0$ Map)} & \textbf{Free List / Deallocation Event} \\ \hline
 -- & \textit{Initial State} & -- & -- & $F_0 \to P_0$ & Free List: $\{P_{16}, P_{17}, P_{18}, \dots\}$ \\
 $I_1$ & \textbf{Rename / Issue} & $F_0$ & $P_{16}$ & $F_0 \to P_{16}$ (prev: $P_0$) & Pop $P_{16}$. $I_1$ records $P_{\text{old}} = P_0$. \\
 $I_2$ & \textbf{Rename / Issue} & $F_0$ & $P_{17}$ & $F_0 \to P_{17}$ (prev: $P_{16}$) & Pop $P_{17}$. $I_2$ records $P_{\text{old}} = P_{16}$. \\
@@ -280,7 +280,7 @@ Explicit register renaming provides several microarchitectural advantages over i
 
 \begin{itemize}
     \item \textbf{Decoupling Renaming from Dynamic Scheduling:} Explicit renaming separates register mapping from issue logic and functional unit scheduling. The front-end pipeline can mirror standard in-order architectures (such as a multi-issue \textsf{DLX} superscalar pipeline) or integrate with out-of-order execution engines (such as dynamic scoreboards or reservation stations).
-    \item \textbf{Unified Operand Storage:} All values—whether committed, speculative, or in-flight—reside within a single centralized physical register file (\gls{prf}). This eliminates the need to duplicate storage across reservation stations, \gls{rob} value fields, and architectural register files.
+    \item \textbf{Unified Operand Storage:} All values—whether committed, speculative, or in-flight—reside within a single centralized \glsxtrfull{prf}. This eliminates the need to duplicate storage across reservation stations, \gls{rob} value fields, and architectural register files.
     \item \textbf{Simplified Bypassing and Pipeline Balance:} Operands are fetched from a unified register file, allowing standard result forwarding networks to route data directly between physical registers and execution units. This simplifies hardware timing and load/store balancing.
     \item \textbf{Efficient Precise Interrupt Recovery:} To roll back state after an exception or branch misprediction, the hardware only needs to restore the map table pointers (\gls{rat} state) to the committed state (\gls{arat}) or a saved checkpoint, avoiding complex scrubbing of distributed values.
     \item \textbf{Industry Adoption:} This paradigm has been widely deployed in major out-of-order microarchitectures, including the MIPS R10000, DEC Alpha 21264, and HP PA-8000 processors.
@@ -292,7 +292,7 @@ Explicit register renaming provides several microarchitectural advantages over i
 Hardware-based speculation represents a major leap in extracting \gls{ilp} by decoupling execution from control flow boundaries. The key insights and trade-offs of speculation include:
 
 \begin{itemize}
-    \item \textbf{Expanding the \glsfmtshort{ilp} Window:} By speculatively executing past unresolved conditional branches, the processor breaks through basic block limits, unlocking concurrency across multiple control paths.
+    \item \textbf{Expanding the \gls{ilp} Window:} By speculatively executing past unresolved conditional branches, the processor breaks through basic block limits, unlocking concurrency across multiple control paths.
     \item \textbf{Precise Exception Management:} Exceptions raised during speculative execution are not handled immediately. Instead, the exception flag is recorded in the instruction's \gls{rob} entry (\texttt{Exception Status}).
     \item \textbf{Dual Resolution of Speculative Faults:}
     \begin{enumerate}
@@ -305,7 +305,7 @@ Hardware-based speculation represents a major leap in extracting \gls{ilp} by de
 \section{Advanced Instruction-Level Parallelism Techniques}
 \label{sec:advanced_ilp_techniques}
 
-Achieving high Instruction-Level Parallelism (\glsfmtshort{ilp}) requires resolving data hazards, handling control dependencies, and dynamic memory disambiguation. Table~\ref{tab:ilp_comparison} summarizes the core dynamic scheduling and speculation techniques studied thus far.
+Achieving high \glsxtrfull{ilp} requires resolving data hazards, handling control dependencies, and dynamic memory disambiguation. Table~\ref{tab:ilp_comparison} summarizes the core dynamic scheduling and speculation techniques studied thus far.
 
 \begin{table}[htbp]
 \centering
@@ -316,10 +316,10 @@ Achieving high Instruction-Level Parallelism (\glsfmtshort{ilp}) requires resolv
 \begin{tabularx}{\textwidth}{|>{\hsize=0.75\hsize\raggedright\arraybackslash}X|>{\hsize=0.95\hsize\raggedright\arraybackslash}X|>{\hsize=1.15\hsize\raggedright\arraybackslash}X|>{\hsize=1.15\hsize\raggedright\arraybackslash}X|}
 \hline
 \textbf{Technique} & \textbf{Control Structure} & \textbf{Hazard Resolution} & \textbf{Execution / Commit Order} \\ \hline
-\textbf{Scoreboard} & Centralized control & Stalls on \glsfmtshort{waw} and \glsfmtshort{war} hazards & In-order issue, Out-of-order execution, Out-of-order commit \\ \hline
-\textbf{Tomasulo's Algorithm} & Distributed (Reservation Stations, \glsfmtshort{cdb}) & Eliminates \glsfmtshort{waw}/\glsfmtshort{war} via implicit register renaming & In-order issue, Out-of-order execution, Out-of-order commit \\ \hline
-\textbf{Explicit Renaming} & Physical Register File (PRF) \& Register Alias Table (RAT) & Eliminates \glsfmtshort{waw}/\glsfmtshort{war} across any architecture & In-order issue, Out-of-order execution, Out-of-order commit \\ \hline
-\textbf{Hardware Speculation} & Reorder Buffer (ROB) \& Branch Predictor & Maintains precise exceptions and speculative state & In-order issue, Out-of-order execution, In-order commit \\ \hline
+\textbf{Scoreboard} & Centralized control & Stalls on \gls{waw} and \gls{war} hazards & In-order issue, Out-of-order execution, Out-of-order commit \\ \hline
+\textbf{Tomasulo's Algorithm} & Distributed (Reservation Stations, \gls{cdb}) & Eliminates \gls{waw}/\gls{war} via implicit register renaming & In-order issue, Out-of-order execution, Out-of-order commit \\ \hline
+\textbf{Explicit Renaming} & \gls{prf} \& \gls{rat} & Eliminates \gls{waw}/\gls{war} across any architecture & In-order issue, Out-of-order execution, Out-of-order commit \\ \hline
+\textbf{Hardware Speculation} & \glsxtrfull{rob} \& Branch Predictor & Maintains precise exceptions and speculative state & In-order issue, Out-of-order execution, In-order commit \\ \hline
 \end{tabularx}
 \end{table}
 
@@ -328,22 +328,22 @@ Beyond basic register-level dynamic scheduling, modern high-performance microarc
     \item \textbf{Speculative Load/Store Execution:} Allows memory load operations to execute out-of-order relative to unresolved store instructions.
     \item \textbf{Memory Dependency Prediction:} Predicts runtime memory address aliasing to balance speculative load execution against memory order violation penalties.
     \item \textbf{Data Value Speculation:} Predicts output values of long-latency instructions to bypass execution bottlenecks.
-    \item \textbf{Multiple Issue (Superscalar / VLIW):} Dispatches and issues multiple instructions simultaneously per clock cycle.
+    \item \textbf{Multiple Issue (Superscalar / \gls{vliw}):} Dispatches and issues multiple instructions simultaneously per clock cycle.
 \end{itemize}
 
 \section{Speculative Loads and Stores}
 \label{sec:speculative_load_stores}
 
-Unlike register operations—where variable names strictly bound data dependencies and mapping tables (RAT) manage physical locations—memory dependencies are dynamic and determined by computed memory addresses.
+Unlike register operations—where variable names strictly bound data dependencies and mapping tables (\gls{rat}) manage physical locations—memory dependencies are dynamic and determined by computed memory addresses.
 
 \begin{concept}{The Memory Disambiguation Problem}{memory-disambiguation}
-Store operations modify permanent architectural state (main memory and cache hierarchies). To support precise exceptions and speculative execution, store operations \textbf{must not modify memory} until after the instruction reaches the commit phase of the Reorder Buffer (\glsfmtshort{rob}). 
+Store operations modify permanent architectural state (main memory and cache hierarchies). To support precise exceptions and speculative execution, store operations \textbf{must not modify memory} until after the instruction reaches the commit phase of the \glsxtrfull{rob}. 
 Conversely, load operations must execute as early as possible to minimize latency. However, a load cannot safely execute speculatively unless the hardware guarantees that its target memory address does not alias with any uncommitted preceding store.
 \end{concept}
 
-To resolve this bottleneck, microarchitectures introduce a \textbf{Speculative Store Buffer} (SSB), also known as a Store Queue (SQ).
+To resolve this bottleneck, microarchitectures introduce a \textbf{\glsxtrfull{ssb}}, also known as a Store Queue (SQ).
 
-\subsection{The Speculative Store Buffer (SSB)}
+\subsection{The Speculative Store Buffer (\glsfmtshort{ssb})}
 
 The Speculative Store Buffer decouples memory address calculation and data generation from the permanent commit to the L1 Data Cache.
 
@@ -392,24 +392,24 @@ The Speculative Store Buffer decouples memory address calculation and data gener
     \draw [->, thick] (mux.south) -- (out.north);
 
 \end{tikzpicture}
-\caption{Architecture of a Speculative Store Buffer (SSB) with Store-to-Load Forwarding.}
+\caption{Architecture of a \glsxtrfull{ssb} with Store-to-Load Forwarding.}
 \label{fig:ssb_architecture}
 \end{figure}
 
 \subsection{Operational Rules for Store and Load Instructions}
 
-\begin{definition}{Store and Load Handling in SSB}{ssb-handling-rules}
+\begin{definition}{Store and Load Handling in \glsfmtshort{ssb}}{ssb-handling-rules}
 The Speculative Store Buffer governs memory accesses according to the following dynamic protocols:
 \begin{enumerate}
     \item \textbf{Store Instruction Execution:} When a store instruction calculates its effective address and data during out-of-order execution:
     \begin{itemize}
-        \item An entry in the SSB is allocated and marked with \texttt{Valid = 1} and \texttt{Speculative = 1}.
+        \item An entry in the \gls{ssb} is allocated and marked with \texttt{Valid = 1} and \texttt{Speculative = 1}.
         \item The calculated target memory address (tag) and data payload are stored in the buffer entry.
     \end{itemize}
-    \item \textbf{Store Instruction Commit:} When the store instruction reaches the head of the Reorder Buffer (\glsfmtshort{rob}) and commits:
+    \item \textbf{Store Instruction Commit:} When the store instruction reaches the head of the \glsxtrfull{rob} and commits:
     \begin{itemize}
         \item Its entry's \texttt{Speculative} bit is cleared (\texttt{Speculative = 0}).
-        \item The data is written out to the primary L1 Data Cache, and the SSB entry is freed.
+        \item The data is written out to the primary L1 Data Cache, and the \gls{ssb} entry is freed.
     \end{itemize}
     \item \textbf{Store Abort / Misprediction Flush:} If a branch misprediction or exception aborts a speculative store:
     \begin{itemize}
@@ -417,9 +417,9 @@ The Speculative Store Buffer governs memory accesses according to the following 
     \end{itemize}
     \item \textbf{Load Instruction Execution (Store-to-Load Forwarding):} When a load instruction executes, it queries both the Speculative Store Buffer and the L1 Data Cache simultaneously:
     \begin{itemize}
-        \item \textbf{Cache Read:} If no address match is found in the SSB, the data is retrieved directly from the L1 Cache.
-        \item \textbf{Store Forwarding:} If the load address matches an entry in the SSB, the store buffer forwards the data directly to the load bypass network without waiting for an L1 Cache write.
-        \item \textbf{Multiple Address Matches:} If the load matches multiple entries in the SSB, the hardware must forward data from the \textbf{youngest store} (the store closest to the load in program order).
+        \item \textbf{Cache Read:} If no address match is found in the \gls{ssb}, the data is retrieved directly from the L1 Cache.
+        \item \textbf{Store Forwarding:} If the load address matches an entry in the \gls{ssb}, the store buffer forwards the data directly to the load bypass network without waiting for an L1 Cache write.
+        \item \textbf{Multiple Address Matches:} If the load matches multiple entries in the \gls{ssb}, the hardware must forward data from the \textbf{youngest store} (the store closest to the load in program order).
     \end{itemize}
 \end{enumerate}
 \end{definition}
@@ -444,7 +444,7 @@ To handle unresolved preceding stores, pipeline designs fall between two extreme
     \end{itemize}
     \item \textbf{No Speculation (Always Wait / Conservative):} Force load instructions to stall until all preceding store effective addresses are fully computed.
     \begin{itemize}
-        \item \textbf{Failure Mode:} Introduces severe \textbf{False Dependencies}, stalling independent loads unnecessarily and degrading instruction-level parallelism (\glsfmtshort{ilp}).
+        \item \textbf{Failure Mode:} Introduces severe \textbf{False Dependencies}, stalling independent loads unnecessarily and degrading \glsxtrfull{ilp}.
     \end{itemize}
 \end{enumerate}
 \end{concept}
@@ -464,7 +464,7 @@ A \textbf{Store Set} is the set of store instructions upon which a given load in
 \subsubsection{Operational Protocol}
 \begin{itemize}
     \item \textbf{Initial State:} All load instructions start with an empty store set (\textit{Not Predicted}). Unconstrained loads proceed speculatively under naive speculation.
-    \item \textbf{Violation Handling:} When a load experiences a memory order violation with a preceding store, the hardware dynamically creates or updates a Store Set pairing that load's PC with the conflicting store's PC.
+    \item \textbf{Violation Handling:} When a load experiences a memory order violation with a preceding store, the hardware dynamically creates or updates a Store Set pairing that load's \gls{pc} with the conflicting store's \gls{pc}.
     \item \textbf{Issue Rule:} When an indeterminate load is dispatched, the hardware checks its Store Set:
     \begin{itemize}
         \item If any store belonging to the load's Store Set is currently in-flight in the pipeline (with an unresolved address), the load stalls.
@@ -494,7 +494,7 @@ While simpler to implement than Store Sets, the Store Barrier Cache exhibits key
 \section{Load Value Prediction and Data Value Speculation}
 \label{sec:load_value_prediction_speculation}
 
-Load Value Prediction (\glsfmtshort{lvp}) bypasses high-latency memory access cycles by predicting the output data of a load instruction before querying the cache or main memory. This speculative technique relies on the empirical property of \textbf{value locality}.
+\glsxtrfull{lvp} bypasses high-latency memory access cycles by predicting the output data of a load instruction before querying the cache or main memory. This speculative technique relies on the empirical property of \textbf{value locality}.
 
 \begin{concept}{Value Locality}{value-locality-concept}
 \textbf{Value Locality} is the likelihood of a previously observed data value recurring at the same instruction execution instance. 
@@ -503,7 +503,7 @@ As established by Lipasti, Wilkerson, and Shen (\textit{``Value Locality and Loa
 \begin{itemize}
     \item \textbf{High Locality:} Instruction addresses and data memory pointers.
     \item \textbf{Moderate Locality:} Integer data values.
-    \item \textbf{Lower Locality:} Floating-point (FP) values.
+    \item \textbf{Lower Locality:} \glsxtrfull{fp} values.
 \end{itemize}
 \end{concept}
 
@@ -516,7 +516,7 @@ In modern Load Value Prediction microarchitectures, \textbf{predictability class
 \subsection{Architectural Structures: LVPT and LCT}
 
 \begin{definition}{Load Value Prediction Table (LVPT)}{lvpt-def}
-The \textbf{Load Value Prediction Table (LVPT)} is an untagged, directly-mapped table indexed by the instruction address (PC). It stores value histories and outputs the predicted data payload for speculative execution.
+The \textbf{Load Value Prediction Table (LVPT)} is an untagged, directly-mapped table indexed by the instruction address (\gls{pc}). It stores value histories and outputs the predicted data payload for speculative execution.
 \begin{itemize}
     \item \textbf{Value History ($n$):} Maintains a history of the last $n$ unique values produced by a given load instruction.
     \item \textbf{History Depth ($n=1$ vs. $n=16$):} 
@@ -588,7 +588,7 @@ To integrate Load Value Prediction into a dynamic instruction pipeline, the look
 The execution lifecycle of a predicted load instruction proceeds across four key stages:
 \begin{enumerate}
     \item \textbf{Fetch Stage (Parallel Indexing):} 
-    When a load instruction is fetched, the low-order bits of its Program Counter (PC) index both the \textbf{Load Classification Table (LCT)} and \textbf{Load Value Prediction Table (LVPT)} in parallel.
+    When a load instruction is fetched, the low-order bits of its \glsxtrfull{pc} index both the \textbf{Load Classification Table (LCT)} and \textbf{Load Value Prediction Table (LVPT)} in parallel.
     \begin{itemize}
         \item The LCT determines \textit{whether} a speculative prediction should be made.
         \item If enabled, the LVPT outputs the predicted data value immediately.
@@ -757,14 +757,14 @@ To avoid updating the stride on temporary loop control perturbations, hysteresis
 Context-Based Predictors learn the value that empirically follows a specific historical sequence (or context) of prior values, without assuming any mathematical functional relationship (e.g., linear strides).
 \end{concept}
 
-\subsubsection{Finite Context Method (FCM) Predictor}
+\subsubsection{Finite Context Method (\glsfmtshort{fcm}) Predictor}
 The \gls{fcm} predictor records value transition frequencies based on a history of $k$ preceding unique values (referred to as an \textit{Order-$k$} predictor):
 \begin{itemize}
     \item \textbf{Order-0 Predictor:} Purely frequency-based; predicts the value that has occurred most frequently over the entire execution history of the instruction.
     \item \textbf{Order-$k$ Predictor ($k \ge 1$):} Uses a hash of the last $k$ values as a lookup key into a history table that outputs the most likely succeeding value.
 \end{itemize}
 
-FCM predictors excel at capturing complex non-linear patterns, such as Repeated Stride ($RS$) and Repeated Non-Stride ($RNS$) sequences, which fail under linear computational stride predictors.
+\gls{fcm} predictors excel at capturing complex non-linear patterns, such as Repeated Stride ($RS$) and Repeated Non-Stride ($RNS$) sequences, which fail under linear computational stride predictors.
 
 \subsection{Empirical Comparison of Value Predictors}
 \label{subsec:empirical_predictor_comparison}
@@ -774,16 +774,16 @@ Sazeides and Smith evaluated the relative prediction coverage of distinct value 
     \item \textbf{$np$:} Not predicted by any model.
     \item \textbf{$l$:} Correctly predicted by Last-Value predictors.
     \item \textbf{$s$:} Correctly predicted by Stride predictors (Two-Delta).
-    \item \textbf{$f$:} Correctly predicted by Context-based predictors (Order-3 FCM).
+    \item \textbf{$f$:} Correctly predicted by Context-based predictors (Order-3 \gls{fcm}).
 \end{itemize}
 
 \begin{observation}{Empirical Predictability of Data Values}{empirical-value-predictability}
 Comparative evaluation reveals key insights into data value predictability across application workloads:
 \begin{itemize}
     \item \textbf{Universal Predictability:} Approximately \textbf{40\%} of all generated data values are correctly predicted by all predictor types ($l, s, f$), reflecting the high prevalence of constant ($C$) values.
-    \item \textbf{Exclusive Context Coverage:} Approximately \textbf{20\%} of values are captured exclusively by Order-3 FCM context predictors ($f$). Computational stride and last-value predictors fail on these sequences because the values lack linear arithmetic relationships.
+    \item \textbf{Exclusive Context Coverage:} Approximately \textbf{20\%} of values are captured exclusively by Order-3 \gls{fcm} context predictors ($f$). Computational stride and last-value predictors fail on these sequences because the values lack linear arithmetic relationships.
     \item \textbf{Unpredictable Baseline:} Only \textbf{18\%} of runtime data values are completely unpredictable ($np$) across all models.
-    \item \textbf{Computational Predictor Limits:} Stride ($s$) and Last-Value ($l$) predictors combined capture less than \textbf{5\%} of correct predictions missed by FCM, proving that context-based models subsume nearly all predictable computational structures.
+    \item \textbf{Computational Predictor Limits:} Stride ($s$) and Last-Value ($l$) predictors combined capture less than \textbf{5\%} of correct predictions missed by \gls{fcm}, proving that context-based models subsume nearly all predictable computational structures.
 \end{itemize}
 \end{observation}
 
@@ -792,15 +792,15 @@ Comparative evaluation reveals key insights into data value predictability acros
 
 To break the theoretical execution boundary of scalar processors ($\text{CPI} = 1$) and achieve a Cycles Per Instruction $\text{CPI} < 1$ (or equivalently, an Instructions Per Cycle $\text{IPC} > 1$), microarchitectures must fetch, decode, issue, and execute multiple instructions simultaneously within every clock cycle.
 
-\begin{definition}{Superscalar vs. VLIW Architectures}{superscalar-vs-vliw}
+\begin{definition}{Superscalar vs. \glsfmtshort{vliw} Architectures}{superscalar-vs-vliw}
 Architectures capable of executing multiple instructions per cycle fall into two structural paradigms based on whether instruction scheduling is performed dynamically by hardware or statically by the compiler:
 \begin{itemize}
     \item \textbf{Superscalar Architecture:} Hardware dynamically fetches, decodes, and schedules a variable number of instructions per clock cycle based on runtime resource availability and data dependencies.
-    \item \textbf{Very Long Instruction Word (VLIW):} The compiler statically packs a fixed number of independent operations (typically 4 to 16) into a single wide instruction template. The hardware executes these operations in parallel without performing dynamic dependency checks.
+    \item \textbf{\glsxtrfull{vliw}:} The compiler statically packs a fixed number of independent operations (typically 4 to 16) into a single wide instruction template. The hardware executes these operations in parallel without performing dynamic dependency checks.
 \end{itemize}
 \end{definition}
 
-The adoption of multi-issue architectures led to a shift in performance metrics, making \textbf{Instructions Per Clock Cycle (IPC)} the primary metric of processing throughput rather than traditional CPI.
+The adoption of multi-issue architectures led to a shift in performance metrics, making \textbf{\glsxtrfull{ipc}} the primary metric of processing throughput rather than traditional \gls{cpi}.
 
 \section{Superscalar Issue Mechanics and Parameters}
 \label{sec:superscalar_issue_mechanics}
@@ -856,32 +856,32 @@ Predecoding shifts part of the instruction decoding workload from the critical e
     \item When instructions are loaded from lower-level memory (L2/L3 cache or main memory) into the on-chip L1 Instruction Cache, a predecode unit analyzes the raw bytes and appends extra \textbf{predecode bits} (tags) to each cached instruction.
     \item \textbf{Predecode Information:} The added predecode bits explicitly store:
     \begin{itemize}
-        \item The basic instruction class and opcode category (e.g., branch, load/store, integer ALU, floating-point).
+        \item The basic instruction class and opcode category (e.g., branch, load/store, integer \gls{alu}, floating-point).
         \item The specific functional unit resources required for execution.
         \item Pre-calculated branch target displacements or static branch properties.
     \end{itemize}
-    \item \textbf{CISC Variable-Length Decoding:} For CISC architectures with variable-length instruction encodings (such as x86), predecoding identifies the exact start and end byte boundaries of consecutive instructions. This enables the parallel decode unit to immediately slice the instruction byte stream into valid instruction blocks without sequential parsing stalls.
+    \item \textbf{\gls{cisc} Variable-Length Decoding:} For \gls{cisc} architectures with variable-length instruction encodings (such as x86), predecoding identifies the exact start and end byte boundaries of consecutive instructions. This enables the parallel decode unit to immediately slice the instruction byte stream into valid instruction blocks without sequential parsing stalls.
 \end{itemize}
 \end{observation}
 
 \section{Loop Unrolling in Superscalar Architectures}
 \label{sec:loop_unrolling_superscalar}
 
-Loop unrolling is a fundamental transformation technique designed to expose \glsfmtshort{ilp} by replicating a loop body multiple times and reducing control overhead. In superscalar processors, combining loop unrolling with hardware speculation yields dramatic throughput gains compared to non-speculative execution.
+Loop unrolling is a fundamental transformation technique designed to expose \gls{ilp} by replicating a loop body multiple times and reducing control overhead. In superscalar processors, combining loop unrolling with hardware speculation yields dramatic throughput gains compared to non-speculative execution.
 
 \begin{concept}{Loop Unrolling Mechanics}{loop-unrolling-concept}
 Loop unrolling increases instruction throughput by:
 \begin{itemize}
     \item \textbf{Amortizing Control Overhead:} Decreasing the frequency of branch evaluations and loop counter updates relative to useful computation.
     \item \textbf{Expanding the Scheduling Window:} Providing a larger pool of independent instructions for multi-issue dispatch.
-    \item \textbf{Eliminating False Dependencies:} Re-allocating destination registers across unrolled iterations to remove \glsfmtshort{waw} and \glsfmtshort{war} name hazards.
+    \item \textbf{Eliminating False Dependencies:} Re-allocating destination registers across unrolled iterations to remove \gls{waw} and \gls{war} name hazards.
 \end{itemize}
 \end{concept}
 
 \subsection{Superscalar Loop Execution Without Speculation}
 \label{subsec:unrolling_without_speculation}
 
-Consider a loop updating an array of 64-bit floating-point values ($x[i] = x[i] + \text{scalar}$). In a dual-issue superscalar pipeline (Slot 1: Memory/Integer ALU; Slot 2: Floating-Point ALU) operating \textbf{without speculation}, the compiler must unroll the loop statically (e.g., $4\times$) and interleave independent operations using distinct architectural registers ($F_0, F_6, F_{10}, F_{14}$).
+Consider a loop updating an array of 64-bit floating-point values ($x[i] = x[i] + \text{scalar}$). In a dual-issue superscalar pipeline (Slot 1: Memory/Integer \gls{alu}; Slot 2: Floating-Point \gls{alu}) operating \textbf{without speculation}, the compiler must unroll the loop statically (e.g., $4\times$) and interleave independent operations using distinct architectural registers ($F_0, F_6, F_{10}, F_{14}$).
 
 \begin{lstlisting}[language=C, caption={$4\times$ Unrolled Loop without Speculation}]
 Loop: L.D    F0, 0(R1)       ; Iteration 1 Load
@@ -908,7 +908,7 @@ Loop: L.D    F0, 0(R1)       ; Iteration 1 Load
 \setlength{\tabcolsep}{4pt}
 \begin{tabularx}{\textwidth}{|c|>{\hsize=1.1\hsize\raggedright\arraybackslash}X|>{\hsize=1.1\hsize\raggedright\arraybackslash}X|>{\hsize=0.8\hsize\raggedright\arraybackslash}X|}
 \hline
-\textbf{Clock Cycle} & \textbf{ALU / Memory Slot} & \textbf{FP Instruction Slot} & \textbf{Pipeline Status} \\ \hline
+\textbf{Clock Cycle} & \textbf{\gls{alu} / Memory Slot} & \textbf{\gls{fp} Instruction Slot} & \textbf{Pipeline Status} \\ \hline
 \textbf{CC 1} & \texttt{L.D F0, 0(R1)} & \textit{stall} & Issue Iter 1 Load \\ \hline
 \textbf{CC 2} & \texttt{L.D F6, -8(R1)} & \textit{stall} & Issue Iter 2 Load \\ \hline
 \textbf{CC 3} & \texttt{L.D F10, -16(R1)} & \texttt{ADD.D F4, F0, F2} & F0 ready; Issue Iter 3 Load \& Iter 1 Add \\ \hline
@@ -941,8 +941,8 @@ Combining loop unrolling with hardware speculation (via Branch Prediction, Reord
 Under hardware speculation:
 \begin{itemize}
     \item \textbf{Branch Bypassing:} The branch predictor predicts loop branches continuously, allowing the fetch engine to stream subsequent loop iterations into the pipeline without stalling.
-    \item \textbf{Dynamic Hardware Renaming:} The Physical Register File (\glsfmtshort{prf}) and Register Alias Table (\glsfmtshort{rat}) automatically map repeated architectural register names ($F_0$) to fresh physical tags ($P_{16}, P_{18}, P_{20}, \dots$), resolving \glsfmtshort{waw} and \glsfmtshort{war} hazards dynamically.
-    \item \textbf{Speculative Memory Disambiguation:} The Speculative Store Buffer (\glsfmtshort{ssb}) holds store payloads safely until commit, enabling loads from iteration $N+1$ to execute speculatively ahead of stores from iteration $N$.
+    \item \textbf{Dynamic Hardware Renaming:} The \glsxtrfull{prf} and \glsxtrfull{rat} automatically map repeated architectural register names ($F_0$) to fresh physical tags ($P_{16}, P_{18}, P_{20}, \dots$), resolving \gls{waw} and \gls{war} hazards dynamically.
+    \item \textbf{Speculative Memory Disambiguation:} The \glsxtrfull{ssb} holds store payloads safely until commit, enabling loads from iteration $N+1$ to execute speculatively ahead of stores from iteration $N$.
 \end{itemize}
 \end{concept}
 
@@ -954,17 +954,17 @@ Under hardware speculation:
 \setlength{\tabcolsep}{3pt}
 \begin{tabularx}{\textwidth}{|c|>{\hsize=0.6\hsize\raggedright\arraybackslash}X|>{\hsize=1.1\hsize\raggedright\arraybackslash}X|>{\hsize=1.1\hsize\raggedright\arraybackslash}X|>{\hsize=1.2\hsize\raggedright\arraybackslash}X|}
 \hline
-\textbf{Iter} & \textbf{Instruction} & \textbf{Rename Mapping (\glsfmtshort{rat})} & \textbf{\glsfmtshort{rob} Entry} & \textbf{Commit Order (In-Order)} \\ \hline
-\textbf{1} & \texttt{L.D F0, 0(R1)} & $F_0 \to P_{16}$ & $\text{\glsfmtshort{rob}}_1$ (Speculative) & Commits 1st (Writes L1 on commit) \\
-\textbf{1} & \texttt{ADD.D F4, F0, F2} & $F_4 \to P_{17}$ (reads $P_{16}$) & $\text{\glsfmtshort{rob}}_2$ (Speculative) & Commits 2nd \\
-\textbf{1} & \texttt{S.D F4, 0(R1)} & Reads $P_{17}$ & $\text{\glsfmtshort{rob}}_3$ (Buffered in SSB) & Commits 3rd (Flushes SSB to L1) \\
-\textbf{1} & \texttt{BNE R1, R2} & Predicted \textit{Taken} & $\text{\glsfmtshort{rob}}_4$ (Speculative) & Commits 4th (Branch verified) \\ \hline
-\textbf{2} & \texttt{L.D F0, -8(R1)} & $F_0 \to P_{18}$ (\textbf{No WAW}) & $\text{\glsfmtshort{rob}}_5$ (Speculative) & Commits 5th \\
-\textbf{2} & \texttt{ADD.D F4, F0, F2} & $F_4 \to P_{19}$ (reads $P_{18}$) & $\text{\glsfmtshort{rob}}_6$ (Speculative) & Commits 6th \\
-\textbf{2} & \texttt{S.D F4, -8(R1)} & Reads $P_{19}$ & $\text{\glsfmtshort{rob}}_7$ (Buffered in SSB) & Commits 7th \\
-\textbf{2} & \texttt{BNE R1, R2} & Predicted \textit{Taken} & $\text{\glsfmtshort{rob}}_8$ (Speculative) & Commits 8th \\ \hline
-\textbf{3} & \texttt{L.D F0, -16(R1)} & $F_0 \to P_{20}$ (\textbf{No WAW}) & $\text{\glsfmtshort{rob}}_9$ (Speculative) & Commits 9th \\
-\textbf{3} & \texttt{ADD.D F4, F0, F2} & $F_4 \to P_{21}$ (reads $P_{20}$) & $\text{\glsfmtshort{rob}}_{10}$ (Speculative) & Commits 10th \\
+\textbf{Iter} & \textbf{Instruction} & \textbf{Rename Mapping (\gls{rat})} & \textbf{\gls{rob} Entry} & \textbf{Commit Order (In-Order)} \\ \hline
+\textbf{1} & \texttt{L.D F0, 0(R1)} & $F_0 \to P_{16}$ & $\text{\gls{rob}}_1$ (Speculative) & Commits 1st (Writes L1 on commit) \\
+\textbf{1} & \texttt{ADD.D F4, F0, F2} & $F_4 \to P_{17}$ (reads $P_{16}$) & $\text{\gls{rob}}_2$ (Speculative) & Commits 2nd \\
+\textbf{1} & \texttt{S.D F4, 0(R1)} & Reads $P_{17}$ & $\text{\gls{rob}}_3$ (Buffered in \gls{ssb}) & Commits 3rd (Flushes \gls{ssb} to L1) \\
+\textbf{1} & \texttt{BNE R1, R2} & Predicted \textit{Taken} & $\text{\gls{rob}}_4$ (Speculative) & Commits 4th (Branch verified) \\ \hline
+\textbf{2} & \texttt{L.D F0, -8(R1)} & $F_0 \to P_{18}$ (\textbf{No \gls{waw}}) & $\text{\gls{rob}}_5$ (Speculative) & Commits 5th \\
+\textbf{2} & \texttt{ADD.D F4, F0, F2} & $F_4 \to P_{19}$ (reads $P_{18}$) & $\text{\gls{rob}}_6$ (Speculative) & Commits 6th \\
+\textbf{2} & \texttt{S.D F4, -8(R1)} & Reads $P_{19}$ & $\text{\gls{rob}}_7$ (Buffered in \gls{ssb}) & Commits 7th \\
+\textbf{2} & \texttt{BNE R1, R2} & Predicted \textit{Taken} & $\text{\gls{rob}}_8$ (Speculative) & Commits 8th \\ \hline
+\textbf{3} & \texttt{L.D F0, -16(R1)} & $F_0 \to P_{20}$ (\textbf{No \gls{waw}}) & $\text{\gls{rob}}_9$ (Speculative) & Commits 9th \\
+\textbf{3} & \texttt{ADD.D F4, F0, F2} & $F_4 \to P_{21}$ (reads $P_{20}$) & $\text{\gls{rob}}_{10}$ (Speculative) & Commits 10th \\
 \hline
 \end{tabularx}
 \end{table}
@@ -978,12 +978,12 @@ Under hardware speculation:
 \begin{tabularx}{\textwidth}{|>{\hsize=0.8\hsize\raggedright\arraybackslash}X|>{\hsize=1.1\hsize\raggedright\arraybackslash}X|>{\hsize=1.1\hsize\raggedright\arraybackslash}X|}
 \hline
 \textbf{Feature / Dimension} & \textbf{Unrolling Without Speculation} & \textbf{Unrolling With Hardware Speculation} \\ \hline
-\textbf{Unrolling Mechanism} & Static compiler transformation & Dynamic hardware unrolling across \glsfmtshort{rob} \\ \hline
-\textbf{Register Allocation} & Consumes multiple \glsfmtshort{isa} architectural registers ($F_0, F_6, F_{10}$) & Uses single \glsfmtshort{isa} register ($F_0$), mapped dynamically to Physical Registers ($P_{16}, P_{18}, P_{20}$) \\ \hline
+\textbf{Unrolling Mechanism} & Static compiler transformation & Dynamic hardware unrolling across \gls{rob} \\ \hline
+\textbf{Register Allocation} & Consumes multiple \gls{isa} architectural registers ($F_0, F_6, F_{10}$) & Uses single \gls{isa} register ($F_0$), mapped dynamically to Physical Registers ($P_{16}, P_{18}, P_{20}$) \\ \hline
 \textbf{Branch Handling} & Issue stalls at unrolled block terminating branches & Zero-stall branch prediction; fetches across branch boundaries \\ \hline
-\textbf{Memory Scheduling} & Strict non-speculative memory order; load/store reordering restricted & Speculative Store Buffer (\glsfmtshort{ssb}) enables early load execution via store-to-load forwarding \\ \hline
+\textbf{Memory Scheduling} & Strict non-speculative memory order; load/store reordering restricted & \glsxtrfull{ssb} enables early load execution via store-to-load forwarding \\ \hline
 \textbf{Binary Code Size} & Multiplied by unroll factor ($N\times$ code size expansion) & Compact baseline code size; zero instruction cache bloat \\ \hline
-\textbf{Exception Handling} & Potential imprecise exceptions if instructions are reordered statically & Precise exceptions guaranteed by in-order \glsfmtshort{rob} retirement \\ \hline
+\textbf{Exception Handling} & Potential imprecise exceptions if instructions are reordered statically & Precise exceptions guaranteed by in-order \gls{rob} retirement \\ \hline
 \end{tabularx}
 \end{table}
 
@@ -998,25 +998,25 @@ A simple split-functional unit dual-issue processor (issuing 1 Integer/Memory op
     \item The instruction stream contains an \textbf{exact 50\% / 50\% split} between Integer and Floating-Point operations.
     \item There are \textbf{zero data or structural hazards} between concurrently issued instructions.
 \end{enumerate}
-In general workloads, asymmetric instruction mixes and inter-instruction dependencies severely degrade actual IPC.
+In general workloads, asymmetric instruction mixes and inter-instruction dependencies severely degrade actual \gls{ipc}.
 \end{observation}
 
 \subsection{Combinatorial Complexity of Wide Decoding and Issue}
 As issue width $N$ grows, the hardware complexity of the Decode and Issue stages increases quadratically ($\mathcal{O}(N^2)$):
 \begin{itemize}
     \item \textbf{Opcode and Specifier Inspection:} A 2-scalar processor must simultaneously inspect 2 opcodes, extract 6 register specifiers (2 destinations, 4 sources), and evaluate dependency logic within a single clock cycle.
-    \item \textbf{Multiported Register Files and Rename Tables:} To issue $N$ instructions per cycle, the Register Alias Table (\glsfmtshort{rat}) and Physical Register File (\glsfmtshort{prf}) must support up to $2N$ read ports and $N$ write ports.
+    \item \textbf{Multiported Register Files and Rename Tables:} To issue $N$ instructions per cycle, the \glsxtrfull{rat} and \glsxtrfull{prf} must support up to $2N$ read ports and $N$ write ports.
     \item \textbf{Multi-Instruction Rename Logic:} The rename unit must be capable of allocating physical registers and updating mapping tables for multiple instructions in parallel—including handling dependency chains \textit{within} the same issue packet.
 \end{itemize}
 
-\subsection{Very Long Instruction Word (VLIW) Trade-Offs}
-To avoid complex dynamic multi-issue hardware, \textbf{VLIW (Very Long Instruction Word)} architectures shift scheduling entirely to the compiler.
+\subsection{Very Long Instruction Word (\glsfmtshort{vliw}) Trade-Offs}
+To avoid complex dynamic multi-issue hardware, \textbf{\glsxtrfull{vliw}} architectures shift scheduling entirely to the compiler.
 
-\begin{concept}{VLIW Trade-Offs}{vliw-tradeoffs}
-VLIW trades instruction memory space for simple hardware decoding:
+\begin{concept}{\glsfmtshort{vliw} Trade-Offs}{vliw-tradeoffs}
+\gls{vliw} trades instruction memory space for simple hardware decoding (detailed in \cref{ch:vliw_architectures}):
 \begin{itemize}
     \item \textbf{Fixed Wide Templates:} The compiler packs multiple independent operations into a single wide instruction template (typically 112 to 168 bits wide, containing 4 to 8 execution slots).
-    \item \textbf{Hardware Simplicity:} Because the compiler guarantees that all operations within a VLIW word are independent, the hardware executes them in parallel without dynamic dependency checking logic.
+    \item \textbf{Hardware Simplicity:} Because the compiler guarantees that all operations within a \gls{vliw} word are independent, the hardware executes them in parallel without dynamic dependency checking logic.
     \item \textbf{Compiler Requirement:} Requires advanced global compilation techniques (such as Trace Scheduling or Software Pipelining) to find independent operations across multiple branch boundaries.
 \end{itemize}
 \end{concept}
@@ -1024,7 +1024,7 @@ VLIW trades instruction memory space for simple hardware decoding:
 \section{Superscalar Dynamic Register Renaming}
 \label{sec:superscalar_register_renaming}
 
-In a superscalar processor, renaming multiple instructions simultaneously per clock cycle introduces a critical hazard: \textbf{Intra-Cycle Read-After-Write (RAW) Dependencies}.
+In a superscalar processor, renaming multiple instructions simultaneously per clock cycle introduces a critical hazard: \textbf{Intra-Cycle \glsxtrfull{raw} Dependencies}.
 
 \subsection{Naive Parallel Renaming (Try \#1: Independent Lookup Failure)}
 
@@ -1041,15 +1041,15 @@ In a naive parallel rename implementation (Try \#1):
     \item The Rename Table updates its entries for $R_d^1$ and $R_d^2$ with $P_{\text{dest}}^1$ and $P_{\text{dest}}^2$.
 \end{enumerate}
 
-\begin{observation}{Failure Mode of Try \#1 (Intra-Cycle RAW Hazard)}{try1-failure}
+\begin{observation}{Failure Mode of Try \#1 (Intra-Cycle \glsfmtshort{raw} Hazard)}{try1-failure}
 If $\text{Inst}_2$ reads an architectural register written by $\text{Inst}_1$ in the same cycle ($R_{s1}^2 == R_d^1$), naive parallel lookup fails: $\text{Inst}_2$ reads the \textbf{old} physical register mapping for $R_d^1$ from the Rename Table because $\text{Inst}_1$'s new mapping ($P_{\text{dest}}^1$) has not yet been written back to the table!
 \end{observation}
 
-\subsection{Intra-Cycle RAW Hazard Detection and Bypass (Try \#2)}
+\subsection{Intra-Cycle \glsfmtshort{raw} Hazard Detection and Bypass (Try \#2)}
 
 To resolve intra-cycle dependencies, superscalar rename units integrate \textbf{intra-cycle comparator and bypass logic} (Try \#2).
 
-\begin{definition}{Intra-Cycle RAW Hazard Bypass}{try2-definition}
+\begin{definition}{Intra-Cycle \glsfmtshort{raw} Hazard Bypass}{try2-definition}
 In Try \#2 superscalar renaming, the rename logic performs parallel equality checks ($=?$) between the destination register of earlier instructions and the source registers of later instructions issued in the same cycle:
 \begin{equation}
 \text{Match}_{s1} = (R_d^1 == R_{s1}^2), \quad \text{Match}_{s2} = (R_d^1 == R_{s2}^2)
@@ -1179,12 +1179,12 @@ If a match is detected ($\text{Match} = \text{true}$), a multiplexer bypasses th
     \draw [line] (mux2.south) -- (1.2, -2.6) -- (4.8, -2.6) -- (4.8, -3.9) -- (out2.north -| 4.8, -3.9);
 
 \end{tikzpicture}
-\caption{Architecture of a Dual-Issue Superscalar Register Rename Unit with Intra-Cycle RAW Hazard Comparators and Bypass MUXes (Try \#2).}
+\caption{Architecture of a Dual-Issue Superscalar Register Rename Unit with Intra-Cycle \gls{raw} Hazard Comparators and Bypass MUXes (Try \#2).}
 \label{fig:superscalar_rename_try2}
 \end{figure}
 
 \begin{concept}{Case Study: MIPS R10000 (MIPS R10K)}{mips-r10k-renaming}
-The \textbf{MIPS R10000} processor implemented a 4-issue superscalar pipeline capable of dynamically renaming up to \textbf{4 serially-RAW-dependent instructions within a single clock cycle}. 
+The \textbf{MIPS R10000} processor implemented a 4-issue superscalar pipeline capable of dynamically renaming up to \textbf{4 serially-\gls{raw}-dependent instructions within a single clock cycle}. 
 
 To achieve this, the R10K rename logic contained a cascading matrix of 12 internal comparators that evaluated all pairwise combinations of destination and source register specifiers across the 4 candidate instructions in parallel, ensuring zero issue stalls even for tightly coupled execution sequences.
 \end{concept}
