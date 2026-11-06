@@ -274,8 +274,21 @@
 \clearpairofpagestyles
 
 \automark[section]{chapter}
-\ohead{\headmark} 
-\ihead{\textbf{Advanced Computing Architectures}} 
+\ohead{\footnotesize\headmark}
+\ihead{\footnotesize\textbf{Advanced Computing Architectures}}
+
+% --- FLOAT PAGES: stack floats at the top instead of centering them vertically ---
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{12pt plus 1fil}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
+
+% --- Allow a line break after an em dash typed without surrounding spaces ---
+\DeclareUnicodeCharacter{2014}{\textemdash\hspace{0pt}}
+
+% --- Unbreakable inline instruction, used to keep operations on one line in schedule tables ---
+\newcommand{\op}[1]{\mbox{\texttt{#1}}}
 
 \ifoot[A.Y. 2026/2027 -- \textit{Notes by Luca Facchini}]{A.Y. 2026/2027 -- \textit{Notes by Luca Facchini}}
 \ofoot[Page \pagemark]{Page \pagemark}

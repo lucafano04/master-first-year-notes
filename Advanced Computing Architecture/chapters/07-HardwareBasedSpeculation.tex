@@ -62,7 +62,7 @@ The \gls{rob} acts as an intermediate buffer holding instruction results from th
     \draw[->, ultra thick, blue!80!black] (45:2.8cm) -- (45:2.3cm) node[at start, right, font=\bfseries] {Tail (Issue)};
     
     % Direction arrow
-    \draw[->, thick, gray] (110:1.7cm) arc (110:70:1.7cm) node[midway, above, font=\scriptsize] {In-Order Allocation};
+    \draw[->, thick, gray] (115:2.6cm) arc (115:65:2.6cm) node[midway, above, font=\scriptsize] {In-Order Allocation};
     
     \node at (0,0) {\textbf{\gls{rob}}};
 \end{tikzpicture}
@@ -178,14 +178,14 @@ Reservation stations buffer instructions and operands prior to execution. In a s
 \begin{table}[htpb]
 \centering
 \small
-\begin{tabular}{lll}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \hline
 \textbf{Architectural Feature} & \textbf{Basic Tomasulo's Algorithm} & \textbf{Speculative Architecture (+ \gls{rob})} \\ \hline
 \textbf{Operand Tags ($Q_j, Q_k$)} & Point to producing \gls{rs} entry & Point to producing \gls{rob} entry \\
 \textbf{Register Status Pointer} & Points to producing \gls{rs} entry & Points to allocated \gls{rob} entry \\
 \textbf{Execution Result Target} & Broadcast to \gls{rs} \& Register File & Broadcast to \gls{rs} \& \gls{rob} \texttt{Value} field \\
 \textbf{Architectural State Update} & Immediate on \gls{cdb} broadcast & Deferred until in-order \gls{rob} Commit \\ \hline
-\end{tabular}
+\end{tabularx}
 \caption{Comparison of Tag Mapping: Basic Tomasulo's vs. Speculative Tomasulo + \gls{rob}}
 \label{tab:tomasulo_vs_rob_tags}
 \end{table}
@@ -255,8 +255,9 @@ Assume initial mappings: $F_0 \to P_0$, $F_2 \to P_2$, $F_4 \to P_4$, $F_6 \to P
 
 \begin{table}[htpb]
 \centering
-\small
-\begin{tabular}{c l c c l l}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{c l c c >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
 \hline
 \textbf{Inst} & \textbf{Pipeline Phase} & \textbf{Dest} & \textbf{Allocated} & \textbf{Active \gls{rat} ($F_0$ Map)} & \textbf{Free List / Deallocation Event} \\ \hline
 -- & \textit{Initial State} & -- & -- & $F_0 \to P_0$ & Free List: $\{P_{16}, P_{17}, P_{18}, \dots\}$ \\
@@ -268,7 +269,7 @@ $I_2$ & \textbf{Execute / WB} & -- & -- & $P_{17}$ value written & $P_{16}$ \tex
 $I_1$ & \textbf{Commit} & $F_0$ & $P_{16}$ & $F_0 \to P_{16}$ committed & \textbf{Free $P_0$} $\to$ Push $P_0$ to Free List. \\
 $I_2$ & \textbf{Commit} & $F_0$ & $P_{17}$ & $F_0 \to P_{17}$ committed & \textbf{Free $P_{16}$} $\to$ Push $P_{16}$ to Free List. \\
 $I_3$ & \textbf{Commit} & $F_{10}$ & $P_{18}$ & $F_{10} \to P_{18}$ committed & \textbf{Free $P_{10}$} $\to$ Push $P_{10}$ to Free List. \\ \hline
-\end{tabular}
+\end{tabularx}
 \caption{Trace of Speculative Explicit Register Renaming and Physical Register Deallocation}
 \label{tab:explicit_renaming_trace}
 \end{table}
@@ -349,16 +350,16 @@ The Speculative Store Buffer decouples memory address calculation and data gener
 
 \begin{figure}[htpb]
 \centering
-\begin{tikzpicture}[scale=0.92, >=stealth, font=\small]
+\begin{tikzpicture}[>=stealth, font=\small]
     % 1. Load Address Register (Top Center)
     \node [draw, rectangle, rounded corners=3pt, fill=gray!15, font=\bfseries, minimum width=4.5cm, minimum height=0.8cm] (load_addr) at (0, 4.2) {Load Address \normalfont\small (Effective Address)};
 
     % 2. Speculative Store Buffer Frame (Top Left)
-    \node [draw, rectangle, rounded corners=4pt, fill=blue!5, minimum width=5.6cm, minimum height=2.6cm] (ssb_frame) at (-3.2, 1.2) {};
-    \node [font=\bfseries\sffamily\small, color=unitnred!80!black] at (-3.2, 2.15) {Speculative Store Buffer (SSB)};
+    \node [draw, rectangle, rounded corners=4pt, fill=blue!5, minimum width=7.4cm, minimum height=2.6cm] (ssb_frame) at (-3.9, 1.2) {};
+    \node [font=\bfseries\sffamily\small, color=unitnred!80!black] at (-3.9, 2.15) {Speculative Store Buffer (SSB)};
     
     % SSB Entries Table
-    \node [draw, rectangle, fill=white, font=\scriptsize, align=center, inner sep=2pt] at (-3.2, 1.0) {%
+    \node [draw, rectangle, fill=white, font=\scriptsize, align=center, inner sep=2pt] at (-3.9, 1.0) {%
         \begin{tabular}{|c|c|c|c|}
             \hline
             \textbf{Valid (V)} & \textbf{Speculative (S)} & \textbf{Address Tag} & \textbf{Data Store} \\ \hline
@@ -368,13 +369,13 @@ The Speculative Store Buffer decouples memory address calculation and data gener
     };
 
     % 3. L1 Data Cache Frame (Top Right)
-    \node [draw, rectangle, rounded corners=4pt, fill=green!8, minimum width=4.2cm, minimum height=2.6cm, align=center] (l1) at (3.2, 1.2) {\textbf{L1 Data Cache}\\[6pt]\small (Tags \& Data Store)};
+    \node [draw, rectangle, rounded corners=4pt, fill=green!8, minimum width=4.2cm, minimum height=2.6cm, align=center] (l1) at (3.6, 1.2) {\textbf{L1 Data Cache}\\[6pt]\small (Tags \& Data Store)};
 
     % 4. Forwarding MUX (Bottom Center)
-    \node [draw, rectangle, rounded corners=6pt, fill=orange!20, minimum width=4.8cm, minimum height=0.9cm, align=center, font=\bfseries\sffamily] (mux) at (0, -1.4) {Store-to-Load Forwarding MUX};
+    \node [draw, rectangle, rounded corners=6pt, fill=orange!20, minimum width=4.8cm, minimum height=0.9cm, align=center, font=\bfseries\sffamily] (mux) at (0, -2.2) {Store-to-Load Forwarding MUX};
 
     % 5. Load Data Output (Bottom Output)
-    \node [draw, rectangle, rounded corners=3pt, fill=green!50!black, text=white, font=\bfseries, minimum width=3.8cm, minimum height=0.8cm] (out) at (0, -3.0) {Load Data Output};
+    \node [draw, rectangle, rounded corners=3pt, fill=green!50!black, text=white, font=\bfseries, minimum width=3.8cm, minimum height=0.8cm] (out) at (0, -3.8) {Load Data Output};
 
     % --- ARROWS & FLOW LINES ---
     % Address Split Lines
@@ -382,11 +383,11 @@ The Speculative Store Buffer decouples memory address calculation and data gener
     \draw [->, thick] (load_addr.south) -- (0, 3.2) -| (l1.north) node[pos=0.25, above, font=\tiny] {Cache Lookup};
 
     % Store Commit Line (SSB to L1)
-    \draw [->, ultra thick, unitnred, dashed] (ssb_frame.east) -- (l1.west) node[midway, above=2pt, font=\bfseries\tiny, text=unitnred] {On Commit: Write to L1};
+    \draw [->, ultra thick, unitnred, dashed] (ssb_frame.east) -- (l1.west) node[midway, above=2pt, font=\bfseries\tiny, text=unitnred, align=center] {On Commit:\\Write to L1};
 
     % Data Flow into MUX
-    \draw [->, thick] (ssb_frame.south) |- (-1.8, -0.6) -- (-1.8, -0.95) node[midway, left=2pt, font=\tiny, align=right] {Youngest SSB Match\\[-1pt](Forwarding)};
-    \draw [->, thick] (l1.south) |- (1.8, -0.6) -- (1.8, -0.95) node[midway, right=2pt, font=\tiny, align=left] {Cache Hit Data\\[-1pt](Read)};
+    \draw [->, thick] (ssb_frame.south) |- (-1.8, -0.6) -- (-1.8, -1.7) node[midway, left=2pt, font=\tiny, align=right] {Youngest SSB Match\\[-1pt](Forwarding)};
+    \draw [->, thick] (l1.south) |- (1.8, -0.6) -- (1.8, -1.7) node[midway, right=2pt, font=\tiny, align=left] {Cache Hit Data\\[-1pt](Read)};
 
     % MUX Output
     \draw [->, thick] (mux.south) -- (out.north);
@@ -652,7 +653,7 @@ Beyond load operations, \textbf{Data Value Speculation} can be applied broadly t
     \draw [->, thick] (mul1) -- (div1);
     \draw [->, thick] (add1) -- (div1);
 
-    \node at (-2.75, -0.3) {\footnotesize (a) Standard Sequential Dataflow Path};
+    \node [align=center] at (-2.75, -0.5) {\footnotesize (a) Standard Sequential\\\footnotesize Dataflow Path};
 
     % Right Graph: Speculative Guessing
     \node [circle, draw, fill=black, text=white, inner sep=1pt] (a2) at (1.5, 4.0) {\scriptsize A};
@@ -670,7 +671,7 @@ Beyond load operations, \textbf{Data Value Speculation} can be applied broadly t
     \draw [->, thick] (b2) -- (mul2);
     \draw [->, thick] (add2) -- (guess);
 
-    \node at (2.6, -0.3) {\footnotesize (b) Speculative Collapse of Critical Path};
+    \node [align=center] at (2.6, -0.5) {\footnotesize (b) Speculative Collapse\\\footnotesize of Critical Path};
 \end{tikzpicture}
 \caption{Comparison of execution graphs: standard sequential dataflow path vs. speculatively guessing data values to execute dependent operations in parallel.}
 \label{fig:dataflow_value_speculation}
@@ -950,21 +951,21 @@ Under hardware speculation:
 \centering
 \caption{Dynamic Speculative Trace of Baseline Single-Body Loop across Multiple Iterations}
 \label{tab:speculative_loop_trace}
-\small
+\footnotesize
 \setlength{\tabcolsep}{3pt}
-\begin{tabularx}{\textwidth}{|c|>{\hsize=0.6\hsize\raggedright\arraybackslash}X|>{\hsize=1.1\hsize\raggedright\arraybackslash}X|>{\hsize=1.1\hsize\raggedright\arraybackslash}X|>{\hsize=1.2\hsize\raggedright\arraybackslash}X|}
+\begin{tabularx}{\textwidth}{|c|>{\hsize=1.0\hsize\raggedright\arraybackslash}X|>{\hsize=1.0\hsize\raggedright\arraybackslash}X|>{\hsize=0.9\hsize\raggedright\arraybackslash}X|>{\hsize=1.1\hsize\raggedright\arraybackslash}X|}
 \hline
 \textbf{Iter} & \textbf{Instruction} & \textbf{Rename Mapping (\gls{rat})} & \textbf{\gls{rob} Entry} & \textbf{Commit Order (In-Order)} \\ \hline
-\textbf{1} & \texttt{L.D F0, 0(R1)} & $F_0 \to P_{16}$ & $\text{\gls{rob}}_1$ (Speculative) & Commits 1st (Writes L1 on commit) \\
-\textbf{1} & \texttt{ADD.D F4, F0, F2} & $F_4 \to P_{17}$ (reads $P_{16}$) & $\text{\gls{rob}}_2$ (Speculative) & Commits 2nd \\
-\textbf{1} & \texttt{S.D F4, 0(R1)} & Reads $P_{17}$ & $\text{\gls{rob}}_3$ (Buffered in \gls{ssb}) & Commits 3rd (Flushes \gls{ssb} to L1) \\
-\textbf{1} & \texttt{BNE R1, R2} & Predicted \textit{Taken} & $\text{\gls{rob}}_4$ (Speculative) & Commits 4th (Branch verified) \\ \hline
-\textbf{2} & \texttt{L.D F0, -8(R1)} & $F_0 \to P_{18}$ (\textbf{No \gls{waw}}) & $\text{\gls{rob}}_5$ (Speculative) & Commits 5th \\
-\textbf{2} & \texttt{ADD.D F4, F0, F2} & $F_4 \to P_{19}$ (reads $P_{18}$) & $\text{\gls{rob}}_6$ (Speculative) & Commits 6th \\
-\textbf{2} & \texttt{S.D F4, -8(R1)} & Reads $P_{19}$ & $\text{\gls{rob}}_7$ (Buffered in \gls{ssb}) & Commits 7th \\
-\textbf{2} & \texttt{BNE R1, R2} & Predicted \textit{Taken} & $\text{\gls{rob}}_8$ (Speculative) & Commits 8th \\ \hline
-\textbf{3} & \texttt{L.D F0, -16(R1)} & $F_0 \to P_{20}$ (\textbf{No \gls{waw}}) & $\text{\gls{rob}}_9$ (Speculative) & Commits 9th \\
-\textbf{3} & \texttt{ADD.D F4, F0, F2} & $F_4 \to P_{21}$ (reads $P_{20}$) & $\text{\gls{rob}}_{10}$ (Speculative) & Commits 10th \\
+\textbf{1} & \op{L.D F0, 0(R1)} & $F_0 \to P_{16}$ & $\text{\gls{rob}}_1$ (Speculative) & Commits 1st (Writes L1 on commit) \\
+\textbf{1} & \op{ADD.D F4, F0, F2} & $F_4 \to P_{17}$ (reads $P_{16}$) & $\text{\gls{rob}}_2$ (Speculative) & Commits 2nd \\
+\textbf{1} & \op{S.D F4, 0(R1)} & Reads $P_{17}$ & $\text{\gls{rob}}_3$ (Buffered in \gls{ssb}) & Commits 3rd (Flushes \gls{ssb} to L1) \\
+\textbf{1} & \op{BNE R1, R2} & Predicted \textit{Taken} & $\text{\gls{rob}}_4$ (Speculative) & Commits 4th (Branch verified) \\ \hline
+\textbf{2} & \op{L.D F0, -8(R1)} & $F_0 \to P_{18}$ (\textbf{No \gls{waw}}) & $\text{\gls{rob}}_5$ (Speculative) & Commits 5th \\
+\textbf{2} & \op{ADD.D F4, F0, F2} & $F_4 \to P_{19}$ (reads $P_{18}$) & $\text{\gls{rob}}_6$ (Speculative) & Commits 6th \\
+\textbf{2} & \op{S.D F4, -8(R1)} & Reads $P_{19}$ & $\text{\gls{rob}}_7$ (Buffered in \gls{ssb}) & Commits 7th \\
+\textbf{2} & \op{BNE R1, R2} & Predicted \textit{Taken} & $\text{\gls{rob}}_8$ (Speculative) & Commits 8th \\ \hline
+\textbf{3} & \op{L.D F0, -16(R1)} & $F_0 \to P_{20}$ (\textbf{No \gls{waw}}) & $\text{\gls{rob}}_9$ (Speculative) & Commits 9th \\
+\textbf{3} & \op{ADD.D F4, F0, F2} & $F_4 \to P_{21}$ (reads $P_{20}$) & $\text{\gls{rob}}_{10}$ (Speculative) & Commits 10th \\
 \hline
 \end{tabularx}
 \end{table}
@@ -1060,7 +1061,6 @@ If a match is detected ($\text{Match} = \text{true}$), a multiplexer bypasses th
 \begin{figure}[htpb]
 \centering
 \begin{tikzpicture}[
-    scale=0.9,
     >=Stealth,
     font=\sffamily\small,
     box/.style={
@@ -1122,7 +1122,7 @@ If a match is detected ($\text{Match} = \text{true}$), a multiplexer bypasses th
     \node [block, fill=blue!12, draw=blue!50!black, minimum width=4.4cm] (rat) at (-4.5, 3.0) {%
         \textbf{Rename Table (RAT)}\\[2pt]\tiny 4 Read Ports / 2 Write Ports
     };
-    \node [block, fill=green!12, draw=green!50!black, minimum width=4.2cm] (free_list) at (4.5, 3.0) {%
+    \node [block, fill=green!12, draw=green!50!black, minimum width=3.6cm] (free_list) at (6.6, 3.0) {%
         \textbf{Register Free List}\\[2pt]\tiny Allocates $PDest_1, PDest_2$
     };
 
@@ -1144,7 +1144,7 @@ If a match is detected ($\text{Match} = \text{true}$), a multiplexer bypasses th
 
     % Sorgenti -> RAT (Percorso pulito a 90 gradi sopra la RAT)
     \draw [line] (inst1.south) -- (rat.north);
-    \draw [line] (inst2.south) -- ++(0,-0.6) -- (-2.2, 4.9) -- (-2.2, 3.65);
+    \draw [line] (inst2.south) -- ++(0,-0.5) -| (rat.north east);
 
     % Linea Rossa Dest1 -> Comparatori
     \draw [data] (-3.8, 5.15) -- (-3.8, 4.4) -- (0.0, 4.4) -- (0.0, 1.4) coordinate (red_node);
@@ -1152,18 +1152,15 @@ If a match is detected ($\text{Match} = \text{true}$), a multiplexer bypasses th
     \draw [data] (red_node) -| (comp2.north);
 
     % Sorgenti Inst 2 -> Comparatori (Canale di Destra)
-    \draw [line] (3.8, 5.15) -- (3.8, 0.4) -- (comp2.east) 
-        node[pos=0.7, above, font=\tiny] {$Src2_2\ $};
-    \draw [line] (4.8, 5.15) -- (4.8, -0.2) -- (2.6, -0.2) -- (2.6, 0.4) -- (comp1.east |- 0, 0.4)
-        node[pos=0.2, above, font=\tiny] {$Src1_2\ $};
+    \draw [line] (3.2, 5.15) -- (3.2, 0.4) -- (comp2.east) node[pos=0.25, right, font=\tiny] {$Src2_2$};
+    \draw [line] (2.3, 5.15) -- (2.3, -0.3) -- (-1.45, -0.3) -- (comp1.south west) node[pos=0.25, left, font=\tiny] {$Src1_2$};
 
     % Allocazione PDest1 (Linea verde: Free List -> Out1)
-    \draw [free] (free_list.south) -- (4.5, 2.0) -- (-2.0, 2.0) -- (-2.0, -3.6) -- (-4.5, -3.6) -- (out1.north)
+    \draw [free] (free_list.south) -- (6.6, 2.0) -- (-2.0, 2.0) -- (-2.0, -3.6) -- (-4.5, -3.6) -- (out1.north)
         node[pos=0.18, above, font=\tiny\bfseries] {$PDest_1$};
 
     % Allocazione PDest2 (Linea verde: Free List -> Out2)
-    \draw [free] (6.0, 2.35) -- (6.0, -3.8) -- (4.5, -3.8) -- (out2.north)
-        node[pos=0.5, right, font=\tiny\bfseries] {$PDest_2$};
+    \draw [free] (7.9, 2.3) -- (7.9, -3.3) -- (5.9, -3.3) -- (5.9, -3.9) node[pos=0.3, right, font=\tiny\bfseries] {$PDest_2$};
 
     % Segnali di Controllo ai MUX
     \draw [ctrl] (comp1.south) -- (mux1.north);

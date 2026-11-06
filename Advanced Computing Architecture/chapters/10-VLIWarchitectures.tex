@@ -114,26 +114,26 @@ Using very long instructions can be very expensive in terms of program memory oc
 
 \begin{figure}[htpb]
 \centering
-\begin{tikzpicture}[scale=0.9, >=stealth, font=\small]
-    % Compressed Stream in Memory
-    \node [font=\bfseries\small] at (-3.2, 2.2) {Compressed Memory Stream};
-    \draw [fill=gray!15, thick] (-5.5, 1.0) rectangle (-0.9, 1.7);
-    \node [font=\scriptsize] at (-3.2, 1.35) {\texttt{[Mask | Op A | Op B]}};
+\begin{tikzpicture}[>=stealth, font=\small]
+    % Compressed stream in memory
+    \node [font=\bfseries\small] at (-3.6, 2.2) {Compressed Memory Stream};
+    \draw [fill=gray!15, thick] (-6.0, 1.0) rectangle (-1.2, 1.7);
+    \node [font=\scriptsize] at (-3.6, 1.35) {\texttt{[Mask | Op A | Op B]}};
 
-    % Hardware Expansion / Pre-decoder
-    \draw [->, ultra thick, unitnred] (-0.8, 1.35) -- (0.5, 1.35) node[midway, above, font=\tiny\bfseries] {Run-Time Expansion};
+    % Hardware expansion
+    \draw [->, ultra thick, unitnred] (-1.1, 1.35) -- (0.5, 1.35);
+    \node [font=\tiny\bfseries, align=center, anchor=south] at (-0.3, 1.45) {Run-time\\expansion};
 
-    % Uncompressed VLIW Issue Bundle
-    \node [font=\bfseries\small] at (4.0, 2.2) {Expanded Parallel Issue Bundle};
-    \draw [fill=blue!10, thick] (0.6, 1.0) rectangle (7.4, 1.7);
-    \node [font=\scriptsize] at (1.45, 1.35) {\texttt{ALU 0: Op A}};
-    \draw [thick] (2.3, 1.0) -- (2.3, 1.7);
-    \node [font=\scriptsize] at (3.15, 1.35) {\texttt{ALU 1: NOP}};
-    \draw [thick] (4.0, 1.0) -- (4.0, 1.7);
-    \node [font=\scriptsize] at (4.85, 1.35) {\texttt{MEM: Op B}};
-    \draw [thick] (5.7, 1.0) -- (5.7, 1.7);
-    \node [font=\scriptsize] at (6.55, 1.35) {\texttt{BRANCH: NOP}};
-
+    % Expanded VLIW issue bundle
+    \node [font=\bfseries\small] at (4.4, 2.2) {Expanded Parallel Issue Bundle};
+    \draw [fill=blue!10, thick] (0.6, 1.0) rectangle (8.2, 1.7);
+    \node [font=\scriptsize] at (1.55, 1.35) {\texttt{ALU 0: Op A}};
+    \draw [thick] (2.5, 1.0) -- (2.5, 1.7);
+    \node [font=\scriptsize] at (3.45, 1.35) {\texttt{ALU 1: NOP}};
+    \draw [thick] (4.4, 1.0) -- (4.4, 1.7);
+    \node [font=\scriptsize] at (5.35, 1.35) {\texttt{MEM: Op B}};
+    \draw [thick] (6.3, 1.0) -- (6.3, 1.7);
+    \node [font=\scriptsize] at (7.25, 1.35) {\texttt{BRANCH: NOP}};
 \end{tikzpicture}
 \caption{Run-time hardware expansion of a compile-time compressed \gls{vliw} instruction (mask-based encoding).}
 \label{fig:vliw_compression_expansion}
@@ -216,23 +216,23 @@ The effectiveness of loop unrolling depends on the underlying architecture and o
 \centering
 \caption{Schedule Breakdown: $5\times$ Unrolled Superscalar vs. $7\times$ Unrolled \gls{vliw}}
 \label{tab:unrolled_schedule_comparison}
-\small
+\footnotesize
 \setlength{\tabcolsep}{4pt}
 \begin{tabularx}{\textwidth}{|c|>{\hsize=0.8\hsize\raggedright\arraybackslash}X|>{\hsize=1.2\hsize\raggedright\arraybackslash}X|}
 \hline
 \textbf{Clock Cycle} & \textbf{Dual-Issue Superscalar ($5\times$ Unrolled)} & \textbf{5-Issue \gls{vliw} Bundle ($7\times$ Unrolled)} \\ \hline
-\textbf{CC 1} & \texttt{L.D F0, 0(R1)} & \texttt{L.D F0, 0(R1) | L.D F6, -8(R1)} \\ \hline
-\textbf{CC 2} & \texttt{L.D F6, -8(R1)} & \texttt{L.D F10, -16(R1) | L.D F14, -24(R1)} \\ \hline
-\textbf{CC 3} & \texttt{L.D F10, -16(R1) | ADD.D F4, F0, F2} & \texttt{L.D F18, -32(R1) | L.D F22, -40(R1) | ADD.D F4, F0, F2 | ADD.D F8, F6, F2} \\ \hline
-\textbf{CC 4} & \texttt{L.D F14, -24(R1) | ADD.D F8, F6, F2} & \texttt{L.D F26, -48(R1) | ADD.D F12, F10, F2 | ADD.D F16, F14, F2} \\ \hline
-\textbf{CC 5} & \texttt{L.D F18, -32(R1) | ADD.D F12, F10, F2} & \texttt{ADD.D F20, F18, F2 | ADD.D F24, F22, F2} \\ \hline
-\textbf{CC 6} & \texttt{S.D F4, 0(R1) | ADD.D F16, F14, F2} & \texttt{S.D F4, 0(R1) | S.D F8, -8(R1) | ADD.D F28, F26, F2} \\ \hline
-\textbf{CC 7} & \texttt{S.D F8, -8(R1) | ADD.D F20, F18, F2} & \texttt{S.D F12, -16(R1) | S.D F16, -24(R1)} \\ \hline
-\textbf{CC 8} & \texttt{S.D F12, -16(R1)} & \texttt{S.D F20, -32(R1) | S.D F24, -40(R1) | SUBI R1, R1, \#48} \\ \hline
-\textbf{CC 9} & \texttt{S.D F16, -24(R1)} & \texttt{S.D F28, 0(R1) | BNEZ R1, Loop} \\ \hline
-\textbf{CC 10} & \texttt{SUBI R1, R1, \#40} & \textit{-- next iteration --} \\ \hline
-\textbf{CC 11} & \texttt{BNEZ R1, Loop} & \textit{-- next iteration --} \\ \hline
-\textbf{CC 12} & \texttt{S.D F20, 8(R1)} (branch delay slot) & \textit{-- next iteration --} \\ \hline
+\textbf{CC 1} & \op{L.D F0, 0(R1)} & \op{L.D F0, 0(R1)} \texttt{|} \op{L.D F6, -8(R1)} \\ \hline
+\textbf{CC 2} & \op{L.D F6, -8(R1)} & \op{L.D F10, -16(R1)} \texttt{|} \op{L.D F14, -24(R1)} \\ \hline
+\textbf{CC 3} & \op{L.D F10, -16(R1)} \texttt{|} \op{ADD.D F4, F0, F2} & \op{L.D F18, -32(R1)} \texttt{|} \op{L.D F22, -40(R1)} \texttt{|} \op{ADD.D F4, F0, F2} \texttt{|} \op{ADD.D F8, F6, F2} \\ \hline
+\textbf{CC 4} & \op{L.D F14, -24(R1)} \texttt{|} \op{ADD.D F8, F6, F2} & \op{L.D F26, -48(R1)} \texttt{|} \op{ADD.D F12, F10, F2} \texttt{|} \op{ADD.D F16, F14, F2} \\ \hline
+\textbf{CC 5} & \op{L.D F18, -32(R1)} \texttt{|} \op{ADD.D F12, F10, F2} & \op{ADD.D F20, F18, F2} \texttt{|} \op{ADD.D F24, F22, F2} \\ \hline
+\textbf{CC 6} & \op{S.D F4, 0(R1)} \texttt{|} \op{ADD.D F16, F14, F2} & \op{S.D F4, 0(R1)} \texttt{|} \op{S.D F8, -8(R1)} \texttt{|} \op{ADD.D F28, F26, F2} \\ \hline
+\textbf{CC 7} & \op{S.D F8, -8(R1)} \texttt{|} \op{ADD.D F20, F18, F2} & \op{S.D F12, -16(R1)} \texttt{|} \op{S.D F16, -24(R1)} \\ \hline
+\textbf{CC 8} & \op{S.D F12, -16(R1)} & \op{S.D F20, -32(R1)} \texttt{|} \op{S.D F24, -40(R1)} \texttt{|} \op{SUBI R1, R1, \#48} \\ \hline
+\textbf{CC 9} & \op{S.D F16, -24(R1)} & \op{S.D F28, 0(R1)} \texttt{|} \op{BNEZ R1, Loop} \\ \hline
+\textbf{CC 10} & \op{SUBI R1, R1, \#40} & \textit{-- next iteration --} \\ \hline
+\textbf{CC 11} & \op{BNEZ R1, Loop} & \textit{-- next iteration --} \\ \hline
+\textbf{CC 12} & \op{S.D F20, 8(R1)} (branch delay slot) & \textit{-- next iteration --} \\ \hline
 \end{tabularx}
 \end{table}
 
@@ -415,12 +415,13 @@ The second generation, Itanium 2, was released in 2002 (180 nm, 1 GHz, larger ca
 
 \begin{table}[htbp]
 \centering
-\caption{Head-to-head \gls{ilp} comparison (Power5 die size and power are estimates).}
+\caption{Head-to-head \gls{ilp} comparison (F/I/E = fetch/issue/execute width; Power5 die size and power are estimates).}
 \label{tab:ilp_head_to_head}
-\small
-\begin{tabularx}{\textwidth}{|l|Y|c|c|c|c|c|}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{|l|Y|c|l|c|c|c|}
 \hline
-\textbf{Processor} & \textbf{Microarchitecture} & \textbf{Fetch/Issue/Exec} & \textbf{\glspl{fu}} & \textbf{GHz} & \textbf{Trans.} & \textbf{Power} \\ \hline
+\textbf{Processor} & \textbf{Microarchitecture} & \textbf{F/I/E} & \textbf{\glspl{fu}} & \textbf{GHz} & \textbf{Trans.} & \textbf{Power} \\ \hline
 Intel Pentium 4 Extreme & Speculative, dynamically scheduled, deeply pipelined, \gls{smt} & 3/3/4 & 7 int, 1 \gls{fp} & 3.8 & 125 M & 115 W \\ \hline
 AMD Athlon 64 FX-57 & Speculative, dynamically scheduled & 3/3/4 & 6 int, 3 \gls{fp} & 2.8 & 114 M & 104 W \\ \hline
 IBM Power5 (1 core) & Speculative, dynamically scheduled, \gls{smt}, 2 cores/chip & 8/4/8 & 6 int, 2 \gls{fp} & 1.9 & 200 M & 80 W \\ \hline

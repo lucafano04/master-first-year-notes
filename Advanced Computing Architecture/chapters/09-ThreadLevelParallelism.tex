@@ -66,13 +66,13 @@ Wide-issue superscalar processors suffer from two distinct forms of pipeline slo
     \end{itemize}
 \end{concept}
 
-Neither \gls{ilp} nor single-threaded dynamic scheduling can address both types of waste simultaneously. Combining \gls{ilp} dynamic issue logic with \gls{tlp} hardware thread states produces 	extbf{\glsxtrfull{smt}}.
+Neither \gls{ilp} nor single-threaded dynamic scheduling can address both types of waste simultaneously. Combining \gls{ilp} dynamic issue logic with \gls{tlp} hardware thread states produces \textbf{\glsxtrfull{smt}}.
 
 \begin{figure}[htpb]
 \centering
-\begin{tikzpicture}[scale=0.85, >=stealth, font=\small]
+\begin{tikzpicture}[>=stealth, font=\small]
     % --- Superscalar (Issue Waste) ---
-    \node [font=\bfseries\small] at (1.5, 4.2) {(a) Standard Superscalar};
+    \node [font=\bfseries\footnotesize] at (1.5, 4.2) {(a) Superscalar};
     \draw [thick] (0,0) rectangle (3,3.6);
     % Grid lines (4-wide, 6 cycles)
     \foreach \y in {0.6, 1.2, 1.8, 2.4, 3.0} \draw [gray!40] (0,\y) -- (3,\y);
@@ -85,7 +85,7 @@ Neither \gls{ilp} nor single-threaded dynamic scheduling can address both types 
     \fill [blue!40] (0,0.6) rectangle (0.75,1.2); % Cycle 5: 1 inst
     
     % --- Fine-Grained Multithreading ---
-    \node [font=\bfseries\small] at (5.5, 4.2) {(b) Fine-Grained MT};
+    \node [font=\bfseries\footnotesize] at (5.5, 4.2) {(b) Fine-Grained MT};
     \draw [thick] (4,0) rectangle (7,3.6);
     \foreach \y in {0.6, 1.2, 1.8, 2.4, 3.0} \draw [gray!40] (4,\y) -- (7,\y);
     \foreach \x in {4.75, 5.5, 6.25} \draw [gray!40] (\x,0) -- (\x,3.6);
@@ -98,7 +98,7 @@ Neither \gls{ilp} nor single-threaded dynamic scheduling can address both types 
     \fill [red!40]  (4,0.0) rectangle (4.75,0.6);  % T2
 
     % --- Simultaneous Multithreading (SMT) ---
-    \node [font=\bfseries\small] at (9.5, 4.2) {(c) Simultaneous MT};
+    \node [font=\bfseries\footnotesize] at (9.5, 4.2) {(c) Simultaneous MT};
     \draw [thick] (8,0) rectangle (11,3.6);
     \foreach \y in {0.6, 1.2, 1.8, 2.4, 3.0} \draw [gray!40] (8,\y) -- (11,\y);
     \foreach \x in {8.75, 9.5, 10.25} \draw [gray!40] (\x,0) -- (\x,3.6);
@@ -290,7 +290,7 @@ Energy consumption is determined by the balance between execution speedup and th
 \section{Summary: The Limits of \glsfmtshort{ilp} and the Transition to Explicit Parallelism}
 \label{sec:ilp_summary_shift_to_tlp}
 
-Decades of microarchitectural research establish that practical limits—including the power wall, compiler limits, dependency chains, and quadratic logic complexity—cap dynamic superscalar issue widths at 	extbf{3 to 6 instructions per cycle}.
+Decades of microarchitectural research establish that practical limits—including the power wall, compiler limits, dependency chains, and quadratic logic complexity—cap dynamic superscalar issue widths at \textbf{3 to 6 instructions per cycle}.
 
 \begin{concept}{Core Takeaways on Architectural Concurrency}{architectural-concurrency-takeaways}
     \begin{enumerate}

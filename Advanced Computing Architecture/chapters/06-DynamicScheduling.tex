@@ -198,7 +198,7 @@ Each \gls{rs} entry consists of the following tracking fields:
     \item \textbf{$A$:} Holds immediate values or offset addresses for memory operations (Load/Store buffers).
 \end{itemize}
 
-Additionally, the 	extbf{Register Status Table} tracks pending writes to the architectural register file. Each register $R_i$ contains a field, $Q_i$, which holds the tag of the \gls{rs} that will compute its future value. If no active instruction is slated to write to $R_i$, $Q_i$ remains blank or zero.
+Additionally, the \textbf{Register Status Table} tracks pending writes to the architectural register file. Each register $R_i$ contains a field, $Q_i$, which holds the tag of the \gls{rs} that will compute its future value. If no active instruction is slated to write to $R_i$, $Q_i$ remains blank or zero.
 
 \subsubsection{1. Issue}
 Instructions are fetched sequentially from the instruction queue and issued in program order. During this stage:
@@ -239,7 +239,7 @@ When the \gls{fu} completes computation, the result is broadcast to clear depend
 While Tomasulo's algorithm significantly outperforms Scoreboarding by enabling dynamic execution and bypassing register bottlenecks, its microarchitectural behavior introduces specific trade-offs, advantages, and physical execution limits.
 
 \subsubsection{Dynamic Loop Unrolling and Memory Disambiguation}
-A major strength of Tomasulo's algorithm is its ability to perform 	extbf{implicit dynamic loop unrolling} at runtime. Because destination registers are immediately renamed to \gls{rs} tags upon issue, instructions from consecutive loop iterations can be issued into reservation stations without stalling on \gls{war} or \gls{waw} register dependencies. This allows functional units to execute operations from multiple iterations simultaneously.
+A major strength of Tomasulo's algorithm is its ability to perform \textbf{implicit dynamic loop unrolling} at runtime. Because destination registers are immediately renamed to \gls{rs} tags upon issue, instructions from consecutive loop iterations can be issued into reservation stations without stalling on \gls{war} or \gls{waw} register dependencies. This allows functional units to execute operations from multiple iterations simultaneously.
 
 However, register renaming alone does not eliminate hazards occurring through memory:
 \begin{itemize}

@@ -73,13 +73,15 @@ Figure~\ref{fig:ilp_ideal_machine} illustrates the empirical performance limits 
 
 \begin{figure}[htpb]
 \centering
-\begin{tikzpicture}[scale=0.85, font=\small]
+\begin{tikzpicture}[font=\small]
     % Grid lines
     \draw[gray!30, dashed] (0,0) grid[ystep=0.7cm, xstep=0] (11, 5.6);
     
     % Axes
-    \draw[->, thick] (0,0) -- (11.5, 0) node[below=12pt, midway, font=\bfseries] {Programs};
-    \draw[->, thick] (0,0) -- (0, 6.0) node[rotate=90, above=14pt, midway, font=\bfseries] {Instructions Per Clock (IPC)};
+    \draw[->, thick] (0,0) -- (11.5, 0);
+    \node[font=\bfseries] at (5.75, -1.25) {Programs};
+    \draw[->, thick] (0,0) -- (0, 6.0);
+    \node[rotate=90, font=\bfseries\small] at (-1.35, 3.00) {Instructions Per Clock (IPC)};
     
     % Y-Axis Ticks & Labels (Scale: 1 unit IPC = 0.035 cm => 160 IPC = 5.6 cm)
     \foreach \y/\val in {0/0, 0.7/20, 1.4/40, 2.1/60, 2.8/80, 3.5/100, 4.2/120, 4.9/140, 5.6/160} {
@@ -87,8 +89,8 @@ Figure~\ref{fig:ilp_ideal_machine} illustrates the empirical performance limits 
     }
 
     % Group Labels Top Text
-    \node[font=\bfseries\large] at (3.2, 4.4) {Integer: 18 -- 60};
-    \node[font=\bfseries\large] at (8.5, 5.2) {FP: 75 -- 150};
+    \node[font=\bfseries\large] at (3.2, 6.8) {Integer: 18 -- 60};
+    \node[font=\bfseries\large] at (8.5, 6.8) {FP: 75 -- 150};
 
     % Bars (Red)
     % gcc: 54.8 IPC -> 54.8 * 0.035 = 1.918 cm
@@ -106,7 +108,7 @@ Figure~\ref{fig:ilp_ideal_machine} illustrates the empirical performance limits 
     % li: 17.9 IPC -> 17.9 * 0.035 = 0.6265 cm
     \draw[fill=red!85!black, draw=black, thick] (4.2, 0) rectangle (5.2, 0.6265);
     \node[above, font=\bfseries\small] at (4.7, 0.6265) {17.9};
-    \node[text=white, font=\tiny\bfseries, align=center, rotate=90] at (4.7, 0.31) {Lisp interpreter};
+    \node[text=white, font=\tiny\bfseries, align=center, rotate=90] at (4.7, 0.31) {Lisp};
     \node[below=4pt, font=\bfseries\small] at (4.7, 0) {li};
 
     % fpppp: 75.2 IPC -> 75.2 * 0.035 = 2.632 cm
@@ -147,21 +149,23 @@ To evaluate performance under more realistic hardware conditions, we constrain t
 
 \begin{figure}[htpb]
 \centering
-\begin{tikzpicture}[scale=0.82, font=\small]
+\begin{tikzpicture}[font=\small]
     % Grid lines
     \draw[gray!30, dashed] (0,0) grid[ystep=0.65cm, xstep=0] (13.5, 5.2);
     
     % Axes
-    \draw[->, thick] (0,0) -- (13.8, 0) node[below=14pt, midway, font=\bfseries] {Benchmarks};
-    \draw[->, thick] (0,0) -- (0, 5.5) node[rotate=90, above=14pt, midway, font=\bfseries] {Instructions Per Clock (IPC)};
+    \draw[->, thick] (0,0) -- (13.8, 0);
+    \node[font=\bfseries] at (6.90, -1.25) {Benchmarks};
+    \draw[->, thick] (0,0) -- (0, 5.5);
+    \node[rotate=90, font=\bfseries\small] at (-1.35, 2.75) {Instructions Per Clock (IPC)};
     
     % Y-Axis Ticks & Labels (Scale: 1 unit IPC = 0.0325 cm => 160 IPC = 5.2 cm)
     \foreach \y/\val in {0/0, 0.65/20, 1.3/40, 1.95/60, 2.6/80, 3.25/100, 3.9/120, 4.55/140, 5.2/160} {
         \draw (0, \y) -- (-0.15, \y) node[left, font=\scriptsize] {\val};
     }
 
-    \node[font=\bfseries\large] at (3.5, 3.6) {Integer: 8 -- 63};
-    \node[font=\bfseries\large] at (10.5, 4.8) {FP: 9 -- 150};
+    \node[font=\bfseries\large] at (3.5, 6.3) {Integer: 8 -- 63};
+    \node[font=\bfseries\large] at (9.6, 6.3) {FP: 9 -- 150};
 
     % Bar group spacing parameters
     % Width of bar: 0.35cm. Group width: 5 * 0.35 = 1.75cm.
@@ -227,7 +231,7 @@ To evaluate performance under more realistic hardware conditions, we constrain t
     \end{scope}
 
     % --- Legend ---
-    \begin{scope}[shift={(4.0, -1.0)}]
+    \begin{scope}[shift={(4.0, -2.1)}]
         \draw[fill=white, draw=black] (-0.2, -0.3) rectangle (7.2, 0.4);
         \draw[fill=red] (0,0) rectangle (0.4, 0.2);
         \node[right, font=\scriptsize] at (0.4, 0.1) {Infinite};
@@ -277,21 +281,23 @@ Figure~\ref{fig:ilp_branch_impact} illustrates the achievable instructions issue
 
 \begin{figure}[htpb]
 \centering
-\begin{tikzpicture}[scale=0.82, font=\small]
+\begin{tikzpicture}[font=\small]
     % Grid lines
     \draw[gray!30, dashed] (0,0) grid[ystep=0.75cm, xstep=0] (13.5, 4.5);
     
     % Axes
-    \draw[->, thick] (0,0) -- (13.8, 0) node[below=14pt, midway, font=\bfseries] {Program};
-    \draw[->, thick] (0,0) -- (0, 4.8) node[rotate=90, above=14pt, midway, font=\bfseries] {Instruction Issues per cycle};
+    \draw[->, thick] (0,0) -- (13.8, 0);
+    \node[font=\bfseries] at (6.90, -1.25) {Program};
+    \draw[->, thick] (0,0) -- (0, 4.8);
+    \node[rotate=90, font=\bfseries\small] at (-1.35, 2.40) {Instruction Issues per cycle};
     
     % Y-Axis Ticks & Labels (Scale: 1 unit IPC = 0.075 cm => 60 IPC = 4.5 cm)
     \foreach \y/\val in {0/0, 0.75/10, 1.5/20, 2.25/30, 3.0/40, 3.75/50, 4.5/60} {
         \draw (0, \y) -- (-0.15, \y) node[left, font=\scriptsize] {\val};
     }
 
-    \node[font=\bfseries\large] at (3.5, 3.2) {Integer: 6 -- 16};
-    \node[font=\bfseries\large] at (11.0, 4.2) {FP: 13 -- 48};
+    \node[font=\bfseries\large] at (3.5, 5.6) {Integer: 6 -- 16};
+    \node[font=\bfseries\large] at (9.6, 5.6) {FP: 13 -- 48};
 
     % --- Benchmark 1: gcc --- (Perfect=35.2, Selective=8.6, 2-bit=5.7, Static=6.4, None=2.0)
     \begin{scope}[shift={(0.4, 0)}]
@@ -354,22 +360,18 @@ Figure~\ref{fig:ilp_branch_impact} illustrates the achievable instructions issue
     \end{scope}
 
     % --- Legend ---
-    \begin{scope}[shift={(3.2, -1.0)}]
-        \draw[fill=white, draw=black] (-0.2, -0.3) rectangle (7.6, 0.4);
+    \begin{scope}[shift={(3.0, -2.1)}]
+        \draw[fill=white, draw=black] (-0.2, -0.3) rectangle (10.4, 0.4);
         \draw[fill=red] (0,0) rectangle (0.4, 0.2);
         \node[right, font=\scriptsize] at (0.4, 0.1) {Perfect};
-        
-        \draw[fill=green!60!black] (1.5,0) rectangle (1.9, 0.2);
-        \node[right, font=\scriptsize] at (1.9, 0.1) {Selective predictor};
-        
-        \draw[fill=blue] (3.4,0) rectangle (3.8, 0.2);
-        \node[right, font=\scriptsize] at (3.8, 0.1) {Standard 2-bit};
-        
-        \draw[fill=yellow!90!black] (5.1,0) rectangle (5.5, 0.2);
-        \node[right, font=\scriptsize] at (5.5, 0.1) {Static};
-        
-        \draw[fill=magenta] (6.3,0) rectangle (6.7, 0.2);
-        \node[right, font=\scriptsize] at (6.7, 0.1) {None};
+        \draw[fill=green!60!black] (1.7,0) rectangle (2.1, 0.2);
+        \node[right, font=\scriptsize] at (2.1, 0.1) {Selective predictor};
+        \draw[fill=blue] (5.0,0) rectangle (5.4, 0.2);
+        \node[right, font=\scriptsize] at (5.4, 0.1) {Standard 2-bit};
+        \draw[fill=yellow!90!black] (7.6,0) rectangle (8.0, 0.2);
+        \node[right, font=\scriptsize] at (8.0, 0.1) {Static};
+        \draw[fill=magenta] (9.2,0) rectangle (9.6, 0.2);
+        \node[right, font=\scriptsize] at (9.6, 0.1) {None};
     \end{scope}
 
 \end{tikzpicture}
@@ -381,13 +383,15 @@ To understand why the selective (tournament) predictor yields superior issue rat
 
 \begin{figure}[htpb]
 \centering
-\begin{tikzpicture}[scale=0.82, font=\small]
+\begin{tikzpicture}[font=\small]
     % Grid lines
     \draw[gray!30, dashed] (0,0) grid[ystep=0.7cm, xstep=0] (13.5, 4.9);
     
     % Axes
-    \draw[->, thick] (0,0) -- (13.8, 0) node[below=14pt, midway, font=\bfseries] {Program};
-    \draw[->, thick] (0,0) -- (0, 5.2) node[rotate=90, above=14pt, midway, font=\bfseries] {Misprediction Rate};
+    \draw[->, thick] (0,0) -- (13.8, 0);
+    \node[font=\bfseries] at (6.90, -1.25) {Program};
+    \draw[->, thick] (0,0) -- (0, 5.2);
+    \node[rotate=90, font=\bfseries\small] at (-1.35, 2.60) {Misprediction Rate};
     
     % Y-Axis Ticks & Labels (Scale: 1% = 0.14 cm => 35% = 4.9 cm)
     \foreach \y/\val in {0/0\%, 0.7/5\%, 1.4/10\%, 2.1/15\%, 2.8/20\%, 3.5/25\%, 4.2/30\%, 4.9/35\%} {
@@ -444,16 +448,14 @@ To understand why the selective (tournament) predictor yields superior issue rat
     \end{scope}
 
     % --- Legend ---
-    \begin{scope}[shift={(3.8, -1.0)}]
-        \draw[fill=white, draw=black] (-0.2, -0.3) rectangle (5.8, 0.4);
+    \begin{scope}[shift={(3.6, -2.1)}]
+        \draw[fill=white, draw=black] (-0.2, -0.3) rectangle (7.0, 0.4);
         \draw[fill=red] (0,0) rectangle (0.4, 0.2);
         \node[right, font=\scriptsize] at (0.4, 0.1) {Profile-based};
-        
-        \draw[fill=green!60!black] (2.0,0) rectangle (2.4, 0.2);
-        \node[right, font=\scriptsize] at (2.4, 0.1) {2-bit counter};
-        
-        \draw[fill=blue!80!black] (4.0,0) rectangle (4.4, 0.2);
-        \node[right, font=\scriptsize] at (4.4, 0.1) {Tournament};
+        \draw[fill=green!60!black] (2.5,0) rectangle (2.9, 0.2);
+        \node[right, font=\scriptsize] at (2.9, 0.1) {2-bit counter};
+        \draw[fill=blue!80!black] (5.0,0) rectangle (5.4, 0.2);
+        \node[right, font=\scriptsize] at (5.4, 0.1) {Tournament};
     \end{scope}
 
 \end{tikzpicture}
@@ -487,21 +489,23 @@ Figure~\ref{fig:ilp_memory_alias_impact} presents the resulting \gls{ipc} across
 
 \begin{figure}[htpb]
 \centering
-\begin{tikzpicture}[scale=0.82, font=\small]
+\begin{tikzpicture}[font=\small]
     % Grid lines
     \draw[gray!30, dashed] (0,0) grid[ystep=0.75cm, xstep=0] (13.5, 4.5);
     
     % Axes
-    \draw[->, thick] (0,0) -- (13.8, 0) node[below=14pt, midway, font=\bfseries] {Program};
-    \draw[->, thick] (0,0) -- (0, 4.8) node[rotate=90, above=14pt, midway, font=\bfseries] {IPC};
+    \draw[->, thick] (0,0) -- (13.8, 0);
+    \node[font=\bfseries] at (6.90, -1.25) {Program};
+    \draw[->, thick] (0,0) -- (0, 4.8);
+    \node[rotate=90, font=\bfseries\small] at (-1.35, 2.40) {IPC};
     
     % Y-Axis Ticks & Labels (Scale: 1 unit IPC = 0.09 cm => 50 IPC = 4.5 cm)
     \foreach \y/\val in {0/0, 0.45/5, 0.9/10, 1.35/15, 1.8/20, 2.25/25, 2.7/30, 3.15/35, 3.6/40, 4.05/45, 4.5/50} {
         \draw (0, \y) -- (-0.15, \y) node[left, font=\scriptsize] {\val};
     }
 
-    \node[font=\bfseries\large] at (3.5, 2.7) {Integer: 4 -- 9};
-    \node[font=\bfseries\large] at (11.0, 3.5) {\begin{tabular}{c} FP: 4 -- 49 \\ (Fortran, no heap) \end{tabular}};
+    \node[font=\bfseries\large] at (3.5, 5.6) {Integer: 4 -- 9};
+    \node[font=\bfseries\large] at (9.6, 5.6) {\begin{tabular}{c} FP: 4 -- 49 \\ (Fortran, no heap) \end{tabular}};
 
     % Bar group spacing parameters (4 bars per group, width=0.32cm)
     % --- Benchmark 1: gcc --- (Perfect=10, Global/Stack=7, Inspection=4, None=3)
@@ -559,19 +563,16 @@ Figure~\ref{fig:ilp_memory_alias_impact} presents the resulting \gls{ipc} across
     \end{scope}
 
     % --- Legend ---
-    \begin{scope}[shift={(3.2, -1.0)}]
-        \draw[fill=white, draw=black] (-0.2, -0.3) rectangle (7.6, 0.4);
+    \begin{scope}[shift={(3.4, -2.1)}]
+        \draw[fill=white, draw=black] (-0.2, -0.3) rectangle (8.6, 0.4);
         \draw[fill=red] (0,0) rectangle (0.4, 0.2);
         \node[right, font=\scriptsize] at (0.4, 0.1) {Perfect};
-        
-        \draw[fill=green!60!black] (1.8,0) rectangle (2.2, 0.2);
-        \node[right, font=\scriptsize] at (2.2, 0.1) {Global/stack Perfect};
-        
-        \draw[fill=blue] (4.5,0) rectangle (4.9, 0.2);
-        \node[right, font=\scriptsize] at (4.9, 0.1) {Inspection};
-        
-        \draw[fill=yellow!90!black] (6.1,0) rectangle (6.5, 0.2);
-        \node[right, font=\scriptsize] at (6.5, 0.1) {None};
+        \draw[fill=green!60!black] (1.7,0) rectangle (2.1, 0.2);
+        \node[right, font=\scriptsize] at (2.1, 0.1) {Global/stack Perfect};
+        \draw[fill=blue] (5.1,0) rectangle (5.5, 0.2);
+        \node[right, font=\scriptsize] at (5.5, 0.1) {Inspection};
+        \draw[fill=yellow!90!black] (7.2,0) rectangle (7.6, 0.2);
+        \node[right, font=\scriptsize] at (7.6, 0.1) {None};
     \end{scope}
 
 \end{tikzpicture}
@@ -601,21 +602,23 @@ Under these cumulative constraints, we vary the Instruction Window Size across e
 
 \begin{figure}[htpb]
 \centering
-\begin{tikzpicture}[scale=0.82, font=\small]
+\begin{tikzpicture}[font=\small]
     % Grid lines
     \draw[gray!30, dashed] (0,0) grid[ystep=0.75cm, xstep=0] (13.5, 4.5);
     
     % Axes
-    \draw[->, thick] (0,0) -- (13.8, 0) node[below=14pt, midway, font=\bfseries] {Program};
-    \draw[->, thick] (0,0) -- (0, 4.8) node[rotate=90, above=14pt, midway, font=\bfseries] {IPC};
+    \draw[->, thick] (0,0) -- (13.8, 0);
+    \node[font=\bfseries] at (6.90, -1.25) {Program};
+    \draw[->, thick] (0,0) -- (0, 4.8);
+    \node[rotate=90, font=\bfseries\small] at (-1.35, 2.40) {IPC};
     
     % Y-Axis Ticks & Labels (Scale: 1 unit IPC = 0.075 cm => 60 IPC = 4.5 cm)
     \foreach \y/\val in {0/0, 0.75/10, 1.5/20, 2.25/30, 3.0/40, 3.75/50, 4.5/60} {
         \draw (0, \y) -- (-0.15, \y) node[left, font=\scriptsize] {\val};
     }
 
-    \node[font=\bfseries\large] at (3.5, 2.8) {Integer: 6 -- 12};
-    \node[font=\bfseries\large] at (11.0, 4.1) {FP: 8 -- 45};
+    \node[font=\bfseries\large] at (3.5, 5.6) {Integer: 6 -- 12};
+    \node[font=\bfseries\large] at (9.6, 5.6) {FP: 8 -- 45};
 
     % Bar group spacing parameters (8 bars per group, width=0.18cm)
     % --- Benchmark 1: gcc --- (Inf=10, 256=10, 128=10, 64=9, 32=8, 16=6, 8=4, 4=3)
@@ -697,31 +700,31 @@ Under these cumulative constraints, we vary the Instruction Window Size across e
     \end{scope}
 
     % --- Legend ---
-    \begin{scope}[shift={(1.8, -1.0)}]
-        \draw[fill=white, draw=black] (-0.2, -0.3) rectangle (10.2, 0.4);
+    \begin{scope}[shift={(1.8, -2.1)}]
+        \draw[fill=white, draw=black] (-0.2, -0.3) rectangle (8.2, 0.4);
         \draw[fill=red] (0,0) rectangle (0.3, 0.2);
         \node[right, font=\scriptsize] at (0.3, 0.1) {Infinite};
         
-        \draw[fill=green!60!black] (1.3,0) rectangle (1.6, 0.2);
-        \node[right, font=\scriptsize] at (1.6, 0.1) {256};
+        \draw[fill=green!60!black] (1.5,0) rectangle (1.8, 0.2);
+        \node[right, font=\scriptsize] at (1.8, 0.1) {256};
         
-        \draw[fill=blue] (2.4,0) rectangle (2.7, 0.2);
-        \node[right, font=\scriptsize] at (2.7, 0.1) {128};
+        \draw[fill=blue] (2.6,0) rectangle (2.9, 0.2);
+        \node[right, font=\scriptsize] at (2.9, 0.1) {128};
         
-        \draw[fill=yellow!90!black] (3.4,0) rectangle (3.7, 0.2);
-        \node[right, font=\scriptsize] at (3.7, 0.1) {64};
+        \draw[fill=yellow!90!black] (3.6,0) rectangle (3.9, 0.2);
+        \node[right, font=\scriptsize] at (3.9, 0.1) {64};
         
-        \draw[fill=magenta] (4.3,0) rectangle (4.6, 0.2);
-        \node[right, font=\scriptsize] at (4.6, 0.1) {32};
+        \draw[fill=magenta] (4.5,0) rectangle (4.8, 0.2);
+        \node[right, font=\scriptsize] at (4.8, 0.1) {32};
 
-        \draw[fill=cyan] (5.2,0) rectangle (5.5, 0.2);
-        \node[right, font=\scriptsize] at (5.5, 0.1) {16};
+        \draw[fill=cyan] (5.4,0) rectangle (5.7, 0.2);
+        \node[right, font=\scriptsize] at (5.7, 0.1) {16};
 
-        \draw[fill=brown] (6.0,0) rectangle (6.3, 0.2);
-        \node[right, font=\scriptsize] at (6.3, 0.1) {8};
+        \draw[fill=brown] (6.2,0) rectangle (6.5, 0.2);
+        \node[right, font=\scriptsize] at (6.5, 0.1) {8};
 
-        \draw[fill=green!30!black] (6.8,0) rectangle (7.1, 0.2);
-        \node[right, font=\scriptsize] at (7.1, 0.1) {4};
+        \draw[fill=green!30!black] (7.0,0) rectangle (7.3, 0.2);
+        \node[right, font=\scriptsize] at (7.3, 0.1) {4};
     \end{scope}
 
 \end{tikzpicture}
